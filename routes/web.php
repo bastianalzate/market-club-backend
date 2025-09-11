@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PaymentTransactionController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +41,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     
     // Gestión de administradores
     Route::resource('admin-users', AdminUserController::class);
+    
+    // Gestión de transacciones de pago
+    Route::resource('payment-transactions', PaymentTransactionController::class)->only(['index', 'show', 'destroy']);
 });
 
 // Ruta de logout (placeholder)

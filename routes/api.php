@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,13 @@ Route::get('/products/{product}', [ProductController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
 
+// Rutas de pago públicas
+Route::post('/payments/token', [PaymentController::class, 'createPaymentToken']);
+Route::get('/payments/methods', [PaymentController::class, 'getPaymentMethods']);
+
+// Webhook de Wompi (sin autenticación)
+Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
+
 // Rutas protegidas con Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // Autenticación
@@ -38,6 +46,10 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Órdenes del usuario
     Route::apiResource('orders', OrderController::class);
+    
+    // Rutas de pago protegidas
+    Route::post('/payments/process', [PaymentController::class, 'processPayment']);
+    Route::post('/payments/verify', [PaymentController::class, 'verifyPayment']);
     
     // Rutas de administración (requieren autenticación)
     Route::middleware('admin')->group(function () {
