@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -15,7 +16,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with(['category', 'productType']);
 
         // Filtros
         if ($request->filled('search')) {
@@ -44,8 +45,9 @@ class ProductController extends Controller
 
         $products = $query->orderBy('created_at', 'desc')->paginate(15);
         $categories = Category::where('is_active', true)->get();
+        $productTypes = ProductType::where('is_active', true)->get();
 
-        return view('admin.products.index', compact('products', 'categories'));
+        return view('admin.products.index', compact('products', 'categories', 'productTypes'));
     }
 
     /**
@@ -54,7 +56,8 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::where('is_active', true)->get();
-        return view('admin.products.create', compact('categories'));
+        $productTypes = ProductType::where('is_active', true)->get();
+        return view('admin.products.create', compact('categories', 'productTypes'));
     }
 
     /**
@@ -70,10 +73,24 @@ class ProductController extends Controller
             'sku' => 'required|string|unique:products',
             'stock_quantity' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
+            'product_type_id' => 'nullable|exists:product_types,id',
             'image' => 'nullable|string',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
         ]);
+
+        // Procesar datos específicos del tipo de producto
+        $productSpecificData = [];
+        if ($request->product_type_id) {
+            $productType = ProductType::find($request->product_type_id);
+            $fieldsConfig = $productType->getFieldsConfig();
+            
+            foreach ($fieldsConfig as $fieldName => $fieldConfig) {
+                if ($request->has($fieldName) && $request->$fieldName !== null) {
+                    $productSpecificData[$fieldName] = $request->$fieldName;
+                }
+            }
+        }
 
         $product = Product::create([
             'name' => $request->name,
@@ -84,6 +101,8 @@ class ProductController extends Controller
             'sku' => $request->sku,
             'stock_quantity' => $request->stock_quantity,
             'category_id' => $request->category_id,
+            'product_type_id' => $request->product_type_id,
+            'product_specific_data' => $productSpecificData,
             'image' => $request->image,
             'is_featured' => $request->has('is_featured'),
             'is_active' => $request->has('is_active'),

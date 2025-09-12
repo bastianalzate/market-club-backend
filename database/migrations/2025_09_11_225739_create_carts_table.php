@@ -13,7 +13,17 @@ return new class extends Migration
     {
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('session_id')->nullable(); // Para usuarios no autenticados
+            $table->decimal('subtotal', 10, 2)->default(0);
+            $table->decimal('tax_amount', 10, 2)->default(0);
+            $table->decimal('shipping_amount', 10, 2)->default(0);
+            $table->decimal('total_amount', 10, 2)->default(0);
+            $table->json('metadata')->nullable(); // Para datos adicionales
             $table->timestamps();
+
+            $table->index(['user_id', 'session_id']);
+            $table->unique(['user_id', 'session_id']);
         });
     }
 

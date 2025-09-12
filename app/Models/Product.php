@@ -21,7 +21,9 @@ class Product extends Model
         'is_active',
         'is_featured',
         'category_id',
+        'product_type_id',
         'attributes',
+        'product_specific_data',
     ];
 
     protected $casts = [
@@ -29,6 +31,7 @@ class Product extends Model
         'sale_price' => 'decimal:2',
         'gallery' => 'array',
         'attributes' => 'array',
+        'product_specific_data' => 'array',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
     ];
@@ -36,6 +39,11 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function productType(): BelongsTo
+    {
+        return $this->belongsTo(ProductType::class);
     }
 
     public function orderItems(): HasMany

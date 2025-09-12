@@ -1,4 +1,4 @@
-<?php
+los ingre<?php
 
 namespace Database\Seeders;
 
@@ -22,9 +22,12 @@ class DatabaseSeeder extends Seeder
 
         // Ejecutar seeders
         $this->call([
+            AdminUserSeeder::class,
+            ProductTypeSeeder::class,
             CategorySeeder::class,
-            ProductSeeder::class,
+            RealBeerProductSeeder::class,
             PaymentTransactionSeeder::class,
+            CartSeeder::class,
         ]);
     }
 }

@@ -65,6 +65,24 @@
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <div>
+                        <label for="product_type_id" class="block text-sm font-medium text-gray-700 mb-2">Tipo de
+                            Producto</label>
+                        <select name="product_type_id" id="product_type_id"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('product_type_id') border-red-300 @enderror">
+                            <option value="">Selecciona un tipo de producto</option>
+                            @foreach ($productTypes as $productType)
+                                <option value="{{ $productType->id }}"
+                                    {{ old('product_type_id') == $productType->id ? 'selected' : '' }}>
+                                    {{ $productType->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('product_type_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Descripción -->
@@ -75,6 +93,16 @@
                     @error('description')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
+                </div>
+
+                <!-- Campos Específicos del Tipo de Producto -->
+                <div id="product-type-fields" class="hidden">
+                    <div class="border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Características Específicas</h3>
+                        <div id="dynamic-fields" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <!-- Los campos se generarán dinámicamente aquí -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Precios y Stock -->
@@ -341,6 +369,102 @@
                 progressBar.style.width = '0%';
                 progressPercentage.textContent = '0%';
             });
+
+            // Manejar cambio de tipo de producto
+            const productTypeSelect = document.getElementById('product_type_id');
+            const productTypeFields = document.getElementById('product-type-fields');
+            const dynamicFields = document.getElementById('dynamic-fields');
+
+            // Configuración de campos por tipo de producto
+            const productTypeConfigs = {
+                @foreach ($productTypes as $productType)
+                    {{ $productType->id }}: @json($productType->getFieldsConfig()),
+                @endforeach
+            };
+
+            productTypeSelect.addEventListener('change', function() {
+                const selectedTypeId = this.value;
+                dynamicFields.innerHTML = '';
+
+                if (selectedTypeId && productTypeConfigs[selectedTypeId]) {
+                    const fieldsConfig = productTypeConfigs[selectedTypeId];
+
+                    Object.entries(fieldsConfig).forEach(([fieldName, fieldConfig]) => {
+                        const fieldElement = createFieldElement(fieldName, fieldConfig);
+                        dynamicFields.appendChild(fieldElement);
+                    });
+
+                    productTypeFields.classList.remove('hidden');
+                } else {
+                    productTypeFields.classList.add('hidden');
+                }
+            });
+
+            // Función para crear elementos de campo dinámicamente
+            function createFieldElement(fieldName, fieldConfig) {
+                const div = document.createElement('div');
+                div.className = 'sm:col-span-2';
+
+                const label = document.createElement('label');
+                label.className = 'block text-sm font-medium text-gray-700 mb-2';
+                label.textContent = fieldConfig.label + (fieldConfig.required ? ' *' : '');
+                label.setAttribute('for', fieldName);
+
+                let input;
+                if (fieldConfig.type === 'select') {
+                    input = document.createElement('select');
+                    input.className =
+                        'block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+                    input.name = fieldName;
+                    input.id = fieldName;
+                    if (fieldConfig.required) input.required = true;
+
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Selecciona una opción';
+                    input.appendChild(defaultOption);
+
+                    Object.entries(fieldConfig.options).forEach(([value, text]) => {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = text;
+                        input.appendChild(option);
+                    });
+                } else if (fieldConfig.type === 'textarea') {
+                    input = document.createElement('textarea');
+                    input.className =
+                        'block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+                    input.name = fieldName;
+                    input.id = fieldName;
+                    input.rows = fieldConfig.rows || 3;
+                    if (fieldConfig.required) input.required = true;
+                } else if (fieldConfig.type === 'number') {
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.className =
+                        'block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+                    input.name = fieldName;
+                    input.id = fieldName;
+                    if (fieldConfig.min !== undefined) input.min = fieldConfig.min;
+                    if (fieldConfig.max !== undefined) input.max = fieldConfig.max;
+                    if (fieldConfig.step !== undefined) input.step = fieldConfig.step;
+                    if (fieldConfig.required) input.required = true;
+                } else {
+                    input = document.createElement('input');
+                    input.type = fieldConfig.type || 'text';
+                    input.className =
+                        'block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+                    input.name = fieldName;
+                    input.id = fieldName;
+                    if (fieldConfig.maxlength) input.maxLength = fieldConfig.maxlength;
+                    if (fieldConfig.required) input.required = true;
+                }
+
+                div.appendChild(label);
+                div.appendChild(input);
+
+                return div;
+            }
 
             // Validación del formulario
             const form = document.querySelector('form');
