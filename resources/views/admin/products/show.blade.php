@@ -146,6 +146,184 @@
                     </div>
                 </div>
 
+                <!-- Características Específicas -->
+                @if ($product->productType && $product->product_specific_data)
+                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Características Específicas</h3>
+                            <p class="text-sm text-gray-500 mt-1">Información detallada del tipo:
+                                {{ $product->productType->name }}</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                @if (isset($product->product_specific_data['country_of_origin']))
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500">País de Origen</label>
+                                        <p class="text-sm text-gray-900 font-medium">
+                                            {{ $product->product_specific_data['country_of_origin'] }}</p>
+                                    </div>
+                                @endif
+
+                                @if (isset($product->product_specific_data['volume_ml']))
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500">Tamaño</label>
+                                        <p class="text-sm text-gray-900 font-medium">
+                                            {{ $product->product_specific_data['volume_ml'] }} ml</p>
+                                    </div>
+                                @endif
+
+                                @if (isset($product->product_specific_data['packaging_type']))
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500">Tipo de Envase</label>
+                                        <p class="text-sm text-gray-900 font-medium">
+                                            @switch($product->product_specific_data['packaging_type'])
+                                                @case('botella')
+                                                    Botella
+                                                @break
+
+                                                @case('lata')
+                                                    Lata
+                                                @break
+
+                                                @case('barril')
+                                                    Barril
+                                                @break
+
+                                                @case('growler')
+                                                    Growler
+                                                @break
+
+                                                @default
+                                                    {{ $product->product_specific_data['packaging_type'] }}
+                                            @endswitch
+                                        </p>
+                                    </div>
+                                @endif
+
+                                @if (isset($product->product_specific_data['alcohol_content']))
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500">Contenido de Alcohol</label>
+                                        <p class="text-sm text-gray-900 font-medium">
+                                            {{ $product->product_specific_data['alcohol_content'] }}%</p>
+                                    </div>
+                                @endif
+
+                                @if (isset($product->product_specific_data['beer_style']))
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500">Estilo de Cerveza</label>
+                                        <p class="text-sm text-gray-900 font-medium">
+                                            @switch($product->product_specific_data['beer_style'])
+                                                @case('lager')
+                                                    Lager
+                                                @break
+
+                                                @case('pilsner')
+                                                    Pilsner
+                                                @break
+
+                                                @case('ale')
+                                                    Ale
+                                                @break
+
+                                                @case('ipa')
+                                                    IPA
+                                                @break
+
+                                                @case('stout')
+                                                    Stout
+                                                @break
+
+                                                @case('porter')
+                                                    Porter
+                                                @break
+
+                                                @case('wheat')
+                                                    Wheat Beer
+                                                @break
+
+                                                @case('pale_ale')
+                                                    Pale Ale
+                                                @break
+
+                                                @case('amber')
+                                                    Amber
+                                                @break
+
+                                                @case('brown')
+                                                    Brown Ale
+                                                @break
+
+                                                @case('blonde')
+                                                    Blonde
+                                                @break
+
+                                                @case('dark')
+                                                    Dark Beer
+                                                @break
+
+                                                @case('light')
+                                                    Light Beer
+                                                @break
+
+                                                @case('craft')
+                                                    Craft Beer
+                                                @break
+
+                                                @case('imported')
+                                                    Imported
+                                                @break
+
+                                                @default
+                                                    {{ $product->product_specific_data['beer_style'] }}
+                                            @endswitch
+                                        </p>
+                                    </div>
+                                @endif
+
+                                @if (isset($product->product_specific_data['brewery']))
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500">Cervecería</label>
+                                        <p class="text-sm text-gray-900 font-medium">
+                                            {{ $product->product_specific_data['brewery'] }}</p>
+                                    </div>
+                                @endif
+
+                                @if (isset($product->product_specific_data['ibu']))
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500">IBU</label>
+                                        <p class="text-sm text-gray-900 font-medium">
+                                            {{ $product->product_specific_data['ibu'] }}</p>
+                                    </div>
+                                @endif
+
+                                @if (isset($product->product_specific_data['srm']))
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500">SRM</label>
+                                        <p class="text-sm text-gray-900 font-medium">
+                                            {{ $product->product_specific_data['srm'] }}</p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if (isset($product->product_specific_data['ingredients']) && $product->product_specific_data['ingredients'])
+                                <div class="mt-6">
+                                    <label class="text-sm font-medium text-gray-500">Ingredientes</label>
+                                    <p class="text-sm text-gray-900 mt-1">
+                                        {{ $product->product_specific_data['ingredients'] }}</p>
+                                </div>
+                            @endif
+
+                            @if (isset($product->product_specific_data['tasting_notes']) && $product->product_specific_data['tasting_notes'])
+                                <div class="mt-6">
+                                    <label class="text-sm font-medium text-gray-500">Notas de Cata</label>
+                                    <p class="text-sm text-gray-900 mt-1">
+                                        {{ $product->product_specific_data['tasting_notes'] }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Historial de Ventas -->
                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
                     <div class="px-6 py-4 border-b border-gray-200">

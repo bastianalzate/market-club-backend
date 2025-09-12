@@ -117,7 +117,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load('category', 'orderItems.order');
+        $product->load('category', 'productType', 'orderItems.order');
         return view('admin.products.show', compact('product'));
     }
 
