@@ -43,8 +43,8 @@
                             <div>
                                 @if ($product->image)
                                     <div class="relative">
-                                        <img src="{{ $product->image }}" alt="{{ $product->name }}"
-                                            class="w-full h-64 object-cover rounded-lg border border-gray-200">
+                                        <img src="{{ Storage::url($product->image) }}" alt="{{ $product->name }}"
+                                            class="w-full h-80 object-cover rounded-lg border border-gray-200">
                                         <div class="absolute top-2 right-2">
                                             @if ($product->is_featured)
                                                 <span
@@ -61,7 +61,7 @@
                                     </div>
                                 @else
                                     <div
-                                        class="w-full h-64 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                                        class="w-full h-80 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
                                         <div class="text-center">
                                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24">

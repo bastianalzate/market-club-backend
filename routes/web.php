@@ -30,6 +30,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     // Gestión de productos
     Route::resource('products', ProductController::class);
     
+    // Gestión de imágenes
+    Route::post('/images/upload', [App\Http\Controllers\Admin\ImageController::class, 'upload'])->name('images.upload');
+    Route::delete('/images/delete', [App\Http\Controllers\Admin\ImageController::class, 'delete'])->name('images.delete');
+    Route::get('/images', [App\Http\Controllers\Admin\ImageController::class, 'index'])->name('images.index');
+    
     // Gestión de categorías
     Route::resource('categories', CategoryController::class);
     

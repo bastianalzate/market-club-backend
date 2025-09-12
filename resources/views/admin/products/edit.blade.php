@@ -360,7 +360,7 @@
                     @if ($product->image)
                         <div id="current-image" class="mb-4">
                             <div class="relative inline-block">
-                                <img src="{{ $product->image }}" alt="Imagen actual"
+                                <img src="{{ Storage::url($product->image) }}" alt="Imagen actual"
                                     class="h-32 w-32 object-cover rounded-lg border border-gray-300">
                                 <button type="button" id="remove-current-image"
                                     class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors">
@@ -388,7 +388,7 @@
                                 <label for="image"
                                     class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                                     <span>Subir archivo</span>
-                                    <input id="image" name="image" type="file" class="sr-only"
+                                    <input id="image" name="image_file" type="file" class="sr-only"
                                         accept="image/*">
                                 </label>
                                 <p class="pl-1">o arrastra y suelta</p>
@@ -426,6 +426,9 @@
                         </div>
                         <p class="mt-2 text-sm text-green-600">✓ Nueva imagen subida correctamente</p>
                     </div>
+
+                    <!-- Campo oculto para la URL de la imagen -->
+                    <input type="hidden" name="image" id="image-url" value="{{ old('image', $product->image) }}">
 
                     @error('image')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -498,35 +501,52 @@
             const currentImage = document.getElementById('current-image');
             const removeCurrentImageBtn = document.getElementById('remove-current-image');
 
-            // Función para simular progreso de subida
-            function simulateUpload() {
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += Math.random() * 15;
-                    if (progress > 100) progress = 100;
+            // Función para subir imagen real
+            async function uploadImage(file) {
+                const formData = new FormData();
+                formData.append('image', file);
 
-                    progressBar.style.width = progress + '%';
-                    progressPercentage.textContent = Math.round(progress) + '%';
+                try {
+                    const response = await fetch('{{ route('admin.images.upload') }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                .getAttribute('content')
+                        }
+                    });
 
-                    if (progress < 30) {
-                        progressText.textContent = 'Preparando archivo...';
-                    } else if (progress < 60) {
-                        progressText.textContent = 'Subiendo archivo...';
-                    } else if (progress < 90) {
-                        progressText.textContent = 'Procesando imagen...';
-                    } else if (progress < 100) {
-                        progressText.textContent = 'Finalizando...';
-                    } else {
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Guardar la ruta relativa de la imagen
+                        document.getElementById('image-url').value = result.path;
+
+                        // Ocultar imagen actual si existe
+                        if (currentImage) {
+                            currentImage.classList.add('hidden');
+                        }
+
+                        // Mostrar mensaje de éxito
                         progressText.textContent = '¡Archivo subido correctamente!';
-                        clearInterval(interval);
 
                         // Ocultar barra de progreso y mostrar vista previa
                         setTimeout(() => {
                             progressContainer.classList.add('hidden');
                             imagePreview.classList.remove('hidden');
                         }, 500);
+                    } else {
+                        throw new Error(result.message);
                     }
-                }, 100);
+                } catch (error) {
+                    console.error('Error al subir imagen:', error);
+                    alert('Error al subir la imagen: ' + error.message);
+
+                    // Resetear el formulario
+                    progressContainer.classList.add('hidden');
+                    uploadArea.classList.remove('hidden');
+                    fileInput.value = '';
+                }
             }
 
             // Manejar selección de archivo
@@ -554,8 +574,8 @@
                     progressContainer.classList.remove('hidden');
                     uploadArea.classList.add('hidden');
 
-                    // Simular progreso de subida
-                    simulateUpload();
+                    // Subir la imagen
+                    uploadImage(file);
 
                     // Crear vista previa de la imagen
                     const reader = new FileReader();
