@@ -12,6 +12,9 @@ class UserController extends Controller
     {
         $query = User::query();
 
+        // Solo mostrar clientes (usuarios con rol 'customer')
+        $query->where('role', 'customer');
+
         // Búsqueda
         if ($request->filled('search')) {
             $search = $request->search;
@@ -26,6 +29,11 @@ class UserController extends Controller
             $query->where('country', $request->country);
         }
 
+        // Filtro por tipo de cliente (mayorista o regular)
+        if ($request->has('is_wholesaler') && $request->is_wholesaler !== '') {
+            $query->where('is_wholesaler', $request->boolean('is_wholesaler'));
+        }
+
         // Ordenamiento
         $sort = $request->get('sort', 'created_at');
         $direction = $request->get('direction', 'desc');
@@ -38,17 +46,32 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        // Verificar que el usuario sea un cliente
+        if ($user->role !== 'customer') {
+            abort(404, 'Usuario no encontrado');
+        }
+        
         $user->load(['orders.orderItems.product']);
         return view('admin.users.show', compact('user'));
     }
 
     public function edit(User $user)
     {
+        // Verificar que el usuario sea un cliente
+        if ($user->role !== 'customer') {
+            abort(404, 'Usuario no encontrado');
+        }
+        
         return view('admin.users.edit', compact('user'));
     }
 
     public function update(Request $request, User $user)
     {
+        // Verificar que el usuario sea un cliente
+        if ($user->role !== 'customer') {
+            abort(404, 'Usuario no encontrado');
+        }
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -64,6 +87,11 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        // Verificar que el usuario sea un cliente
+        if ($user->role !== 'customer') {
+            abort(404, 'Usuario no encontrado');
+        }
+        
         // Verificar si el usuario tiene órdenes
         if ($user->orders()->count() > 0) {
             return redirect()->route('admin.users.index')

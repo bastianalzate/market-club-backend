@@ -17,6 +17,9 @@ class AdminUserController extends Controller
     {
         $query = User::query();
 
+        // Solo mostrar administradores (usuarios con rol 'admin' o 'super_admin')
+        $query->whereIn('role', ['admin', 'super_admin']);
+
         // Filtros
         if ($request->filled('search')) {
             $search = $request->search;
@@ -77,6 +80,11 @@ class AdminUserController extends Controller
      */
     public function show(User $adminUser)
     {
+        // Verificar que el usuario sea un administrador
+        if (!in_array($adminUser->role, ['admin', 'super_admin'])) {
+            abort(404, 'Administrador no encontrado');
+        }
+        
         $adminUser->load(['orders.orderItems.product']);
         return view('admin.admin-users.show', compact('adminUser'));
     }
@@ -86,6 +94,11 @@ class AdminUserController extends Controller
      */
     public function edit(User $adminUser)
     {
+        // Verificar que el usuario sea un administrador
+        if (!in_array($adminUser->role, ['admin', 'super_admin'])) {
+            abort(404, 'Administrador no encontrado');
+        }
+        
         return view('admin.admin-users.edit', compact('adminUser'));
     }
 
@@ -94,26 +107,44 @@ class AdminUserController extends Controller
      */
     public function update(Request $request, User $adminUser)
     {
-        $request->validate([
+        // Verificar que el usuario sea un administrador
+        if (!in_array($adminUser->role, ['admin', 'super_admin'])) {
+            abort(404, 'Administrador no encontrado');
+        }
+        
+        // Proteger el super admin principal
+        $isMainSuperAdmin = $adminUser->email === 'admin@marketclub.com';
+        
+        $validationRules = [
             'name' => 'required|string|max:255',
-            'email' => [
+            'password' => 'nullable|string|min:8|confirmed',
+            'is_active' => 'boolean',
+        ];
+
+        // Solo permitir cambiar email si no es el super admin principal
+        if (!$isMainSuperAdmin) {
+            $validationRules['email'] = [
                 'required',
                 'string',
                 'email',
                 'max:255',
                 Rule::unique('users')->ignore($adminUser->id),
-            ],
-            'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|in:admin,super_admin',
-            'is_active' => 'boolean',
-        ]);
+            ];
+            $validationRules['role'] = 'required|in:admin,super_admin';
+        }
+
+        $request->validate($validationRules);
 
         $data = [
             'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
             'is_active' => $request->boolean('is_active', true),
         ];
+
+        // Solo permitir cambiar email y rol si no es el super admin principal
+        if (!$isMainSuperAdmin) {
+            $data['email'] = $request->email;
+            $data['role'] = $request->role;
+        }
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
@@ -130,6 +161,17 @@ class AdminUserController extends Controller
      */
     public function destroy(User $adminUser)
     {
+        // Verificar que el usuario sea un administrador
+        if (!in_array($adminUser->role, ['admin', 'super_admin'])) {
+            abort(404, 'Administrador no encontrado');
+        }
+        
+        // No permitir eliminar el super admin principal
+        if ($adminUser->email === 'admin@marketclub.com') {
+            return redirect()->back()
+                ->with('error', 'No se puede eliminar el super administrador principal del sistema.');
+        }
+
         // No permitir eliminar el último super admin
         if ($adminUser->role === 'super_admin' && User::where('role', 'super_admin')->count() <= 1) {
             return redirect()->back()

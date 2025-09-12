@@ -4,132 +4,113 @@
 @section('page-title', 'Gestión de Administradores')
 
 @section('content')
-    <div class="max-w-7xl mx-auto">
-        <!-- Header con acciones -->
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-2xl font-bold text-gray-900">Administradores</h1>
-                <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    {{ $admins->total() }} administradores
-                </span>
-            </div>
-            <div class="flex items-center space-x-3">
-                <a href="{{ route('admin.admin-users.create') }}"
-                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Crear Administrador
-                </a>
-            </div>
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Administradores</h1>
+            <p class="mt-1 text-sm text-gray-500">Gestiona todos los administradores del sistema</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('admin.admin-users.create') }}"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+                    </path>
+                </svg>
+                Crear Administrador
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white border border-gray-200 rounded-xl mb-6">
+        <div class="p-6">
+            <form method="GET" action="{{ route('admin.admin-users.index') }}"
+                class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+                    <input type="text" id="search" name="search"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        placeholder="Nombre o email..." value="{{ request('search') }}">
+                </div>
+
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+                    <select id="role" name="role"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Todos los roles</option>
+                        <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Administrador</option>
+                        <option value="super_admin" {{ request('role') == 'super_admin' ? 'selected' : '' }}>Super
+                            Administrador</option>
+                    </select>
+                </div>
+
+                <div class="flex items-end">
+                    <button type="submit"
+                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Administradores -->
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Lista de Administradores</h3>
+            <p class="mt-1 text-sm text-gray-500">{{ $admins->total() }} administradores encontrados</p>
         </div>
 
-        <!-- Filtros y búsqueda -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm mb-6">
-            <div class="p-6">
-                <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
-                        <input type="text" name="search" id="search" value="{{ request('search') }}"
-                            placeholder="Nombre o email..."
-                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                    </div>
-
-                    <div>
-                        <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
-                        <select name="role" id="role"
-                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                            <option value="">Todos los roles</option>
-                            <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Administrador</option>
-                            <option value="super_admin" {{ request('role') == 'super_admin' ? 'selected' : '' }}>Super
-                                Administrador</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-end">
-                        <button type="submit"
-                            class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                            Filtrar
-                        </button>
-                    </div>
-
-                    <div class="flex items-end">
-                        <a href="{{ route('admin.admin-users.index') }}"
-                            class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                </path>
-                            </svg>
-                            Limpiar
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Tabla de administradores -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
+        @if ($admins->count() > 0)
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => request('sort') == 'name' && request('direction') == 'asc' ? 'desc' : 'asc']) }}"
-                                    class="group inline-flex items-center hover:text-gray-700">
-                                    Administrador
-                                    <svg class="ml-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                                    </svg>
-                                </a>
+                                Administrador</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Estado</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => request('sort') == 'created_at' && request('direction') == 'asc' ? 'desc' : 'asc']) }}"
-                                    class="group inline-flex items-center hover:text-gray-700">
-                                    Fecha de Creación
-                                    <svg class="ml-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                                    </svg>
-                                </a>
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha
+                                de Creación</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($admins as $admin)
+                        @foreach ($admins as $admin)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
                                             <div
                                                 class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                                <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
-                                                    </path>
-                                                </svg>
+                                                <span
+                                                    class="text-indigo-600 text-sm font-medium">{{ substr($admin->name, 0, 1) }}</span>
                                             </div>
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900">{{ $admin->name }}</div>
-                                            <div class="text-sm text-gray-500">{{ $admin->email }}</div>
+                                            <div class="text-sm text-gray-500">ID: {{ $admin->id }}</div>
                                         </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                            </path>
+                                        </svg>
+                                        <div class="text-sm text-gray-900">{{ $admin->email }}</div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -174,12 +155,24 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $admin->created_at->format('d/m/Y H:i') }}
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                            </path>
+                                        </svg>
+                                        <div>
+                                            <div>{{ $admin->created_at->format('M d, Y') }}</div>
+                                            <div class="text-xs text-gray-400">{{ $admin->created_at->format('H:i') }}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex items-center space-x-2">
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex items-center justify-end space-x-2">
                                         <a href="{{ route('admin.admin-users.show', $admin) }}"
-                                            class="text-indigo-600 hover:text-indigo-900 transition-colors">
+                                            class="text-indigo-600 hover:text-indigo-900" title="Ver detalles">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -190,7 +183,7 @@
                                             </svg>
                                         </a>
                                         <a href="{{ route('admin.admin-users.edit', $admin) }}"
-                                            class="text-yellow-600 hover:text-yellow-900 transition-colors">
+                                            class="text-indigo-600 hover:text-indigo-900" title="Editar administrador">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -198,14 +191,16 @@
                                                 </path>
                                             </svg>
                                         </a>
-                                        @if (!($admin->role === 'super_admin' && $admins->where('role', 'super_admin')->count() <= 1))
+                                        @if (
+                                            $admin->email !== 'admin@marketclub.com' &&
+                                                !($admin->role === 'super_admin' && $admins->where('role', 'super_admin')->count() <= 1))
                                             <form action="{{ route('admin.admin-users.destroy', $admin) }}"
-                                                method="POST" class="inline">
+                                                method="POST" class="inline"
+                                                onsubmit="return confirm('¿Estás seguro de que quieres eliminar este administrador?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit"
-                                                    class="text-red-600 hover:text-red-900 transition-colors"
-                                                    onclick="return confirm('¿Estás seguro de eliminar este administrador?')">
+                                                <button type="submit" class="text-red-600 hover:text-red-900"
+                                                    title="Eliminar administrador">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -219,21 +214,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-12 text-center">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z">
-                                        </path>
-                                    </svg>
-                                    <h3 class="mt-2 text-sm font-medium text-gray-900">Sin administradores</h3>
-                                    <p class="mt-1 text-sm text-gray-500">No se encontraron administradores con los filtros
-                                        aplicados.</p>
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -241,9 +222,19 @@
             <!-- Paginación -->
             @if ($admins->hasPages())
                 <div class="px-6 py-4 border-t border-gray-200">
-                    {{ $admins->links() }}
+                    {{ $admins->appends(request()->query())->links() }}
                 </div>
             @endif
-        </div>
+        @else
+            <div class="px-6 py-12 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                    </path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No hay administradores</h3>
+                <p class="mt-1 text-sm text-gray-500">No se encontraron administradores con los filtros aplicados.</p>
+            </div>
+        @endif
     </div>
 @endsection

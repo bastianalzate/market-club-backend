@@ -58,33 +58,60 @@
                                 @enderror
                             </div>
 
-                            <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Correo
-                                    Electrónico *</label>
-                                <input type="email" name="email" id="email"
-                                    value="{{ old('email', $adminUser->email) }}" required
-                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('email') border-red-300 @enderror"
-                                    placeholder="admin@marketclub.com">
-                                @error('email')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                            @if ($adminUser->email !== 'admin@marketclub.com')
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Correo
+                                        Electrónico *</label>
+                                    <input type="email" name="email" id="email"
+                                        value="{{ old('email', $adminUser->email) }}" required
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('email') border-red-300 @enderror"
+                                        placeholder="admin@marketclub.com">
+                                    @error('email')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
 
-                            <div>
-                                <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
-                                <select name="role" id="role" required
-                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('role') border-red-300 @enderror">
-                                    <option value="">Selecciona un rol</option>
-                                    <option value="admin" {{ old('role', $adminUser->role) == 'admin' ? 'selected' : '' }}>
-                                        Administrador</option>
-                                    <option value="super_admin"
-                                        {{ old('role', $adminUser->role) == 'super_admin' ? 'selected' : '' }}>Super
-                                        Administrador</option>
-                                </select>
-                                @error('role')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                                <div>
+                                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Rol *</label>
+                                    <select name="role" id="role" required
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('role') border-red-300 @enderror">
+                                        <option value="">Selecciona un rol</option>
+                                        <option value="admin"
+                                            {{ old('role', $adminUser->role) == 'admin' ? 'selected' : '' }}>
+                                            Administrador</option>
+                                        <option value="super_admin"
+                                            {{ old('role', $adminUser->role) == 'super_admin' ? 'selected' : '' }}>Super
+                                            Administrador</option>
+                                    </select>
+                                    @error('role')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            @else
+                                <!-- Información protegida para el super admin principal -->
+                                <div class="sm:col-span-2">
+                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                        <div class="flex">
+                                            <div class="flex-shrink-0">
+                                                <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
+                                                    </path>
+                                                </svg>
+                                            </div>
+                                            <div class="ml-3">
+                                                <h3 class="text-sm font-medium text-yellow-800">Super Administrador
+                                                    Principal</h3>
+                                                <div class="mt-2 text-sm text-yellow-700">
+                                                    <p>Este es el super administrador principal del sistema. Su email y rol
+                                                        están protegidos y no pueden ser modificados por seguridad.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Contraseña -->
@@ -120,7 +147,8 @@
                                     Administrador activo
                                 </label>
                             </div>
-                            <p class="mt-1 text-xs text-gray-500">Solo los administradores activos pueden iniciar sesión</p>
+                            <p class="mt-1 text-xs text-gray-500">Solo los administradores activos pueden iniciar sesión
+                            </p>
                         </div>
 
                         <!-- Botones -->
@@ -284,7 +312,8 @@
                 if (!isValid) {
                     e.preventDefault();
                     alert(
-                        'Por favor completa todos los campos obligatorios y asegúrate de que las contraseñas coincidan.');
+                        'Por favor completa todos los campos obligatorios y asegúrate de que las contraseñas coincidan.'
+                        );
                 }
             });
 

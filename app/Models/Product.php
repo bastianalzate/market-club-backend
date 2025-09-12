@@ -64,4 +64,13 @@ class Product extends Model
 
         return round((($this->price - $this->sale_price) / $this->price) * 100);
     }
+
+    public function getImageUrlAttribute()
+    {
+        if (!$this->image) {
+            return null;
+        }
+
+        return asset('storage/' . $this->image);
+    }
 }

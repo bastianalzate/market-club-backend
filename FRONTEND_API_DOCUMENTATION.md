@@ -12,11 +12,20 @@ Content-Type: application/json
     "name": "Juan Pérez",
     "email": "juan@example.com",
     "password": "password123",
-    "password_confirmation": "password123",
     "phone": "+573001234567",
-    "country": "Colombia"
+    "country": "Colombia",
+    "is_wholesaler": false
 }
 ```
+
+**Campos:**
+
+-   `name` (requerido): Nombre completo del usuario
+-   `email` (requerido): Email único del usuario
+-   `password` (requerido): Contraseña mínimo 8 caracteres
+-   `phone` (opcional): Número de teléfono
+-   `country` (opcional): País del usuario
+-   `is_wholesaler` (opcional): Boolean - true si es mayorista, false si es cliente regular
 
 ### Login
 
@@ -50,6 +59,43 @@ Authorization: Bearer {token}
 
 ```http
 GET /api/products?page=1&per_page=12&category=1&search=iphone&sort=price&order=asc
+```
+
+### Productos Destacados
+
+```http
+GET /api/products/featured?limit=10&category_id=1&search=cerveza&sort_by=price&sort_order=asc
+```
+
+**Parámetros:**
+
+-   `limit` (opcional): Número máximo de productos a retornar (default: 10)
+-   `category_id` (opcional): Filtrar por categoría específica
+-   `search` (opcional): Buscar en nombre y descripción
+-   `sort_by` (opcional): Campo para ordenar (default: created_at)
+-   `sort_order` (opcional): Orden ascendente o descendente (default: desc)
+
+**Respuesta:**
+
+```json
+[
+    {
+        "id": 1,
+        "name": "Cerveza Premium",
+        "price": 15000,
+        "sale_price": 12000,
+        "current_price": 12000,
+        "image_url": "http://localhost:8000/storage/products/2024/09/image.jpg"
+    },
+    {
+        "id": 2,
+        "name": "Cerveza Artesanal",
+        "price": 18000,
+        "sale_price": null,
+        "current_price": 18000,
+        "image_url": "http://localhost:8000/storage/products/2024/09/image2.jpg"
+    }
+]
 ```
 
 ### Obtener Producto

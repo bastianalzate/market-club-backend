@@ -15,7 +15,7 @@
     <div class="bg-white border border-gray-200 rounded-xl mb-6">
         <div class="p-6">
             <form method="GET" action="{{ route('admin.users.index') }}"
-                class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                     <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
                     <input type="text" id="search" name="search"
@@ -37,6 +37,17 @@
                         <option value="España" {{ request('country') == 'España' ? 'selected' : '' }}>España</option>
                         <option value="Estados Unidos" {{ request('country') == 'Estados Unidos' ? 'selected' : '' }}>
                             Estados Unidos</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="is_wholesaler" class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                    <select id="is_wholesaler" name="is_wholesaler"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Todos los tipos</option>
+                        <option value="1" {{ request('is_wholesaler') == '1' ? 'selected' : '' }}>Mayorista</option>
+                        <option value="0" {{ request('is_wholesaler') == '0' ? 'selected' : '' }}>Cliente Regular
+                        </option>
                     </select>
                 </div>
 
@@ -73,6 +84,8 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Teléfono</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">País
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha
                                 de Registro</th>
@@ -138,6 +151,26 @@
                                         </svg>
                                         <div class="text-sm text-gray-900">{{ $user->country ?? 'Colombia' }}</div>
                                     </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        @if ($user->is_wholesaler) bg-purple-100 text-purple-800
+                                        @else bg-blue-100 text-blue-800 @endif">
+                                        @if ($user->is_wholesaler)
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Mayorista
+                                        @else
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                                    clip-rule="evenodd"></path>
+                                            </svg>
+                                            Cliente
+                                        @endif
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <div class="flex items-center">

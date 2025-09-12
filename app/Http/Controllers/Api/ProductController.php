@@ -45,6 +45,51 @@ class ProductController extends Controller
     }
 
     /**
+     * Display featured products.
+     */
+    public function featured(Request $request)
+    {
+        $query = Product::where('is_active', true)
+            ->where('is_featured', true);
+
+        // Filtro por categoría
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // Filtro por búsqueda
+        if ($request->has('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Ordenamiento
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        // Límite de productos destacados
+        $limit = $request->get('limit', 10);
+        $products = $query->limit($limit)->get();
+
+        // Formatear la respuesta con solo los campos necesarios
+        $formattedProducts = $products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'sale_price' => $product->sale_price,
+                'current_price' => $product->current_price,
+                'image_url' => $product->image_url,
+            ];
+        });
+
+        return response()->json($formattedProducts);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)

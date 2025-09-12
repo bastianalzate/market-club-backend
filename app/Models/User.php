@@ -27,6 +27,7 @@ class User extends Authenticatable
         'country',
         'role',
         'is_active',
+        'is_wholesaler',
     ];
 
     /**
@@ -50,6 +51,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'is_wholesaler' => 'boolean',
         ];
     }
 
@@ -90,5 +92,13 @@ class User extends Authenticatable
     public function isCustomer(): bool
     {
         return $this->role === 'customer';
+    }
+
+    /**
+     * Check if user is a wholesaler
+     */
+    public function isWholesaler(): bool
+    {
+        return $this->is_wholesaler === true;
     }
 }
