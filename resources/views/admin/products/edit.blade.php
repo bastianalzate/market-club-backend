@@ -67,6 +67,235 @@
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <div>
+                        <label for="product_type_id" class="block text-sm font-medium text-gray-700 mb-2">Tipo de
+                            Producto</label>
+                        <select name="product_type_id" id="product_type_id"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('product_type_id') border-red-300 @enderror">
+                            <option value="">Selecciona un tipo de producto</option>
+                            @foreach ($productTypes as $productType)
+                                <option value="{{ $productType->id }}"
+                                    {{ old('product_type_id', $product->product_type_id) == $productType->id ? 'selected' : '' }}>
+                                    {{ $productType->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('product_type_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Campos Específicos del Tipo de Producto -->
+                <div id="product-type-fields" class="{{ $product->product_type_id ? '' : 'hidden' }}">
+                    <div class="border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Características Específicas</h3>
+
+                        <!-- Campos estáticos para cervezas -->
+                        @if ($product->product_type_id && $product->productType && $product->productType->slug === 'cervezas')
+                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                <!-- País de Origen -->
+                                <div>
+                                    <label for="country_of_origin" class="block text-sm font-medium text-gray-700 mb-2">País
+                                        de Origen *</label>
+                                    <select name="country_of_origin" id="country_of_origin" required
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                        <option value="">Selecciona un país</option>
+                                        <option value="Inglaterra"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Inglaterra' ? 'selected' : '' }}>
+                                            Inglaterra</option>
+                                        <option value="Colombia"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Colombia' ? 'selected' : '' }}>
+                                            Colombia</option>
+                                        <option value="Alemania"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Alemania' ? 'selected' : '' }}>
+                                            Alemania</option>
+                                        <option value="Italia"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Italia' ? 'selected' : '' }}>
+                                            Italia</option>
+                                        <option value="Escocia"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Escocia' ? 'selected' : '' }}>
+                                            Escocia</option>
+                                        <option value="Bélgica"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Bélgica' ? 'selected' : '' }}>
+                                            Bélgica</option>
+                                        <option value="España"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'España' ? 'selected' : '' }}>
+                                            España</option>
+                                        <option value="Países Bajos"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Países Bajos' ? 'selected' : '' }}>
+                                            Países Bajos</option>
+                                        <option value="Japón"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Japón' ? 'selected' : '' }}>
+                                            Japón</option>
+                                        <option value="México"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'México' ? 'selected' : '' }}>
+                                            México</option>
+                                        <option value="Perú"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Perú' ? 'selected' : '' }}>
+                                            Perú</option>
+                                        <option value="República Checa"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'República Checa' ? 'selected' : '' }}>
+                                            República Checa</option>
+                                        <option value="Estados Unidos"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Estados Unidos' ? 'selected' : '' }}>
+                                            Estados Unidos</option>
+                                        <option value="Tailandia"
+                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Tailandia' ? 'selected' : '' }}>
+                                            Tailandia</option>
+                                    </select>
+                                </div>
+
+                                <!-- Tamaño -->
+                                <div>
+                                    <label for="volume_ml" class="block text-sm font-medium text-gray-700 mb-2">Tamaño (ml)
+                                        *</label>
+                                    <select name="volume_ml" id="volume_ml" required
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                        <option value="">Selecciona un tamaño</option>
+                                        <option value="250"
+                                            {{ ($product->product_specific_data['volume_ml'] ?? '') === '250' ? 'selected' : '' }}>
+                                            250 ml</option>
+                                        <option value="269"
+                                            {{ ($product->product_specific_data['volume_ml'] ?? '') === '269' ? 'selected' : '' }}>
+                                            269 ml</option>
+                                        <option value="300"
+                                            {{ ($product->product_specific_data['volume_ml'] ?? '') === '300' ? 'selected' : '' }}>
+                                            300 ml</option>
+                                        <option value="310"
+                                            {{ ($product->product_specific_data['volume_ml'] ?? '') === '310' ? 'selected' : '' }}>
+                                            310 ml</option>
+                                        <option value="330"
+                                            {{ ($product->product_specific_data['volume_ml'] ?? '') === '330' ? 'selected' : '' }}>
+                                            330 ml</option>
+                                        <option value="355"
+                                            {{ ($product->product_specific_data['volume_ml'] ?? '') === '355' ? 'selected' : '' }}>
+                                            355 ml</option>
+                                        <option value="500"
+                                            {{ ($product->product_specific_data['volume_ml'] ?? '') === '500' ? 'selected' : '' }}>
+                                            500 ml</option>
+                                        <option value="5000"
+                                            {{ ($product->product_specific_data['volume_ml'] ?? '') === '5000' ? 'selected' : '' }}>
+                                            5000 ml</option>
+                                    </select>
+                                </div>
+
+                                <!-- Tipo de Envase -->
+                                <div>
+                                    <label for="packaging_type" class="block text-sm font-medium text-gray-700 mb-2">Tipo de
+                                        Envase *</label>
+                                    <select name="packaging_type" id="packaging_type" required
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                        <option value="">Selecciona un tipo</option>
+                                        <option value="botella"
+                                            {{ ($product->product_specific_data['packaging_type'] ?? '') === 'botella' ? 'selected' : '' }}>
+                                            Botella</option>
+                                        <option value="lata"
+                                            {{ ($product->product_specific_data['packaging_type'] ?? '') === 'lata' ? 'selected' : '' }}>
+                                            Lata</option>
+                                        <option value="barril"
+                                            {{ ($product->product_specific_data['packaging_type'] ?? '') === 'barril' ? 'selected' : '' }}>
+                                            Barril</option>
+                                        <option value="growler"
+                                            {{ ($product->product_specific_data['packaging_type'] ?? '') === 'growler' ? 'selected' : '' }}>
+                                            Growler</option>
+                                    </select>
+                                </div>
+
+                                <!-- Contenido de Alcohol -->
+                                <div>
+                                    <label for="alcohol_content"
+                                        class="block text-sm font-medium text-gray-700 mb-2">Contenido de Alcohol
+                                        (%)</label>
+                                    <input type="number" name="alcohol_content" id="alcohol_content" step="0.1"
+                                        min="0" max="100"
+                                        value="{{ $product->product_specific_data['alcohol_content'] ?? '' }}"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+
+                                <!-- Estilo de Cerveza -->
+                                <div>
+                                    <label for="beer_style" class="block text-sm font-medium text-gray-700 mb-2">Estilo de
+                                        Cerveza</label>
+                                    <select name="beer_style" id="beer_style"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                        <option value="">Selecciona un estilo</option>
+                                        <option value="lager"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'lager' ? 'selected' : '' }}>
+                                            Lager</option>
+                                        <option value="pilsner"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'pilsner' ? 'selected' : '' }}>
+                                            Pilsner</option>
+                                        <option value="ale"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'ale' ? 'selected' : '' }}>
+                                            Ale</option>
+                                        <option value="ipa"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'ipa' ? 'selected' : '' }}>
+                                            IPA</option>
+                                        <option value="stout"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'stout' ? 'selected' : '' }}>
+                                            Stout</option>
+                                        <option value="porter"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'porter' ? 'selected' : '' }}>
+                                            Porter</option>
+                                        <option value="wheat"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'wheat' ? 'selected' : '' }}>
+                                            Wheat Beer</option>
+                                        <option value="pale_ale"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'pale_ale' ? 'selected' : '' }}>
+                                            Pale Ale</option>
+                                        <option value="amber"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'amber' ? 'selected' : '' }}>
+                                            Amber</option>
+                                        <option value="brown"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'brown' ? 'selected' : '' }}>
+                                            Brown Ale</option>
+                                        <option value="blonde"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'blonde' ? 'selected' : '' }}>
+                                            Blonde</option>
+                                        <option value="dark"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'dark' ? 'selected' : '' }}>
+                                            Dark Beer</option>
+                                        <option value="light"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'light' ? 'selected' : '' }}>
+                                            Light Beer</option>
+                                        <option value="craft"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'craft' ? 'selected' : '' }}>
+                                            Craft Beer</option>
+                                        <option value="imported"
+                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'imported' ? 'selected' : '' }}>
+                                            Imported</option>
+                                    </select>
+                                </div>
+
+                                <!-- Cervecería -->
+                                <div>
+                                    <label for="brewery"
+                                        class="block text-sm font-medium text-gray-700 mb-2">Cervecería</label>
+                                    <input type="text" name="brewery" id="brewery" maxlength="255"
+                                        value="{{ $product->product_specific_data['brewery'] ?? '' }}"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+
+                                <!-- Ingredientes -->
+                                <div class="sm:col-span-2">
+                                    <label for="ingredients"
+                                        class="block text-sm font-medium text-gray-700 mb-2">Ingredientes</label>
+                                    <textarea name="ingredients" id="ingredients" rows="3"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ $product->product_specific_data['ingredients'] ?? '' }}</textarea>
+                                </div>
+
+                                <!-- Notas de Cata -->
+                                <div class="sm:col-span-2">
+                                    <label for="tasting_notes" class="block text-sm font-medium text-gray-700 mb-2">Notas
+                                        de Cata</label>
+                                    <textarea name="tasting_notes" id="tasting_notes" rows="4"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ $product->product_specific_data['tasting_notes'] ?? '' }}</textarea>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
                 <!-- Descripción -->
@@ -405,6 +634,127 @@
                     alert('Por favor completa todos los campos obligatorios.');
                 }
             });
+
+            // Manejar cambio de tipo de producto
+            const productTypeSelect = document.getElementById('product_type_id');
+            const productTypeFields = document.getElementById('product-type-fields');
+            const dynamicFields = document.getElementById('dynamic-fields');
+
+            const productTypeConfigs = {
+                @foreach ($productTypes as $productType)
+                    {{ $productType->id }}: @json($productType->getFieldsConfig()),
+                @endforeach
+            };
+
+            // Función para crear elementos de campo
+            function createFieldElement(fieldName, fieldConfig) {
+                const div = document.createElement('div');
+                div.className = 'sm:col-span-2';
+
+                const label = document.createElement('label');
+                label.className = 'block text-sm font-medium text-gray-700 mb-2';
+                label.textContent = fieldConfig.label + (fieldConfig.required ? ' *' : '');
+                label.setAttribute('for', fieldName);
+
+                let input;
+                const productData = @json($product->product_specific_data ?? []);
+                const currentValue = productData[fieldName] || '';
+
+                console.log(`Campo ${fieldName}: valor actual = "${currentValue}"`);
+
+                if (fieldConfig.type === 'select') {
+                    input = document.createElement('select');
+                    input.className =
+                        'block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+                    if (fieldConfig.required) input.required = true;
+
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Selecciona una opción';
+                    input.appendChild(defaultOption);
+
+                    Object.entries(fieldConfig.options).forEach(([value, label]) => {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = label;
+                        if (currentValue === value) {
+                            option.selected = true;
+                            console.log(`Seleccionando opción: ${value} para campo ${fieldName}`);
+                        }
+                        input.appendChild(option);
+                    });
+                } else if (fieldConfig.type === 'textarea') {
+                    input = document.createElement('textarea');
+                    input.className =
+                        'block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+                    input.rows = fieldConfig.rows || 3;
+                    input.value = currentValue;
+                    if (fieldConfig.required) input.required = true;
+                } else if (fieldConfig.type === 'number') {
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.className =
+                        'block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+                    input.value = currentValue;
+                    if (fieldConfig.min !== undefined) input.min = fieldConfig.min;
+                    if (fieldConfig.max !== undefined) input.max = fieldConfig.max;
+                    if (fieldConfig.step !== undefined) input.step = fieldConfig.step;
+                    if (fieldConfig.required) input.required = true;
+                } else {
+                    input = document.createElement('input');
+                    input.type = fieldConfig.type || 'text';
+                    input.className =
+                        'block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
+                    input.value = currentValue;
+                    if (fieldConfig.maxlength) input.maxLength = fieldConfig.maxlength;
+                    if (fieldConfig.required) input.required = true;
+                }
+
+                input.name = fieldName;
+                input.id = fieldName;
+
+                div.appendChild(label);
+                div.appendChild(input);
+
+                return div;
+            }
+
+            // Función para cargar campos del tipo de producto actual
+            function loadCurrentProductTypeFields() {
+                const selectedTypeId = productTypeSelect.value;
+                dynamicFields.innerHTML = '';
+
+                // Debug: mostrar datos del producto
+                const productData = @json($product->product_specific_data ?? []);
+                console.log('Datos del producto:', productData);
+                console.log('Tipo de producto seleccionado:', selectedTypeId);
+
+                if (selectedTypeId && productTypeConfigs[selectedTypeId]) {
+                    const fieldsConfig = productTypeConfigs[selectedTypeId];
+                    Object.entries(fieldsConfig).forEach(([fieldName, fieldConfig]) => {
+                        const fieldElement = createFieldElement(fieldName, fieldConfig);
+                        dynamicFields.appendChild(fieldElement);
+                    });
+                    productTypeFields.classList.remove('hidden');
+                } else {
+                    productTypeFields.classList.add('hidden');
+                }
+            }
+
+            // Manejar cambio de tipo de producto - deshabilitado para evitar duplicación
+            // productTypeSelect.addEventListener('change', loadCurrentProductTypeFields);
+
+            // Cargar campos iniciales - deshabilitado para evitar duplicación
+            // setTimeout(() => {
+            //     loadCurrentProductTypeFields();
+            // }, 100);
+
+            // También cargar cuando la página esté completamente cargada - deshabilitado
+            // window.addEventListener('load', function() {
+            //     setTimeout(() => {
+            //         loadCurrentProductTypeFields();
+            //     }, 200);
+            // });
         });
     </script>
 @endsection

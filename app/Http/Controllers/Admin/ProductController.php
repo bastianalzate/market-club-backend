@@ -127,7 +127,8 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::where('is_active', true)->get();
-        return view('admin.products.edit', compact('product', 'categories'));
+        $productTypes = ProductType::where('is_active', true)->get();
+        return view('admin.products.edit', compact('product', 'categories', 'productTypes'));
     }
 
     /**
@@ -143,10 +144,24 @@ class ProductController extends Controller
             'sku' => 'required|string|unique:products,sku,' . $product->id,
             'stock_quantity' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
+            'product_type_id' => 'nullable|exists:product_types,id',
             'image' => 'nullable|string',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
         ]);
+
+        // Procesar datos específicos del tipo de producto
+        $productSpecificData = [];
+        if ($request->product_type_id) {
+            $productType = ProductType::find($request->product_type_id);
+            $fieldsConfig = $productType->getFieldsConfig();
+            
+            foreach ($fieldsConfig as $fieldName => $fieldConfig) {
+                if ($request->has($fieldName) && $request->$fieldName !== null) {
+                    $productSpecificData[$fieldName] = $request->$fieldName;
+                }
+            }
+        }
 
         $product->update([
             'name' => $request->name,
@@ -157,6 +172,8 @@ class ProductController extends Controller
             'sku' => $request->sku,
             'stock_quantity' => $request->stock_quantity,
             'category_id' => $request->category_id,
+            'product_type_id' => $request->product_type_id,
+            'product_specific_data' => $productSpecificData,
             'image' => $request->image,
             'is_featured' => $request->has('is_featured'),
             'is_active' => $request->has('is_active'),

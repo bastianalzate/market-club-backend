@@ -230,14 +230,7 @@ class RealBeerProductSeeder extends Seeder
 
     private function mapCountry($country)
     {
-        $countries = [
-            'Inglaterra' => 'Reino Unido',
-            'Italia' => 'Italia',
-            'República Checa' => 'República Checa',
-            'Estados Unidos' => 'Estados Unidos',
-            'Escocia' => 'Reino Unido',
-        ];
-
-        return $countries[$country] ?? $country;
+        // Mantener los países exactamente como están en la lista
+        return $country;
     }
 }
