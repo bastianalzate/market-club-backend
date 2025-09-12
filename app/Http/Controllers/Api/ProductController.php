@@ -90,6 +90,47 @@ class ProductController extends Controller
     }
 
     /**
+     * Display latest beers.
+     */
+    public function latestBeers(Request $request)
+    {
+        $query = Product::where('is_active', true)
+            ->whereHas('productType', function ($q) {
+                $q->where('name', 'Cervezas');
+            });
+
+        // Filtro por búsqueda
+        if ($request->has('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Ordenar por fecha de creación más reciente
+        $query->orderBy('created_at', 'desc');
+
+        // Límite de cervezas
+        $limit = $request->get('limit', 10);
+        $products = $query->limit($limit)->get();
+
+        // Formatear la respuesta con solo los campos necesarios
+        $formattedProducts = $products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'sale_price' => $product->sale_price,
+                'current_price' => $product->current_price,
+                'image_url' => $product->image_url,
+                'created_at' => $product->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
+
+        return response()->json($formattedProducts);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)

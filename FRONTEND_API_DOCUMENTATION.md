@@ -98,6 +98,42 @@ GET /api/products/featured?limit=10&category_id=1&search=cerveza&sort_by=price&s
 ]
 ```
 
+### Últimas Cervezas Agregadas
+
+```http
+GET /api/products/latest-beers?limit=10&search=cerveza
+```
+
+**Parámetros:**
+
+-   `limit` (opcional): Número máximo de cervezas a retornar (default: 10)
+-   `search` (opcional): Buscar en nombre y descripción
+
+**Respuesta:**
+
+```json
+[
+    {
+        "id": 1,
+        "name": "Cerveza Premium",
+        "price": 15000,
+        "sale_price": 12000,
+        "current_price": 12000,
+        "image_url": "http://localhost:8000/storage/products/2024/09/image.jpg",
+        "created_at": "2024-09-12 14:30:00"
+    },
+    {
+        "id": 2,
+        "name": "Cerveza Artesanal",
+        "price": 18000,
+        "sale_price": null,
+        "current_price": 18000,
+        "image_url": "http://localhost:8000/storage/products/2024/09/image2.jpg",
+        "created_at": "2024-09-12 14:25:00"
+    }
+]
+```
+
 ### Obtener Producto
 
 ```http
