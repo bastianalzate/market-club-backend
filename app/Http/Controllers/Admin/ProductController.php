@@ -31,6 +31,10 @@ class ProductController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
+        if ($request->filled('country')) {
+            $query->whereJsonContains('product_specific_data->country_of_origin', $request->country);
+        }
+
         if ($request->filled('status')) {
             if ($request->status === 'active') {
                 $query->where('is_active', true);
@@ -81,14 +85,25 @@ class ProductController extends Controller
 
         // Procesar datos específicos del tipo de producto
         $productSpecificData = [];
-        if ($request->product_type_id) {
-            $productType = ProductType::find($request->product_type_id);
-            $fieldsConfig = $productType->getFieldsConfig();
-            
-            foreach ($fieldsConfig as $fieldName => $fieldConfig) {
-                if ($request->has($fieldName) && $request->$fieldName !== null) {
-                    $productSpecificData[$fieldName] = $request->$fieldName;
-                }
+        
+        // Lista de campos específicos que pueden venir del formulario
+        $specificFields = [
+            'country_of_origin',
+            'volume_ml', 
+            'packaging_type',
+            'alcohol_content',
+            'beer_style',
+            'brewery',
+            'ibu',
+            'srm',
+            'ingredients',
+            'tasting_notes'
+        ];
+        
+        // Procesar cada campo específico
+        foreach ($specificFields as $fieldName) {
+            if ($request->has($fieldName) && $request->$fieldName !== null && $request->$fieldName !== '') {
+                $productSpecificData[$fieldName] = $request->$fieldName;
             }
         }
 
@@ -151,18 +166,38 @@ class ProductController extends Controller
         ]);
 
         // Procesar datos específicos del tipo de producto
-        $productSpecificData = [];
-        if ($request->product_type_id) {
-            $productType = ProductType::find($request->product_type_id);
-            $fieldsConfig = $productType->getFieldsConfig();
-            
-            foreach ($fieldsConfig as $fieldName => $fieldConfig) {
-                if ($request->has($fieldName) && $request->$fieldName !== null) {
-                    $productSpecificData[$fieldName] = $request->$fieldName;
+        $productSpecificData = $product->product_specific_data ?? []; // Preservar datos existentes
+        
+        // Lista de campos específicos que pueden venir del formulario
+        $specificFields = [
+            'country_of_origin',
+            'volume_ml', 
+            'packaging_type',
+            'alcohol_content',
+            'beer_style',
+            'brewery',
+            'ibu',
+            'srm',
+            'ingredients',
+            'tasting_notes'
+        ];
+        
+        // Procesar cada campo específico
+        foreach ($specificFields as $fieldName) {
+            if ($request->has($fieldName)) {
+                $value = $request->$fieldName;
+                
+                // Si el campo está vacío, lo eliminamos del array
+                if ($value === null || $value === '') {
+                    unset($productSpecificData[$fieldName]);
+                } else {
+                    $productSpecificData[$fieldName] = $value;
                 }
             }
         }
 
+
+        // Actualizar campos básicos
         $product->update([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
@@ -173,11 +208,14 @@ class ProductController extends Controller
             'stock_quantity' => $request->stock_quantity,
             'category_id' => $request->category_id,
             'product_type_id' => $request->product_type_id,
-            'product_specific_data' => $productSpecificData,
             'image' => $request->image,
             'is_featured' => $request->has('is_featured'),
             'is_active' => $request->has('is_active'),
         ]);
+
+        // Actualizar product_specific_data por separado
+        $product->product_specific_data = $productSpecificData;
+        $product->save();
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Producto actualizado exitosamente.');

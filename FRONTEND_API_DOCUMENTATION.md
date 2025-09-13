@@ -58,19 +58,53 @@ Authorization: Bearer {token}
 ### Listar Productos
 
 ```http
-GET /api/products?page=1&per_page=12&category=1&search=iphone&sort=price&order=asc
+GET /api/products?page=1&per_page=12&category_id=1&country=colombia&search=cerveza&sort_by=price&sort_order=asc
+```
+
+**Parámetros:**
+
+-   `page` (opcional): Número de página (default: 1)
+-   `per_page` (opcional): Productos por página (default: 15)
+-   `category_id` (opcional): Filtrar por categoría específica
+-   `country` (opcional): Filtrar por país de origen (colombia, alemania, belgica, espana, china, japon, holanda, escocia, inglaterra, reino unido, tailandia, mexico, peru)
+
+**Nota:** El frontend puede enviar nombres en minúsculas y sin tildes. El backend los mapea automáticamente a los nombres correctos almacenados en la base de datos.
+
+-   `search` (opcional): Buscar en nombre y descripción
+-   `featured` (opcional): true para solo productos destacados
+-   `sort_by` (opcional): Campo para ordenar (default: created_at)
+-   `sort_order` (opcional): Orden ascendente o descendente (default: desc)
+
+**Ejemplos de uso:**
+
+```http
+# Todas las cervezas
+GET /api/products
+
+# Cervezas de Colombia
+GET /api/products?country=colombia
+
+# Cervezas de Alemania con búsqueda
+GET /api/products?country=alemania&search=artesanal
+
+# Cervezas de Bélgica en categoría específica
+GET /api/products?country=belgica&category_id=1
+
+# Cervezas de México con límite
+GET /api/products?country=mexico&per_page=5
 ```
 
 ### Productos Destacados
 
 ```http
-GET /api/products/featured?limit=10&category_id=1&search=cerveza&sort_by=price&sort_order=asc
+GET /api/products/featured?limit=10&category_id=1&country=colombia&search=cerveza&sort_by=price&sort_order=asc
 ```
 
 **Parámetros:**
 
 -   `limit` (opcional): Número máximo de productos a retornar (default: 10)
 -   `category_id` (opcional): Filtrar por categoría específica
+-   `country` (opcional): Filtrar por país (colombia, alemania, belgica, espana, china, japon, holanda, escocia, reino unido, tailandia, mexico, peru)
 -   `search` (opcional): Buscar en nombre y descripción
 -   `sort_by` (opcional): Campo para ordenar (default: created_at)
 -   `sort_order` (opcional): Orden ascendente o descendente (default: desc)
@@ -101,12 +135,13 @@ GET /api/products/featured?limit=10&category_id=1&search=cerveza&sort_by=price&s
 ### Últimas Cervezas Agregadas
 
 ```http
-GET /api/products/latest-beers?limit=10&search=cerveza
+GET /api/products/latest-beers?limit=10&country=colombia&search=cerveza
 ```
 
 **Parámetros:**
 
 -   `limit` (opcional): Número máximo de cervezas a retornar (default: 10)
+-   `country` (opcional): Filtrar por país (colombia, alemania, belgica, espana, china, japon, holanda, escocia, reino unido, tailandia, mexico, peru)
 -   `search` (opcional): Buscar en nombre y descripción
 
 **Respuesta:**

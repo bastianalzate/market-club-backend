@@ -45,13 +45,38 @@
                 </div>
 
                 <div>
+                    <label for="country" class="block text-sm font-medium text-gray-700 mb-2">País</label>
+                    <select id="country" name="country"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Todos los países</option>
+                        <option value="Colombia" {{ request('country') == 'Colombia' ? 'selected' : '' }}>Colombia</option>
+                        <option value="Alemania" {{ request('country') == 'Alemania' ? 'selected' : '' }}>Alemania</option>
+                        <option value="Bélgica" {{ request('country') == 'Bélgica' ? 'selected' : '' }}>Bélgica</option>
+                        <option value="España" {{ request('country') == 'España' ? 'selected' : '' }}>España</option>
+                        <option value="China" {{ request('country') == 'China' ? 'selected' : '' }}>China</option>
+                        <option value="Japón" {{ request('country') == 'Japón' ? 'selected' : '' }}>Japón</option>
+                        <option value="Holanda" {{ request('country') == 'Holanda' ? 'selected' : '' }}>Holanda</option>
+                        <option value="Escocia" {{ request('country') == 'Escocia' ? 'selected' : '' }}>Escocia</option>
+                        <option value="Inglaterra" {{ request('country') == 'Inglaterra' ? 'selected' : '' }}>Inglaterra
+                        </option>
+                        <option value="Reino Unido" {{ request('country') == 'Reino Unido' ? 'selected' : '' }}>Reino Unido
+                        </option>
+                        <option value="Tailandia" {{ request('country') == 'Tailandia' ? 'selected' : '' }}>Tailandia
+                        </option>
+                        <option value="México" {{ request('country') == 'México' ? 'selected' : '' }}>México</option>
+                        <option value="Perú" {{ request('country') == 'Perú' ? 'selected' : '' }}>Perú</option>
+                    </select>
+                </div>
+
+                <div>
                     <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
                     <select id="status" name="status"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         <option value="">Todos los estados</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Activos</option>
                         <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactivos</option>
-                        <option value="featured" {{ request('status') == 'featured' ? 'selected' : '' }}>Destacados</option>
+                        <option value="featured" {{ request('status') == 'featured' ? 'selected' : '' }}>Destacados
+                        </option>
                         <option value="low_stock" {{ request('status') == 'low_stock' ? 'selected' : '' }}>Stock Bajo
                         </option>
                     </select>
@@ -87,6 +112,8 @@
                                 Producto</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Categoría</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                País</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Precio</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock
@@ -132,6 +159,12 @@
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                         {{ $product->category->name ?? 'Sin categoría' }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $product->product_specific_data['country_of_origin'] ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

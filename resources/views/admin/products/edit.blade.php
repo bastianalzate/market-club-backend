@@ -92,6 +92,7 @@
                     <div class="border-t border-gray-200 pt-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Características Específicas</h3>
 
+
                         <!-- Campos estáticos para cervezas -->
                         @if ($product->product_type_id && $product->productType && $product->productType->slug === 'cervezas')
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -149,9 +150,9 @@
 
                                 <!-- Tamaño -->
                                 <div>
-                                    <label for="volume_ml" class="block text-sm font-medium text-gray-700 mb-2">Tamaño (ml)
-                                        *</label>
-                                    <select name="volume_ml" id="volume_ml" required
+                                    <label for="volume_ml" class="block text-sm font-medium text-gray-700 mb-2">Tamaño
+                                        (ml)</label>
+                                    <select name="volume_ml" id="volume_ml"
                                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                         <option value="">Selecciona un tamaño</option>
                                         <option value="250"
@@ -184,8 +185,8 @@
                                 <!-- Tipo de Envase -->
                                 <div>
                                     <label for="packaging_type" class="block text-sm font-medium text-gray-700 mb-2">Tipo de
-                                        Envase *</label>
-                                    <select name="packaging_type" id="packaging_type" required
+                                        Envase</label>
+                                    <select name="packaging_type" id="packaging_type"
                                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                         <option value="">Selecciona un tipo</option>
                                         <option value="botella"

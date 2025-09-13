@@ -21,6 +21,12 @@ class ProductController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
+        // Filtro por país (nuevo)
+        if ($request->has('country') && $request->country) {
+            $normalizedCountry = $this->normalizeCountryName($request->country);
+            $query->whereJsonContains('product_specific_data->country_of_origin', $normalizedCountry);
+        }
+
         // Filtro por búsqueda
         if ($request->has('search')) {
             $query->where(function ($q) use ($request) {
@@ -55,6 +61,12 @@ class ProductController extends Controller
         // Filtro por categoría
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
+        }
+
+        // Filtro por país (nuevo)
+        if ($request->has('country') && $request->country) {
+            $normalizedCountry = $this->normalizeCountryName($request->country);
+            $query->whereJsonContains('product_specific_data->country_of_origin', $normalizedCountry);
         }
 
         // Filtro por búsqueda
@@ -98,6 +110,12 @@ class ProductController extends Controller
             ->whereHas('productType', function ($q) {
                 $q->where('name', 'Cervezas');
             });
+
+        // Filtro por país (nuevo)
+        if ($request->has('country') && $request->country) {
+            $normalizedCountry = $this->normalizeCountryName($request->country);
+            $query->whereJsonContains('product_specific_data->country_of_origin', $normalizedCountry);
+        }
 
         // Filtro por búsqueda
         if ($request->has('search')) {
@@ -194,5 +212,30 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Normalize country name from lowercase without accents to proper format
+     */
+    private function normalizeCountryName($country)
+    {
+        $countryMap = [
+            'colombia' => 'Colombia',
+            'alemania' => 'Alemania',
+            'belgica' => 'Bélgica',
+            'espana' => 'España',
+            'china' => 'China',
+            'japon' => 'Japón',
+            'holanda' => 'Holanda',
+            'escocia' => 'Escocia',
+            'inglaterra' => 'Inglaterra',
+            'reino unido' => 'Reino Unido',
+            'tailandia' => 'Tailandia',
+            'mexico' => 'México',
+            'peru' => 'Perú',
+        ];
+
+        $normalized = strtolower(trim($country));
+        return $countryMap[$normalized] ?? $country;
     }
 }
