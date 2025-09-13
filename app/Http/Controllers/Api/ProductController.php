@@ -27,6 +27,16 @@ class ProductController extends Controller
             $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.country_of_origin')) = ?", [$normalizedCountry]);
         }
 
+        // Filtro por estilo de cerveza (nuevo)
+        if ($request->has('beer_style') && $request->beer_style) {
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.beer_style')) = ?", [$request->beer_style]);
+        }
+
+        // Filtro por rango de precios (nuevo)
+        if ($request->has('price_range') && $request->price_range) {
+            $this->applyPriceFilter($query, $request->price_range);
+        }
+
         // Filtro por búsqueda
         if ($request->has('search')) {
             $query->where(function ($q) use ($request) {
@@ -67,6 +77,16 @@ class ProductController extends Controller
         if ($request->has('country') && $request->country) {
             $normalizedCountry = $this->normalizeCountryName($request->country);
             $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.country_of_origin')) = ?", [$normalizedCountry]);
+        }
+
+        // Filtro por estilo de cerveza (nuevo)
+        if ($request->has('beer_style') && $request->beer_style) {
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.beer_style')) = ?", [$request->beer_style]);
+        }
+
+        // Filtro por rango de precios (nuevo)
+        if ($request->has('price_range') && $request->price_range) {
+            $this->applyPriceFilter($query, $request->price_range);
         }
 
         // Filtro por búsqueda
@@ -115,6 +135,16 @@ class ProductController extends Controller
         if ($request->has('country') && $request->country) {
             $normalizedCountry = $this->normalizeCountryName($request->country);
             $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.country_of_origin')) = ?", [$normalizedCountry]);
+        }
+
+        // Filtro por estilo de cerveza (nuevo)
+        if ($request->has('beer_style') && $request->beer_style) {
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.beer_style')) = ?", [$request->beer_style]);
+        }
+
+        // Filtro por rango de precios (nuevo)
+        if ($request->has('price_range') && $request->price_range) {
+            $this->applyPriceFilter($query, $request->price_range);
         }
 
         // Filtro por búsqueda
@@ -212,6 +242,36 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Apply price range filter to query
+     */
+    private function applyPriceFilter($query, $priceRange)
+    {
+        switch ($priceRange) {
+            case 'less_than_15000':
+                $query->where('price', '<', 15000);
+                break;
+            case '15000_25000':
+                $query->whereBetween('price', [15000, 25000]);
+                break;
+            case '25000_35000':
+                $query->whereBetween('price', [25000, 35000]);
+                break;
+            case '35000_50000':
+                $query->whereBetween('price', [35000, 50000]);
+                break;
+            case '50000_75000':
+                $query->whereBetween('price', [50000, 75000]);
+                break;
+            case '75000_100000':
+                $query->whereBetween('price', [75000, 100000]);
+                break;
+            case 'more_than_100000':
+                $query->where('price', '>', 100000);
+                break;
+        }
     }
 
     /**

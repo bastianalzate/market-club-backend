@@ -58,7 +58,7 @@ Authorization: Bearer {token}
 ### Listar Productos
 
 ```http
-GET /api/products?page=1&per_page=12&category_id=1&country=colombia&search=cerveza&sort_by=price&sort_order=asc
+GET /api/products?page=1&per_page=12&category_id=1&country=colombia&beer_style=ipa&price_range=15000_25000&search=cerveza&sort_by=price&sort_order=asc
 ```
 
 **Parámetros:**
@@ -67,6 +67,8 @@ GET /api/products?page=1&per_page=12&category_id=1&country=colombia&search=cerve
 -   `per_page` (opcional): Productos por página (default: 15)
 -   `category_id` (opcional): Filtrar por categoría específica
 -   `country` (opcional): Filtrar por país de origen (inglaterra, colombia, alemania, italia, escocia, belgica, espana, paises bajos, japon, mexico, peru, republica checa, estados unidos, tailandia)
+-   `beer_style` (opcional): Filtrar por estilo de cerveza (ale, blonde, dark, ipa, lager, pale_ale, pilsner, porter, wheat)
+-   `price_range` (opcional): Filtrar por rango de precios (less_than_15000, 15000_25000, 25000_35000, 35000_50000, 50000_75000, 75000_100000, more_than_100000)
 
 **Nota:** El frontend puede enviar nombres en minúsculas y sin tildes. El backend los mapea automáticamente a los nombres correctos almacenados en la base de datos.
 
@@ -87,20 +89,38 @@ GET /api/products?country=inglaterra
 # Cervezas de Colombia
 GET /api/products?country=colombia
 
+# Cervezas IPA
+GET /api/products?beer_style=ipa
+
+# Cervezas Lager de Bélgica
+GET /api/products?country=belgica&beer_style=lager
+
+# Cervezas entre $15,000 y $25,000
+GET /api/products?price_range=15000_25000
+
+# Cervezas IPA entre $25,000 y $35,000
+GET /api/products?beer_style=ipa&price_range=25000_35000
+
 # Cervezas de Alemania con búsqueda
 GET /api/products?country=alemania&search=artesanal
+
+# Cervezas Porter de México
+GET /api/products?country=mexico&beer_style=porter
 
 # Cervezas de Bélgica en categoría específica
 GET /api/products?country=belgica&category_id=1
 
 # Cervezas de México con límite
 GET /api/products?country=mexico&per_page=5
+
+# Cervezas premium (más de $100,000)
+GET /api/products?price_range=more_than_100000
 ```
 
 ### Productos Destacados
 
 ```http
-GET /api/products/featured?limit=10&category_id=1&country=colombia&search=cerveza&sort_by=price&sort_order=asc
+GET /api/products/featured?limit=10&category_id=1&country=colombia&beer_style=ipa&price_range=15000_25000&search=cerveza&sort_by=price&sort_order=asc
 ```
 
 **Parámetros:**
@@ -108,6 +128,8 @@ GET /api/products/featured?limit=10&category_id=1&country=colombia&search=cervez
 -   `limit` (opcional): Número máximo de productos a retornar (default: 10)
 -   `category_id` (opcional): Filtrar por categoría específica
 -   `country` (opcional): Filtrar por país (colombia, alemania, belgica, espana, china, japon, holanda, escocia, reino unido, tailandia, mexico, peru)
+-   `beer_style` (opcional): Filtrar por estilo de cerveza (ale, blonde, dark, ipa, lager, pale_ale, pilsner, porter, wheat)
+-   `price_range` (opcional): Filtrar por rango de precios (less_than_15000, 15000_25000, 25000_35000, 35000_50000, 50000_75000, 75000_100000, more_than_100000)
 -   `search` (opcional): Buscar en nombre y descripción
 -   `sort_by` (opcional): Campo para ordenar (default: created_at)
 -   `sort_order` (opcional): Orden ascendente o descendente (default: desc)
@@ -138,13 +160,15 @@ GET /api/products/featured?limit=10&category_id=1&country=colombia&search=cervez
 ### Últimas Cervezas Agregadas
 
 ```http
-GET /api/products/latest-beers?limit=10&country=colombia&search=cerveza
+GET /api/products/latest-beers?limit=10&country=colombia&beer_style=ipa&price_range=15000_25000&search=cerveza
 ```
 
 **Parámetros:**
 
 -   `limit` (opcional): Número máximo de cervezas a retornar (default: 10)
 -   `country` (opcional): Filtrar por país (colombia, alemania, belgica, espana, china, japon, holanda, escocia, reino unido, tailandia, mexico, peru)
+-   `beer_style` (opcional): Filtrar por estilo de cerveza (ale, blonde, dark, ipa, lager, pale_ale, pilsner, porter, wheat)
+-   `price_range` (opcional): Filtrar por rango de precios (less_than_15000, 15000_25000, 25000_35000, 35000_50000, 50000_75000, 75000_100000, more_than_100000)
 -   `search` (opcional): Buscar en nombre y descripción
 
 **Respuesta:**
