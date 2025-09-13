@@ -66,7 +66,7 @@ GET /api/products?page=1&per_page=12&category_id=1&country=colombia&search=cerve
 -   `page` (opcional): Número de página (default: 1)
 -   `per_page` (opcional): Productos por página (default: 15)
 -   `category_id` (opcional): Filtrar por categoría específica
--   `country` (opcional): Filtrar por país de origen (colombia, alemania, belgica, espana, china, japon, holanda, escocia, inglaterra, reino unido, tailandia, mexico, peru)
+-   `country` (opcional): Filtrar por país de origen (inglaterra, colombia, alemania, italia, escocia, belgica, espana, paises bajos, japon, mexico, peru, republica checa, estados unidos, tailandia)
 
 **Nota:** El frontend puede enviar nombres en minúsculas y sin tildes. El backend los mapea automáticamente a los nombres correctos almacenados en la base de datos.
 
@@ -80,6 +80,9 @@ GET /api/products?page=1&per_page=12&category_id=1&country=colombia&search=cerve
 ```http
 # Todas las cervezas
 GET /api/products
+
+# Cervezas de Inglaterra
+GET /api/products?country=inglaterra
 
 # Cervezas de Colombia
 GET /api/products?country=colombia

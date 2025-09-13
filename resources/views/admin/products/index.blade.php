@@ -49,22 +49,25 @@
                     <select id="country" name="country"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         <option value="">Todos los países</option>
-                        <option value="Colombia" {{ request('country') == 'Colombia' ? 'selected' : '' }}>Colombia</option>
-                        <option value="Alemania" {{ request('country') == 'Alemania' ? 'selected' : '' }}>Alemania</option>
-                        <option value="Bélgica" {{ request('country') == 'Bélgica' ? 'selected' : '' }}>Bélgica</option>
-                        <option value="España" {{ request('country') == 'España' ? 'selected' : '' }}>España</option>
-                        <option value="China" {{ request('country') == 'China' ? 'selected' : '' }}>China</option>
-                        <option value="Japón" {{ request('country') == 'Japón' ? 'selected' : '' }}>Japón</option>
-                        <option value="Holanda" {{ request('country') == 'Holanda' ? 'selected' : '' }}>Holanda</option>
-                        <option value="Escocia" {{ request('country') == 'Escocia' ? 'selected' : '' }}>Escocia</option>
                         <option value="Inglaterra" {{ request('country') == 'Inglaterra' ? 'selected' : '' }}>Inglaterra
                         </option>
-                        <option value="Reino Unido" {{ request('country') == 'Reino Unido' ? 'selected' : '' }}>Reino Unido
-                        </option>
-                        <option value="Tailandia" {{ request('country') == 'Tailandia' ? 'selected' : '' }}>Tailandia
-                        </option>
+                        <option value="Colombia" {{ request('country') == 'Colombia' ? 'selected' : '' }}>Colombia</option>
+                        <option value="Alemania" {{ request('country') == 'Alemania' ? 'selected' : '' }}>Alemania</option>
+                        <option value="Italia" {{ request('country') == 'Italia' ? 'selected' : '' }}>Italia</option>
+                        <option value="Escocia" {{ request('country') == 'Escocia' ? 'selected' : '' }}>Escocia</option>
+                        <option value="Bélgica" {{ request('country') == 'Bélgica' ? 'selected' : '' }}>Bélgica</option>
+                        <option value="España" {{ request('country') == 'España' ? 'selected' : '' }}>España</option>
+                        <option value="Países Bajos" {{ request('country') == 'Países Bajos' ? 'selected' : '' }}>Países
+                            Bajos</option>
+                        <option value="Japón" {{ request('country') == 'Japón' ? 'selected' : '' }}>Japón</option>
                         <option value="México" {{ request('country') == 'México' ? 'selected' : '' }}>México</option>
                         <option value="Perú" {{ request('country') == 'Perú' ? 'selected' : '' }}>Perú</option>
+                        <option value="República Checa" {{ request('country') == 'República Checa' ? 'selected' : '' }}>
+                            República Checa</option>
+                        <option value="Estados Unidos" {{ request('country') == 'Estados Unidos' ? 'selected' : '' }}>
+                            Estados Unidos</option>
+                        <option value="Tailandia" {{ request('country') == 'Tailandia' ? 'selected' : '' }}>Tailandia
+                        </option>
                     </select>
                 </div>
 

@@ -24,7 +24,7 @@ class ProductController extends Controller
         // Filtro por país (nuevo)
         if ($request->has('country') && $request->country) {
             $normalizedCountry = $this->normalizeCountryName($request->country);
-            $query->whereJsonContains('product_specific_data->country_of_origin', $normalizedCountry);
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.country_of_origin')) = ?", [$normalizedCountry]);
         }
 
         // Filtro por búsqueda
@@ -66,7 +66,7 @@ class ProductController extends Controller
         // Filtro por país (nuevo)
         if ($request->has('country') && $request->country) {
             $normalizedCountry = $this->normalizeCountryName($request->country);
-            $query->whereJsonContains('product_specific_data->country_of_origin', $normalizedCountry);
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.country_of_origin')) = ?", [$normalizedCountry]);
         }
 
         // Filtro por búsqueda
@@ -114,7 +114,7 @@ class ProductController extends Controller
         // Filtro por país (nuevo)
         if ($request->has('country') && $request->country) {
             $normalizedCountry = $this->normalizeCountryName($request->country);
-            $query->whereJsonContains('product_specific_data->country_of_origin', $normalizedCountry);
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.country_of_origin')) = ?", [$normalizedCountry]);
         }
 
         // Filtro por búsqueda
@@ -220,19 +220,20 @@ class ProductController extends Controller
     private function normalizeCountryName($country)
     {
         $countryMap = [
+            'inglaterra' => 'Inglaterra',
             'colombia' => 'Colombia',
             'alemania' => 'Alemania',
+            'italia' => 'Italia',
+            'escocia' => 'Escocia',
             'belgica' => 'Bélgica',
             'espana' => 'España',
-            'china' => 'China',
+            'paises bajos' => 'Países Bajos',
             'japon' => 'Japón',
-            'holanda' => 'Holanda',
-            'escocia' => 'Escocia',
-            'inglaterra' => 'Inglaterra',
-            'reino unido' => 'Reino Unido',
-            'tailandia' => 'Tailandia',
             'mexico' => 'México',
             'peru' => 'Perú',
+            'republica checa' => 'República Checa',
+            'estados unidos' => 'Estados Unidos',
+            'tailandia' => 'Tailandia',
         ];
 
         $normalized = strtolower(trim($country));

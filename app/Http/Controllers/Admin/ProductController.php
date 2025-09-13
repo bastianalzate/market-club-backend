@@ -32,7 +32,7 @@ class ProductController extends Controller
         }
 
         if ($request->filled('country')) {
-            $query->whereJsonContains('product_specific_data->country_of_origin', $request->country);
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.country_of_origin')) = ?", [$request->country]);
         }
 
         if ($request->filled('status')) {
