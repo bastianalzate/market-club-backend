@@ -22,6 +22,7 @@ class Cart extends Model
     ];
 
     protected $casts = [
+        'user_id' => 'integer',
         'subtotal' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'shipping_amount' => 'decimal:2',
@@ -34,7 +35,7 @@ class Cart extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withDefault();
     }
 
     /**
@@ -50,10 +51,14 @@ class Cart extends Model
      */
     public static function getActiveCart($userId, $sessionId = null)
     {
-        $query = static::where('user_id', $userId);
+        $query = static::query();
         
-        if ($sessionId) {
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } elseif ($sessionId) {
             $query->where('session_id', $sessionId);
+        } else {
+            return null;
         }
 
         return $query->with(['items.product'])->first();

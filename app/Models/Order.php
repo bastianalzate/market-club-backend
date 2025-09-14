@@ -43,9 +43,8 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function generateOrderNumber()
+    public static function generateOrderNumber()
     {
-        $this->order_number = 'ORD-' . strtoupper(uniqid());
-        return $this->order_number;
+        return 'ORD-' . strtoupper(uniqid());
     }
 }

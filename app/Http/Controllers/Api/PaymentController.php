@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\WompiService;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,10 +15,12 @@ use Illuminate\Support\Facades\Validator;
 class PaymentController extends Controller
 {
     protected $wompiService;
+    protected $emailService;
 
-    public function __construct(WompiService $wompiService)
+    public function __construct(WompiService $wompiService, EmailService $emailService)
     {
         $this->wompiService = $wompiService;
+        $this->emailService = $emailService;
     }
 
     /**
@@ -124,12 +127,18 @@ class PaymentController extends Controller
                 $transaction = $result['data']['data'];
 
                 // Actualizar orden con información de pago
+                $oldStatus = $order->status;
                 $order->update([
                     'payment_method' => $request->payment_method_type,
                     'payment_reference' => $transaction['id'],
                     'payment_status' => $transaction['status'] === 'APPROVED' ? 'paid' : 'pending',
                     'status' => $transaction['status'] === 'APPROVED' ? 'processing' : 'pending',
                 ]);
+
+                // Enviar email de confirmación de pago si fue aprobado
+                if ($transaction['status'] === 'APPROVED') {
+                    $this->emailService->sendPaymentConfirmation($order);
+                }
 
                 DB::commit();
 
@@ -289,6 +298,83 @@ class PaymentController extends Controller
             'message' => 'Error al obtener métodos de pago',
             'error' => $result['error'],
         ], 400);
+    }
+
+    /**
+     * Crear sesión de pago con Wompi
+     */
+    public function createWompiSession(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required|exists:orders,id',
+            'amount' => 'required|numeric|min:1',
+            'currency' => 'required|string|in:COP',
+            'customer_email' => 'required|email',
+            'customer_name' => 'required|string|max:255',
+            'customer_phone' => 'nullable|string|max:20',
+            'redirect_url' => 'required|url',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos de sesión inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $order = Order::findOrFail($request->order_id);
+
+            // Preparar datos para Wompi
+            $sessionData = [
+                'amount_in_cents' => $this->wompiService->convertToCents($request->amount),
+                'currency' => $request->currency,
+                'customer_email' => $request->customer_email,
+                'customer_name' => $request->customer_name,
+                'customer_phone' => $request->customer_phone ?? '',
+                'reference' => $this->wompiService->generateReference('ORDER_' . $order->id),
+                'redirect_url' => $request->redirect_url,
+                'shipping_address' => $order->shipping_address,
+            ];
+
+            // Crear sesión en Wompi
+            $result = $this->wompiService->createTransaction($sessionData);
+
+            if ($result['success']) {
+                $transaction = $result['data']['data'];
+
+                // Actualizar orden con información de pago
+                $order->update([
+                    'payment_reference' => $transaction['id'],
+                    'payment_status' => 'pending',
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Sesión de pago creada exitosamente',
+                    'data' => [
+                        'session_id' => $transaction['id'],
+                        'payment_url' => $transaction['payment_url'] ?? null,
+                        'order' => $order->fresh(),
+                    ],
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear sesión de pago',
+                'error' => $result['error'],
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('Wompi session creation error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor',
+            ], 500);
+        }
     }
 
     /**

@@ -19,7 +19,23 @@ class CartController extends Controller
         $user = Auth::user();
         $sessionId = $request->header('X-Session-ID');
 
-        $cart = Cart::getOrCreateActiveCart($user->id, $sessionId);
+        // Si no hay usuario autenticado y no hay session_id, devolver carrito vacío
+        if (!$user && !$sessionId) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'cart' => null,
+                    'items_count' => 0,
+                    'subtotal' => 0,
+                    'tax_amount' => 0,
+                    'shipping_amount' => 0,
+                    'total_amount' => 0,
+                    'is_empty' => true,
+                ],
+            ]);
+        }
+
+        $cart = Cart::getOrCreateActiveCart($user?->id, $sessionId);
 
         return response()->json([
             'success' => true,
@@ -30,6 +46,7 @@ class CartController extends Controller
                 'tax_amount' => $cart->tax_amount,
                 'shipping_amount' => $cart->shipping_amount,
                 'total_amount' => $cart->total_amount,
+                'is_empty' => $cart->isEmpty(),
             ],
         ]);
     }
@@ -57,6 +74,14 @@ class CartController extends Controller
         $productId = $request->product_id;
         $quantity = $request->quantity ?? 1;
 
+        // Si no hay usuario autenticado y no hay session_id, devolver error
+        if (!$user && !$sessionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session ID requerido para usuarios no autenticados',
+            ], 400);
+        }
+
         // Verificar que el producto esté disponible
         $product = Product::where('id', $productId)
             ->where('is_active', true)
@@ -78,7 +103,7 @@ class CartController extends Controller
             ], 400);
         }
 
-        $cart = Cart::getOrCreateActiveCart($user->id, $sessionId);
+        $cart = Cart::getOrCreateActiveCart($user?->id, $sessionId);
         $cart->addProduct($productId, $quantity);
 
         return response()->json([
@@ -114,7 +139,15 @@ class CartController extends Controller
         $productId = $request->product_id;
         $quantity = $request->quantity;
 
-        $cart = Cart::getActiveCart($user->id, $sessionId);
+        // Si no hay usuario autenticado y no hay session_id, devolver error
+        if (!$user && !$sessionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session ID requerido para usuarios no autenticados',
+            ], 400);
+        }
+
+        $cart = Cart::getActiveCart($user?->id, $sessionId);
 
         if (!$cart) {
             return response()->json([
@@ -172,7 +205,15 @@ class CartController extends Controller
         $sessionId = $request->header('X-Session-ID');
         $productId = $request->product_id;
 
-        $cart = Cart::getActiveCart($user->id, $sessionId);
+        // Si no hay usuario autenticado y no hay session_id, devolver error
+        if (!$user && !$sessionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session ID requerido para usuarios no autenticados',
+            ], 400);
+        }
+
+        $cart = Cart::getActiveCart($user?->id, $sessionId);
 
         if (!$cart) {
             return response()->json([
@@ -201,7 +242,15 @@ class CartController extends Controller
         $user = Auth::user();
         $sessionId = $request->header('X-Session-ID');
 
-        $cart = Cart::getActiveCart($user->id, $sessionId);
+        // Si no hay usuario autenticado y no hay session_id, devolver error
+        if (!$user && !$sessionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session ID requerido para usuarios no autenticados',
+            ], 400);
+        }
+
+        $cart = Cart::getActiveCart($user?->id, $sessionId);
 
         if (!$cart) {
             return response()->json([
@@ -230,7 +279,22 @@ class CartController extends Controller
         $user = Auth::user();
         $sessionId = $request->header('X-Session-ID');
 
-        $cart = Cart::getActiveCart($user->id, $sessionId);
+        // Si no hay usuario autenticado y no hay session_id, devolver carrito vacío
+        if (!$user && !$sessionId) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'items_count' => 0,
+                    'subtotal' => 0,
+                    'tax_amount' => 0,
+                    'shipping_amount' => 0,
+                    'total_amount' => 0,
+                    'is_empty' => true,
+                ],
+            ]);
+        }
+
+        $cart = Cart::getActiveCart($user?->id, $sessionId);
 
         if (!$cart || $cart->isEmpty()) {
             return response()->json([

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,13 @@ use Illuminate\Support\Facades\Validator;
 
 class CheckoutController extends Controller
 {
+    protected $emailService;
+
+    public function __construct(EmailService $emailService)
+    {
+        $this->emailService = $emailService;
+    }
+
     /**
      * Crear orden desde el carrito
      */
@@ -49,8 +57,16 @@ class CheckoutController extends Controller
         $user = Auth::user();
         $sessionId = $request->header('X-Session-ID');
 
+        // Si no hay usuario autenticado y no hay session_id, devolver error
+        if (!$user && !$sessionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session ID requerido para usuarios no autenticados',
+            ], 400);
+        }
+
         // Obtener carrito activo
-        $cart = Cart::getActiveCart($user->id, $sessionId);
+        $cart = Cart::getActiveCart($user?->id, $sessionId);
 
         if (!$cart || $cart->isEmpty()) {
             return response()->json([
@@ -78,7 +94,7 @@ class CheckoutController extends Controller
             // Crear orden
             $order = Order::create([
                 'order_number' => Order::generateOrderNumber(),
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'status' => 'pending',
                 'subtotal' => $cart->subtotal,
                 'tax_amount' => $cart->tax_amount,
@@ -107,6 +123,9 @@ class CheckoutController extends Controller
             // Limpiar carrito
             $cart->clear();
 
+            // Enviar email de confirmación
+            $this->emailService->sendOrderConfirmation($order);
+
             DB::commit();
 
             return response()->json([
@@ -114,6 +133,11 @@ class CheckoutController extends Controller
                 'message' => 'Orden creada exitosamente',
                 'data' => [
                     'order' => $order->load(['orderItems.product', 'user']),
+                    'user_status' => [
+                        'is_authenticated' => $user ? true : false,
+                        'can_track_order' => $user ? true : false,
+                        'login_suggestion' => $user ? null : 'Crea una cuenta para rastrear tu pedido y acceder a ofertas exclusivas'
+                    ]
                 ],
             ]);
 
@@ -136,7 +160,15 @@ class CheckoutController extends Controller
         $user = Auth::user();
         $sessionId = $request->header('X-Session-ID');
 
-        $cart = Cart::getActiveCart($user->id, $sessionId);
+        // Si no hay usuario autenticado y no hay session_id, devolver error
+        if (!$user && !$sessionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session ID requerido para usuarios no autenticados',
+            ], 400);
+        }
+
+        $cart = Cart::getActiveCart($user?->id, $sessionId);
 
         if (!$cart || $cart->isEmpty()) {
             return response()->json([
@@ -176,6 +208,16 @@ class CheckoutController extends Controller
                 'total_amount' => $cart->total_amount,
                 'shipping_free_threshold' => 100000,
                 'is_shipping_free' => $cart->subtotal >= 100000,
+                'user_status' => [
+                    'is_authenticated' => $user ? true : false,
+                    'login_benefits' => $user ? [] : [
+                        'track_orders' => 'Rastrea tus pedidos en tiempo real',
+                        'order_history' => 'Accede a tu historial de compras',
+                        'wishlist' => 'Guarda productos en tu lista de deseos',
+                        'faster_checkout' => 'Checkout más rápido con datos guardados',
+                        'exclusive_offers' => 'Ofertas exclusivas para miembros'
+                    ]
+                ]
             ],
         ]);
     }
@@ -242,7 +284,16 @@ class CheckoutController extends Controller
 
         $user = Auth::user();
         $sessionId = $request->header('X-Session-ID');
-        $cart = Cart::getActiveCart($user->id, $sessionId);
+
+        // Si no hay usuario autenticado y no hay session_id, devolver error
+        if (!$user && !$sessionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session ID requerido para usuarios no autenticados',
+            ], 400);
+        }
+
+        $cart = Cart::getActiveCart($user?->id, $sessionId);
 
         if (!$cart) {
             return response()->json([
@@ -286,6 +337,65 @@ class CheckoutController extends Controller
                         'days' => 1,
                     ],
                 ],
+            ],
+        ]);
+    }
+
+    /**
+     * Sincronizar carrito de sesión con usuario autenticado
+     */
+    public function syncCartAfterLogin(Request $request)
+    {
+        $user = Auth::user();
+        $sessionId = $request->header('X-Session-ID');
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no autenticado',
+            ], 401);
+        }
+
+        if (!$sessionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session ID requerido',
+            ], 400);
+        }
+
+        // Obtener carrito de sesión
+        $sessionCart = Cart::getActiveCart(null, $sessionId);
+        
+        // Obtener carrito del usuario
+        $userCart = Cart::getActiveCart($user->id, null);
+
+        if ($sessionCart && $sessionCart->items()->count() > 0) {
+            if ($userCart) {
+                // Fusionar carritos
+                foreach ($sessionCart->items as $sessionItem) {
+                    $userCart->addProduct($sessionItem->product_id, $sessionItem->quantity);
+                }
+                $sessionCart->delete();
+            } else {
+                // Asignar carrito de sesión al usuario
+                $sessionCart->update(['user_id' => $user->id, 'session_id' => null]);
+            }
+        }
+
+        $finalCart = Cart::getActiveCart($user->id, null);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Carrito sincronizado exitosamente',
+            'data' => [
+                'cart' => $finalCart,
+                'items_count' => $finalCart ? $finalCart->total_items : 0,
+                'benefits_unlocked' => [
+                    'track_orders' => 'Ahora puedes rastrear tus pedidos',
+                    'order_history' => 'Accede a tu historial de compras',
+                    'wishlist' => 'Guarda productos en tu lista de deseos',
+                    'faster_checkout' => 'Checkout más rápido con datos guardados'
+                ]
             ],
         ]);
     }

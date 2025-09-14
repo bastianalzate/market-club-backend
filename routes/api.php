@@ -46,9 +46,25 @@ Route::get('/search/related/{product}', [SearchController::class, 'related']);
 // Rutas de pago públicas
 Route::post('/payments/token', [PaymentController::class, 'createPaymentToken']);
 Route::get('/payments/methods', [PaymentController::class, 'getPaymentMethods']);
+Route::post('/payments/wompi/create-session', [PaymentController::class, 'createWompiSession']);
 
 // Webhook de Wompi (sin autenticación)
 Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
+
+// Carrito de compras (público - funciona con session_id)
+Route::get('/cart', [CartController::class, 'index']);
+Route::post('/cart/add', [CartController::class, 'addProduct']);
+Route::put('/cart/update', [CartController::class, 'updateQuantity']);
+Route::delete('/cart/remove', [CartController::class, 'removeProduct']);
+Route::delete('/cart/clear', [CartController::class, 'clear']);
+Route::get('/cart/summary', [CartController::class, 'summary']);
+
+// Checkout (público - funciona con session_id)
+Route::get('/checkout/summary', [CheckoutController::class, 'getCheckoutSummary']);
+Route::post('/checkout/validate-address', [CheckoutController::class, 'validateShippingAddress']);
+Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping']);
+Route::post('/checkout/create-order', [CheckoutController::class, 'createOrder']);
+Route::post('/checkout/sync-cart', [CheckoutController::class, 'syncCartAfterLogin']);
 
 // Rutas protegidas con Sanctum
 Route::middleware('auth:sanctum')->group(function () {
@@ -59,13 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Órdenes del usuario
     Route::apiResource('orders', OrderController::class);
     
-    // Carrito de compras
-    Route::get('/cart', [CartController::class, 'index']);
-    Route::post('/cart/add', [CartController::class, 'addProduct']);
-    Route::put('/cart/update', [CartController::class, 'updateQuantity']);
-    Route::delete('/cart/remove', [CartController::class, 'removeProduct']);
-    Route::delete('/cart/clear', [CartController::class, 'clear']);
-    Route::get('/cart/summary', [CartController::class, 'summary']);
+    // Sincronización de carrito (solo para usuarios autenticados)
     Route::post('/cart/sync', [CartController::class, 'sync']);
     
     // Wishlist
@@ -75,12 +85,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wishlist/check', [WishlistController::class, 'checkProduct']);
     Route::delete('/wishlist/clear', [WishlistController::class, 'clear']);
     Route::post('/wishlist/move-to-cart', [WishlistController::class, 'moveToCart']);
-    
-    // Checkout
-    Route::get('/checkout/summary', [CheckoutController::class, 'getCheckoutSummary']);
-    Route::post('/checkout/validate-address', [CheckoutController::class, 'validateShippingAddress']);
-    Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping']);
-    Route::post('/checkout/create-order', [CheckoutController::class, 'createOrder']);
     
     // Rutas de pago protegidas
     Route::post('/payments/process', [PaymentController::class, 'processPayment']);
