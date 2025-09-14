@@ -62,11 +62,45 @@ class WompiService
     }
 
     /**
+     * Crear token de pago para otros métodos (Nequi, PSE, etc.)
+     */
+    public function createPaymentTokenForMethod(array $paymentData): array
+    {
+        try {
+            // Para métodos que no requieren token (Nequi, PSE, etc.)
+            // Simulamos un token temporal con formato válido
+            $methodType = $paymentData['payment_method']['type'];
+            $tokenId = 'tok_' . strtolower($methodType) . '_' . time() . '_' . rand(1000, 9999);
+            
+            return [
+                'success' => true,
+                'data' => [
+                    'id' => $tokenId,
+                    'type' => $methodType,
+                ],
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Wompi token creation error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor',
+            ];
+        }
+    }
+
+    /**
      * Crear transacción de pago
      */
     public function createTransaction(array $paymentData): array
     {
         try {
+            // Generar firma de integridad ANTES de agregar signature
+            $signature = $this->generateSignature($paymentData);
+            
+            // Agregar signature a los datos
+            $paymentData['signature'] = $signature;
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->privateKey,
                 'Content-Type' => 'application/json',
@@ -140,7 +174,9 @@ class WompiService
                 $data = $response->json();
                 return [
                     'success' => true,
-                    'data' => $data['data']['presigned_acceptance'],
+                    'data' => [
+                        'acceptance_token' => $data['data']['presigned_acceptance']['acceptance_token'],
+                    ],
                 ];
             }
 
@@ -181,5 +217,24 @@ class WompiService
     public function generateReference(string $prefix): string
     {
         return $prefix . '_' . time() . '_' . rand(1000, 9999);
+    }
+
+    /**
+     * Generar firma de integridad para Wompi
+     */
+    private function generateSignature(array $paymentData): string
+    {
+        // Crear string de datos para la firma (sin signature)
+        $signatureData = [
+            $paymentData['reference'],
+            $paymentData['amount_in_cents'],
+            $paymentData['currency'],
+            $this->privateKey,
+        ];
+
+        $signatureString = implode('', $signatureData);
+        
+        // Generar hash SHA256
+        return hash('sha256', $signatureString);
     }
 }

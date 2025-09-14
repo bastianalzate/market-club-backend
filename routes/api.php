@@ -47,6 +47,9 @@ Route::get('/search/related/{product}', [SearchController::class, 'related']);
 Route::post('/payments/token', [PaymentController::class, 'createPaymentToken']);
 Route::get('/payments/methods', [PaymentController::class, 'getPaymentMethods']);
 Route::post('/payments/wompi/create-session', [PaymentController::class, 'createWompiSession']);
+Route::post('/payments/wompi/create-widget', [PaymentController::class, 'createWompiWidget']);
+Route::post('/payments/wompi/create-checkout', [PaymentController::class, 'createWompiCheckout']);
+Route::post('/payments/check-status', [PaymentController::class, 'checkPaymentStatus']);
 
 // Webhook de Wompi (sin autenticación)
 Route::post('/payments/webhook', [PaymentController::class, 'webhook']);

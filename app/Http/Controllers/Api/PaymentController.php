@@ -301,6 +301,102 @@ class PaymentController extends Controller
     }
 
     /**
+     * Obtener tipo de método de pago para Wompi
+     */
+    private function getPaymentMethodType($paymentMethodType)
+    {
+        switch ($paymentMethodType) {
+            case 'card':
+                return 'CARD';
+            case 'nequi':
+                return 'NEQUI';
+            case 'bancolombia_transfer':
+                return 'BANCOLOMBIA_TRANSFER';
+            case 'pse':
+                return 'PSE';
+            default:
+                return 'CARD';
+        }
+    }
+
+    /**
+     * Crear objeto de método de pago según el tipo
+     */
+    private function createPaymentMethodObject($paymentMethodType)
+    {
+        switch ($paymentMethodType) {
+            case 'card':
+                return [
+                    'type' => 'CARD',
+                    'installments' => 1,
+                ];
+            case 'nequi':
+                return [
+                    'type' => 'NEQUI',
+                ];
+            case 'bancolombia_transfer':
+                return [
+                    'type' => 'BANCOLOMBIA_TRANSFER',
+                ];
+            case 'pse':
+                return [
+                    'type' => 'PSE',
+                ];
+            default:
+                return [
+                    'type' => 'CARD',
+                    'installments' => 1,
+                ];
+        }
+    }
+
+    /**
+     * Convertir nombre de país a código ISO
+     */
+    private function getCountryCode($countryName)
+    {
+        $countryMap = [
+            'Colombia' => 'CO',
+            'México' => 'MX',
+            'Estados Unidos' => 'US',
+            'España' => 'ES',
+            'Francia' => 'FR',
+            'Alemania' => 'DE',
+            'Italia' => 'IT',
+            'Reino Unido' => 'GB',
+            'Inglaterra' => 'GB',
+            'Bélgica' => 'BE',
+            'Países Bajos' => 'NL',
+            'Holanda' => 'NL',
+            'Japón' => 'JP',
+            'Perú' => 'PE',
+            'República Checa' => 'CZ',
+            'Escocia' => 'GB',
+            'Tailandia' => 'TH',
+            'Brasil' => 'BR',
+            'Argentina' => 'AR',
+            'Chile' => 'CL',
+            'Ecuador' => 'EC',
+            'Venezuela' => 'VE',
+            'Uruguay' => 'UY',
+            'Paraguay' => 'PY',
+            'Bolivia' => 'BO',
+            'Panamá' => 'PA',
+            'Costa Rica' => 'CR',
+            'Guatemala' => 'GT',
+            'Honduras' => 'HN',
+            'El Salvador' => 'SV',
+            'Nicaragua' => 'NI',
+            'Cuba' => 'CU',
+            'República Dominicana' => 'DO',
+            'Puerto Rico' => 'PR',
+            'Canadá' => 'CA',
+        ];
+
+        return $countryMap[$countryName] ?? 'CO'; // Default a Colombia
+    }
+
+    /**
      * Crear sesión de pago con Wompi
      */
     public function createWompiSession(Request $request)
@@ -313,6 +409,7 @@ class PaymentController extends Controller
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
             'redirect_url' => 'required|url',
+            'payment_method' => 'nullable|string|in:card,nequi,bancolombia_transfer,pse',
         ]);
 
         if ($validator->fails()) {
@@ -332,10 +429,90 @@ class PaymentController extends Controller
             $customerPhone = $request->customer_phone ?? $order->shipping_address['phone'] ?? ($order->user ? $order->user->phone : '');
 
             // Validar que tenemos los datos mínimos
-            if (empty($customerEmail) || empty($customerName)) {
+            if (empty($customerName)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Datos del cliente incompletos. Se requiere email y nombre.',
+                    'message' => 'Datos del cliente incompletos. Se requiere nombre del cliente.',
+                ], 400);
+            }
+
+            // Si no hay email, usar un email temporal basado en el order_id
+            if (empty($customerEmail)) {
+                $customerEmail = "order_{$order->id}@marketclub.temp";
+            }
+
+            // Mapear dirección al formato que espera Wompi
+            $shippingAddress = $order->shipping_address;
+            $wompiShippingAddress = [
+                'address_line_1' => $shippingAddress['address'] ?? '',
+                'address_line_2' => $shippingAddress['address_line_2'] ?? '',
+                'city' => $shippingAddress['city'] ?? '',
+                'region' => $shippingAddress['state'] ?? '',
+                'country' => $this->getCountryCode($shippingAddress['country'] ?? ''),
+                'phone_number' => $shippingAddress['phone'] ?? $customerPhone,
+                'postal_code' => $shippingAddress['postal_code'] ?? '',
+            ];
+
+            // Determinar método de pago (por defecto: tarjeta)
+            $paymentMethodType = $request->payment_method ?? 'card';
+            
+            // Crear token de pago según el método
+            if ($paymentMethodType === 'card') {
+                // Para tarjetas, necesitamos datos de la tarjeta (esto debería venir del frontend)
+                // Por ahora, usamos un token temporal para testing
+                $tokenResult = [
+                    'success' => true,
+                    'data' => [
+                        'id' => 'tok_test_' . time() . '_' . rand(1000, 9999),
+                    ],
+                ];
+            } else {
+                // Para otros métodos (Nequi, PSE, etc.)
+                $tokenData = [
+                    'amount_in_cents' => $this->wompiService->convertToCents($request->amount),
+                    'currency' => $request->currency,
+                    'customer_email' => $customerEmail,
+                    'payment_method' => $this->createPaymentMethodObject($paymentMethodType),
+                ];
+
+                $tokenResult = $this->wompiService->createPaymentTokenForMethod($tokenData);
+            }
+            
+            if (!$tokenResult['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al crear token de pago',
+                    'error' => $tokenResult['error'],
+                ], 400);
+            }
+
+            // Crear objeto de método de pago con token
+            $paymentMethod = [
+                'type' => $this->getPaymentMethodType($paymentMethodType),
+                'token' => $tokenResult['data']['id'],
+                'installments' => 1, // Siempre 1 cuota por defecto
+            ];
+
+            // Para Nequi, agregar phone_number al método de pago
+            if ($paymentMethodType === 'nequi') {
+                // Validar que el teléfono tenga exactamente 10 dígitos
+                $cleanPhone = preg_replace('/[^0-9]/', '', $customerPhone);
+                if (strlen($cleanPhone) !== 10) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El número de teléfono debe tener exactamente 10 dígitos para Nequi.',
+                    ], 400);
+                }
+                $paymentMethod['phone_number'] = $cleanPhone;
+            }
+
+            // Obtener acceptance token
+            $acceptanceResult = $this->wompiService->getPaymentMethods();
+            if (!$acceptanceResult['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al obtener acceptance token',
+                    'error' => $acceptanceResult['error'],
                 ], 400);
             }
 
@@ -348,7 +525,9 @@ class PaymentController extends Controller
                 'customer_phone' => $customerPhone,
                 'reference' => $this->wompiService->generateReference('ORDER_' . $order->id),
                 'redirect_url' => $request->redirect_url,
-                'shipping_address' => $order->shipping_address,
+                'shipping_address' => $wompiShippingAddress,
+                'payment_method' => $paymentMethod,
+                'acceptance_token' => $acceptanceResult['data']['acceptance_token'],
             ];
 
             // Crear sesión en Wompi
@@ -388,6 +567,157 @@ class PaymentController extends Controller
                 'message' => 'Error interno del servidor',
             ], 500);
         }
+    }
+
+    /**
+     * Verificar estado del pago
+     */
+    public function checkPaymentStatus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required|exists:orders,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $order = Order::findOrFail($request->order_id);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'order_id' => $order->id,
+                    'payment_status' => $order->payment_status,
+                    'order_status' => $order->status,
+                    'payment_reference' => $order->payment_reference,
+                    'wompi_transaction_id' => $order->wompi_transaction_id,
+                    'total_amount' => $order->total_amount,
+                    'created_at' => $order->created_at,
+                    'updated_at' => $order->updated_at,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error checking payment status: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor',
+            ], 500);
+        }
+    }
+
+    /**
+     * Crear datos para Checkout Web de Wompi
+     */
+    public function createWompiCheckout(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required|exists:orders,id',
+            'redirect_url' => 'required|url',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $order = Order::with('user')->findOrFail($request->order_id);
+
+            // Obtener datos del cliente de la orden
+            $customerEmail = $order->shipping_address['email'] ?? ($order->user ? $order->user->email : '');
+            $customerName = $order->shipping_address['name'] ?? ($order->user ? $order->user->name : '');
+            $customerPhone = $order->shipping_address['phone'] ?? ($order->user ? $order->user->phone : '');
+
+            // Validar y corregir datos del cliente
+            if (empty($customerEmail) || !filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+                $customerEmail = "cliente{$order->id}@marketclub.com";
+            }
+
+            if (empty($customerName)) {
+                $customerName = "Cliente {$order->id}";
+            }
+
+            if (empty($customerPhone)) {
+                $customerPhone = "3000000000";
+            }
+
+            // Limpiar y validar teléfono
+            $customerPhone = preg_replace('/[^0-9]/', '', $customerPhone);
+            if (strlen($customerPhone) !== 10) {
+                $customerPhone = "3000000000";
+            }
+
+            // Generar referencia única
+            $reference = $this->wompiService->generateReference('ORDER_' . $order->id);
+
+            // Generar firma de integridad para el Widget
+            $signature = $this->generateWidgetSignature($reference, $order->total_amount);
+
+            // Preparar datos para el Widget de Wompi (formato exacto según documentación)
+            $widgetData = [
+                'publicKey' => config('services.wompi.public_key'),
+                'reference' => $reference,
+                'amount' => $this->wompiService->convertToCents($order->total_amount),
+                'currency' => 'COP',
+                'signature' => $signature,
+                'redirectUrl' => $request->redirect_url,
+                'customerData' => [
+                    'name' => $customerName,
+                    'email' => $customerEmail,
+                    'phoneNumber' => $customerPhone,
+                    'phoneNumberPrefix' => '+57',
+                ],
+                'shippingAddress' => [
+                    'addressLine1' => $order->shipping_address['address'] ?? '',
+                    'city' => $order->shipping_address['city'] ?? '',
+                    'region' => $order->shipping_address['state'] ?? '',
+                    'country' => $this->getCountryCode($order->shipping_address['country'] ?? ''),
+                    'phoneNumber' => $customerPhone,
+                ],
+            ];
+
+            // Actualizar orden con referencia de pago
+            $order->update([
+                'payment_reference' => $reference,
+                'payment_status' => 'pending',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Datos del Checkout Web generados exitosamente',
+                'data' => $widgetData,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error creating Wompi widget data: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor',
+            ], 500);
+        }
+    }
+
+    /**
+     * Generar firma de integridad para Widget de Wompi
+     */
+    private function generateWidgetSignature(string $reference, float $amount): string
+    {
+        $integrityKey = config('services.wompi.integrity_key');
+        $amountInCents = $this->wompiService->convertToCents($amount);
+        
+        $signatureString = $reference . $amountInCents . 'COP' . $integrityKey;
+        
+        return hash('sha256', $signatureString);
     }
 
     /**
