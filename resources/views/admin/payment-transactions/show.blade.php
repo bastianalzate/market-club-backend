@@ -82,22 +82,29 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Nombre</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $paymentTransaction->order->user->name }}</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {{ $paymentTransaction->order->user?->name ?? ($paymentTransaction->customer_data['full_name'] ?? 'Usuario no encontrado') }}
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Email</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $paymentTransaction->order->user->email }}</p>
+                            <p class="mt-1 text-sm text-gray-900">
+                                {{ $paymentTransaction->order->user?->email ?? ($paymentTransaction->customer_data['email'] ?? 'Email no disponible') }}
+                            </p>
                         </div>
-                        @if ($paymentTransaction->order->user->phone)
+                        @if ($paymentTransaction->order->user?->phone ?? $paymentTransaction->customer_data['phone_number'])
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Teléfono</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $paymentTransaction->order->user->phone }}</p>
+                                <p class="mt-1 text-sm text-gray-900">
+                                    {{ $paymentTransaction->order->user?->phone ?? $paymentTransaction->customer_data['phone_number'] }}
+                                </p>
                             </div>
                         @endif
-                        @if ($paymentTransaction->order->user->country)
+                        @if ($paymentTransaction->order->user?->country)
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">País</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $paymentTransaction->order->user->country }}</p>
+                                <p class="mt-1 text-sm text-gray-900">
+                                    {{ $paymentTransaction->order->user?->country ?? 'No disponible' }}</p>
                             </div>
                         @endif
                     </div>
@@ -207,14 +214,16 @@
                             </svg>
                             Ver Orden
                         </a>
-                        <a href="{{ route('admin.users.show', $paymentTransaction->order->user) }}"
-                            class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            Ver Cliente
-                        </a>
+                        @if ($paymentTransaction->order->user)
+                            <a href="{{ route('admin.users.show', $paymentTransaction->order->user) }}"
+                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Ver Cliente
+                            </a>
+                        @endif
                     </div>
                 </div>
 

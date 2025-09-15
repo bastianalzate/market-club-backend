@@ -50,6 +50,10 @@ Route::post('/payments/wompi/create-session', [PaymentController::class, 'create
 Route::post('/payments/wompi/create-widget', [PaymentController::class, 'createWompiWidget']);
 Route::post('/payments/wompi/create-checkout', [PaymentController::class, 'createWompiCheckout']);
 Route::post('/payments/check-status', [PaymentController::class, 'checkPaymentStatus']);
+Route::get('/payments/wompi/config', [PaymentController::class, 'checkWompiConfig']);
+Route::post('/payments/wompi/generate-signature', [PaymentController::class, 'getWidgetSignature']);
+Route::post('/payments/update-order-status', [PaymentController::class, 'updateOrderStatus']);
+Route::post('/payments/create-transaction', [PaymentController::class, 'createPaymentTransaction']);
 
 // Webhook de Wompi (sin autenticación)
 Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
