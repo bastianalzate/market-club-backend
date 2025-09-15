@@ -60,19 +60,19 @@
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                                <p class="text-sm text-gray-900">{{ $order->user->name ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-900">{{ $order->user?->name ?? 'Usuario no encontrado' }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <p class="text-sm text-gray-900">{{ $order->user->email ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-900">{{ $order->user?->email ?? 'Email no disponible' }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                                <p class="text-sm text-gray-900">{{ $order->user->phone ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-900">{{ $order->user?->phone ?? 'Teléfono no disponible' }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">País</label>
-                                <p class="text-sm text-gray-900">{{ $order->user->country ?? 'N/A' }}</p>
+                                <p class="text-sm text-gray-900">{{ $order->user?->country ?? 'País no disponible' }}</p>
                             </div>
                         </div>
                     </div>

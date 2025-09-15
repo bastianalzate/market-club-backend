@@ -142,11 +142,11 @@
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Cliente</dt>
-                                <dd class="text-sm text-gray-900">{{ $order->user->name }}</dd>
+                                <dd class="text-sm text-gray-900">{{ $order->user?->name ?? 'Usuario no encontrado' }}</dd>
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Email</dt>
-                                <dd class="text-sm text-gray-900">{{ $order->user->email }}</dd>
+                                <dd class="text-sm text-gray-900">{{ $order->user?->email ?? 'Email no disponible' }}</dd>
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Total</dt>

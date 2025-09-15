@@ -18,8 +18,8 @@ class DashboardController extends Controller
             'total_categories' => Category::count(),
             'total_orders' => Order::count(),
             'total_users' => User::count(),
-            'total_revenue' => Order::where('status', 'delivered')->sum('total_amount'),
-            'today_sales' => Order::whereDate('created_at', today())->sum('total_amount'),
+            'total_revenue' => Order::where('payment_status', 'paid')->sum('total_amount'),
+            'today_sales' => Order::whereDate('created_at', today())->where('payment_status', 'paid')->sum('total_amount'),
             'pending_orders' => Order::where('status', 'pending')->count(),
             'low_stock_products' => Product::where('stock_quantity', '<', 10)->count(),
         ];
@@ -41,12 +41,14 @@ class DashboardController extends Controller
         if ($dbDriver === 'sqlite') {
             $monthly_sales = Order::selectRaw('strftime("%Y-%m", created_at) as month, SUM(total_amount) as total')
                 ->where('created_at', '>=', now()->subMonths(6))
+                ->where('payment_status', 'paid')
                 ->groupBy('month')
                 ->orderBy('month')
                 ->get();
         } else {
             $monthly_sales = Order::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(total_amount) as total')
                 ->where('created_at', '>=', now()->subMonths(6))
+                ->where('payment_status', 'paid')
                 ->groupBy('month')
                 ->orderBy('month')
                 ->get();
