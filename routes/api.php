@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -79,7 +80,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     
-    // Órdenes del usuario
+    // Perfil de usuario
+    Route::get('/user/profile', [UserProfileController::class, 'getProfile']);
+    Route::put('/user/profile', [UserProfileController::class, 'updateProfile']);
+    Route::put('/user/password', [UserProfileController::class, 'changePassword']);
+    Route::get('/user/orders', [UserProfileController::class, 'getOrders']);
+    Route::get('/user/orders/{orderId}', [UserProfileController::class, 'getOrder']);
+    Route::get('/user/favorites', [UserProfileController::class, 'getFavorites']);
+    Route::get('/user/settings', [UserProfileController::class, 'getSettings']);
+    Route::put('/user/settings', [UserProfileController::class, 'updateSettings']);
+    
+    // Órdenes del usuario (alias para compatibilidad)
     Route::apiResource('orders', OrderController::class);
     
     // Sincronización de carrito (solo para usuarios autenticados)

@@ -28,6 +28,16 @@ class User extends Authenticatable
         'role',
         'is_active',
         'is_wholesaler',
+        'profile_image',
+        'address',
+        'email_notifications',
+        'sms_notifications',
+        'order_updates',
+        'promotions',
+        'newsletter',
+        'profile_visibility',
+        'show_orders',
+        'show_favorites',
     ];
 
     /**
@@ -52,6 +62,14 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'is_wholesaler' => 'boolean',
+            'address' => 'array',
+            'email_notifications' => 'boolean',
+            'sms_notifications' => 'boolean',
+            'order_updates' => 'boolean',
+            'promotions' => 'boolean',
+            'newsletter' => 'boolean',
+            'show_orders' => 'boolean',
+            'show_favorites' => 'boolean',
         ];
     }
 
