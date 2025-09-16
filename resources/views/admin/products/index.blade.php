@@ -49,7 +49,7 @@
                     <select id="country" name="country"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         <option value="">Todos los países</option>
-                        <option value="Inglaterra" {{ request('country') == 'Inglaterra' ? 'selected' : '' }}>Inglaterra
+                        <option value="Reino Unido" {{ request('country') == 'Reino Unido' ? 'selected' : '' }}>Reino Unido
                         </option>
                         <option value="Colombia" {{ request('country') == 'Colombia' ? 'selected' : '' }}>Colombia</option>
                         <option value="Alemania" {{ request('country') == 'Alemania' ? 'selected' : '' }}>Alemania</option>

@@ -282,7 +282,8 @@ class ProductController extends Controller
     private function normalizeCountryName($country)
     {
         $countryMap = [
-            'inglaterra' => 'Inglaterra',
+            'inglaterra' => 'Reino Unido',
+            'reino unido' => 'Reino Unido',
             'colombia' => 'Colombia',
             'alemania' => 'Alemania',
             'italia' => 'Italia',
