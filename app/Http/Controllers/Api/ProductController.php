@@ -115,6 +115,7 @@ class ProductController extends Controller
                 'sale_price' => $product->sale_price,
                 'current_price' => $product->current_price,
                 'image_url' => $product->image_url,
+                'stock_quantity' => $product->stock_quantity,
             ];
         });
 
@@ -171,6 +172,7 @@ class ProductController extends Controller
                 'sale_price' => $product->sale_price,
                 'current_price' => $product->current_price,
                 'image_url' => $product->image_url,
+                'stock_quantity' => $product->stock_quantity,
                 'created_at' => $product->created_at->format('Y-m-d H:i:s'),
             ];
         });
