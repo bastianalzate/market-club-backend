@@ -163,6 +163,73 @@ class WishlistController extends Controller
     }
 
     /**
+     * Toggle producto en la wishlist (agregar o quitar)
+     */
+    public function toggle(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = Auth::user();
+        $productId = $request->product_id;
+
+        // Verificar que el producto esté disponible
+        $product = Product::where('id', $productId)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no disponible',
+            ], 404);
+        }
+
+        // Verificar si está en la wishlist
+        $isInWishlist = Wishlist::isInWishlist($user->id, $productId);
+
+        if ($isInWishlist) {
+            // Remover de la wishlist
+            Wishlist::removeProduct($user->id, $productId);
+            $action = 'removed';
+            $message = 'Producto removido de favoritos';
+        } else {
+            // Agregar a la wishlist
+            $wishlistItem = Wishlist::addProduct($user->id, $productId);
+            $action = 'added';
+            $message = 'Producto agregado a favoritos';
+        }
+
+        // Obtener conteo actualizado
+        $totalFavorites = Wishlist::where('user_id', $user->id)->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => [
+                'action' => $action,
+                'is_in_wishlist' => !$isInWishlist,
+                'total_favorites' => $totalFavorites,
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'image' => $product->image_url,
+                ],
+            ],
+        ]);
+    }
+
+    /**
      * Mover producto de wishlist al carrito
      */
     public function moveToCart(Request $request)

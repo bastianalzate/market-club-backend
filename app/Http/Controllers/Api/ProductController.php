@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -57,6 +59,9 @@ class ProductController extends Controller
 
         $products = $query->paginate($request->get('per_page', 15));
 
+        // Agregar información de favoritos
+        $this->addFavoriteInfo($products->getCollection());
+
         return response()->json($products);
     }
 
@@ -106,6 +111,9 @@ class ProductController extends Controller
         $limit = $request->get('limit', 10);
         $products = $query->limit($limit)->get();
 
+        // Agregar información de favoritos
+        $this->addFavoriteInfo($products);
+
         // Formatear la respuesta con solo los campos necesarios
         $formattedProducts = $products->map(function ($product) {
             return [
@@ -116,6 +124,7 @@ class ProductController extends Controller
                 'current_price' => $product->current_price,
                 'image_url' => $product->image_url,
                 'stock_quantity' => $product->stock_quantity,
+                'is_favorite' => $product->is_favorite ?? false,
             ];
         });
 
@@ -163,6 +172,9 @@ class ProductController extends Controller
         $limit = $request->get('limit', 10);
         $products = $query->limit($limit)->get();
 
+        // Agregar información de favoritos
+        $this->addFavoriteInfo($products);
+
         // Formatear la respuesta con solo los campos necesarios
         $formattedProducts = $products->map(function ($product) {
             return [
@@ -174,6 +186,7 @@ class ProductController extends Controller
                 'image_url' => $product->image_url,
                 'stock_quantity' => $product->stock_quantity,
                 'created_at' => $product->created_at->format('Y-m-d H:i:s'),
+                'is_favorite' => $product->is_favorite ?? false,
             ];
         });
 
@@ -209,6 +222,10 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        // Agregar información de favoritos para un solo producto
+        $products = collect([$product]);
+        $this->addFavoriteInfo($products);
+        
         return response()->json($product->load('category'));
     }
 
@@ -301,5 +318,49 @@ class ProductController extends Controller
 
         $normalized = strtolower(trim($country));
         return $countryMap[$normalized] ?? $country;
+    }
+
+    /**
+     * Add favorite information to products collection
+     */
+    private function addFavoriteInfo($products)
+    {
+        // Intentar obtener el usuario autenticado usando el token Bearer
+        $user = null;
+        $request = request();
+        
+        if ($request->bearerToken()) {
+            try {
+                $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+                if ($token) {
+                    $user = $token->tokenable;
+                }
+            } catch (\Exception $e) {
+                // Token inválido, continuar sin usuario
+            }
+        }
+        
+        if (!$user) {
+            // Si no hay usuario autenticado, marcar todos como no favoritos
+            $products->each(function ($product) {
+                $product->is_favorite = false;
+            });
+            return;
+        }
+
+        // Obtener todos los IDs de productos
+        $productIds = $products->pluck('id')->toArray();
+        
+        // Obtener los favoritos del usuario para estos productos
+        $favoriteProductIds = Wishlist::where('user_id', $user->id)
+            ->whereIn('product_id', $productIds)
+            ->pluck('product_id')
+            ->toArray();
+
+
+        // Marcar cada producto como favorito o no
+        $products->each(function ($product) use ($favoriteProductIds) {
+            $product->is_favorite = in_array($product->id, $favoriteProductIds);
+        });
     }
 }

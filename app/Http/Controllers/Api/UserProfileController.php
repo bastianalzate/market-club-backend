@@ -247,6 +247,94 @@ class UserProfileController extends Controller
     }
 
     /**
+     * Agregar producto a favoritos
+     */
+    public function addFavorite($productId)
+    {
+        $user = Auth::user();
+        
+        // Verificar que el producto existe y está activo
+        $product = \App\Models\Product::where('id', $productId)
+            ->where('is_active', true)
+            ->first();
+            
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no disponible',
+            ], 404);
+        }
+
+        // Verificar si ya está en favoritos
+        if (\App\Models\Wishlist::isInWishlist($user->id, $productId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El producto ya está en tus favoritos',
+            ], 400);
+        }
+
+        // Agregar a favoritos
+        $wishlistItem = \App\Models\Wishlist::addProduct($user->id, $productId);
+
+        // Obtener conteo actualizado
+        $totalFavorites = \App\Models\Wishlist::where('user_id', $user->id)->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto agregado a favoritos',
+            'data' => [
+                'product_id' => $productId,
+                'total_favorites' => $totalFavorites,
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'image' => $product->image_url,
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Remover producto de favoritos
+     */
+    public function removeFavorite($productId)
+    {
+        $user = Auth::user();
+        
+        // Verificar que el producto existe
+        $product = \App\Models\Product::find($productId);
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no encontrado',
+            ], 404);
+        }
+
+        // Remover de favoritos
+        $removed = \App\Models\Wishlist::removeProduct($user->id, $productId);
+
+        if (!$removed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El producto no está en tus favoritos',
+            ], 404);
+        }
+
+        // Obtener conteo actualizado
+        $totalFavorites = \App\Models\Wishlist::where('user_id', $user->id)->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto removido de favoritos',
+            'data' => [
+                'product_id' => $productId,
+                'total_favorites' => $totalFavorites,
+            ],
+        ]);
+    }
+
+    /**
      * Obtener configuraciones del usuario
      */
     public function getSettings(Request $request)

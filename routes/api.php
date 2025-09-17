@@ -87,6 +87,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/orders', [UserProfileController::class, 'getOrders']);
     Route::get('/user/orders/{orderId}', [UserProfileController::class, 'getOrder']);
     Route::get('/user/favorites', [UserProfileController::class, 'getFavorites']);
+    Route::post('/user/favorites/{productId}', [UserProfileController::class, 'addFavorite']);
+    Route::delete('/user/favorites/{productId}', [UserProfileController::class, 'removeFavorite']);
     Route::get('/user/settings', [UserProfileController::class, 'getSettings']);
     Route::put('/user/settings', [UserProfileController::class, 'updateSettings']);
     
@@ -100,6 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist/add', [WishlistController::class, 'addProduct']);
     Route::delete('/wishlist/remove', [WishlistController::class, 'removeProduct']);
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle']);
     Route::post('/wishlist/check', [WishlistController::class, 'checkProduct']);
     Route::delete('/wishlist/clear', [WishlistController::class, 'clear']);
     Route::post('/wishlist/move-to-cart', [WishlistController::class, 'moveToCart']);
