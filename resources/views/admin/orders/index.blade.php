@@ -121,7 +121,9 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">{{ $order->user?->name ?? 'Cliente' }}
                                     </div>
-                                    <div class="text-sm text-gray-500">{{ $order->user?->email ?? 'N/A' }}</div>
+                                    @if ($order->user?->email)
+                                        <div class="text-sm text-gray-500">{{ $order->user->email }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php
@@ -148,7 +150,9 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
                                         ${{ number_format($order->total_amount, 2) }}</div>
-                                    <div class="text-sm text-gray-500">{{ $order->payment_method ?? 'N/A' }}</div>
+                                    @if ($order->payment_method)
+                                        <div class="text-sm text-gray-500">{{ $order->payment_method }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php

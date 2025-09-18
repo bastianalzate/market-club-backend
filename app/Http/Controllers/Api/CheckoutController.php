@@ -26,6 +26,9 @@ class CheckoutController extends Controller
      */
     public function createOrder(Request $request)
     {
+        // Obtener usuario autenticado de manera opcional (similar a ProductController)
+        $user = $this->getOptionalAuthenticatedUser($request);
+        
         $validator = Validator::make($request->all(), [
             'shipping_address' => 'required|array',
             'shipping_address.name' => 'required|string|max:255',
@@ -54,7 +57,7 @@ class CheckoutController extends Controller
             ], 422);
         }
 
-        $user = Auth::user();
+        // $user ya fue obtenido al inicio del método
         $sessionId = $request->header('X-Session-ID');
 
         // Si no hay usuario autenticado y no hay session_id, devolver error
@@ -90,6 +93,9 @@ class CheckoutController extends Controller
                     ], 400);
                 }
             }
+
+            // Recalcular totales del carrito antes de crear la orden
+            $cart->calculateTotals();
 
             // Crear orden
             $order = Order::create([
@@ -157,7 +163,7 @@ class CheckoutController extends Controller
      */
     public function getCheckoutSummary(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->getOptionalAuthenticatedUser($request);
         $sessionId = $request->header('X-Session-ID');
 
         // Si no hay usuario autenticado y no hay session_id, devolver error
@@ -268,6 +274,8 @@ class CheckoutController extends Controller
      */
     public function calculateShipping(Request $request)
     {
+        $user = $this->getOptionalAuthenticatedUser($request);
+        
         $validator = Validator::make($request->all(), [
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
@@ -282,7 +290,7 @@ class CheckoutController extends Controller
             ], 422);
         }
 
-        $user = Auth::user();
+        // $user ya fue obtenido al inicio del método
         $sessionId = $request->header('X-Session-ID');
 
         // Si no hay usuario autenticado y no hay session_id, devolver error
@@ -346,7 +354,7 @@ class CheckoutController extends Controller
      */
     public function syncCartAfterLogin(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->getOptionalAuthenticatedUser($request);
         $sessionId = $request->header('X-Session-ID');
 
         if (!$user) {
@@ -398,5 +406,26 @@ class CheckoutController extends Controller
                 ]
             ],
         ]);
+    }
+
+    /**
+     * Get authenticated user optionally (similar to ProductController)
+     */
+    private function getOptionalAuthenticatedUser($request)
+    {
+        $user = null;
+        
+        if ($request->bearerToken()) {
+            try {
+                $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+                if ($token) {
+                    $user = $token->tokenable;
+                }
+            } catch (\Exception $e) {
+                // Token inválido, continuar sin usuario
+            }
+        }
+        
+        return $user;
     }
 }

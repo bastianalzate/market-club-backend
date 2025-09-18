@@ -16,7 +16,7 @@ class CartController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->getOptionalAuthenticatedUser($request);
         $sessionId = $request->header('X-Session-ID');
 
         // Si no hay usuario autenticado y no hay session_id, devolver carrito vacío
@@ -69,7 +69,7 @@ class CartController extends Controller
             ], 422);
         }
 
-        $user = Auth::user();
+        $user = $this->getOptionalAuthenticatedUser($request);
         $sessionId = $request->header('X-Session-ID');
         $productId = $request->product_id;
         $quantity = $request->quantity ?? 1;
@@ -134,7 +134,7 @@ class CartController extends Controller
             ], 422);
         }
 
-        $user = Auth::user();
+        $user = $this->getOptionalAuthenticatedUser($request);
         $sessionId = $request->header('X-Session-ID');
         $productId = $request->product_id;
         $quantity = $request->quantity;
@@ -201,7 +201,7 @@ class CartController extends Controller
             ], 422);
         }
 
-        $user = Auth::user();
+        $user = $this->getOptionalAuthenticatedUser($request);
         $sessionId = $request->header('X-Session-ID');
         $productId = $request->product_id;
 
@@ -239,7 +239,7 @@ class CartController extends Controller
      */
     public function clear(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->getOptionalAuthenticatedUser($request);
         $sessionId = $request->header('X-Session-ID');
 
         // Si no hay usuario autenticado y no hay session_id, devolver error
@@ -276,7 +276,7 @@ class CartController extends Controller
      */
     public function summary(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->getOptionalAuthenticatedUser($request);
         $sessionId = $request->header('X-Session-ID');
 
         // Si no hay usuario autenticado y no hay session_id, devolver carrito vacío
@@ -328,7 +328,7 @@ class CartController extends Controller
      */
     public function sync(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->getOptionalAuthenticatedUser($request);
         $sessionId = $request->header('X-Session-ID');
 
         if (!$sessionId) {
@@ -367,5 +367,26 @@ class CartController extends Controller
                 'items_count' => $finalCart ? $finalCart->total_items : 0,
             ],
         ]);
+    }
+
+    /**
+     * Get authenticated user optionally (similar to ProductController and CheckoutController)
+     */
+    private function getOptionalAuthenticatedUser($request)
+    {
+        $user = null;
+        
+        if ($request->bearerToken()) {
+            try {
+                $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+                if ($token) {
+                    $user = $token->tokenable;
+                }
+            } catch (\Exception $e) {
+                // Token inválido, continuar sin usuario
+            }
+        }
+        
+        return $user;
     }
 }

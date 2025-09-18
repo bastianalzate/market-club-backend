@@ -162,12 +162,15 @@
                             @endphp
                             @if ($shippingAddress)
                                 <div class="text-sm text-gray-900">
-                                    <p class="font-medium">{{ $shippingAddress['name'] ?? 'N/A' }}</p>
-                                    <p>{{ $shippingAddress['address'] ?? 'N/A' }}</p>
-                                    <p>{{ $shippingAddress['city'] ?? 'N/A' }}, {{ $shippingAddress['state'] ?? 'N/A' }}
+                                    <p class="font-medium">{{ $shippingAddress['name'] ?? '' }}</p>
+                                    <p>{{ $shippingAddress['address'] ?? '' }}</p>
+                                    <p>{{ $shippingAddress['city'] ?? '' }}@if (!empty($shippingAddress['city']) && !empty($shippingAddress['state']))
+                                            ,
+                                        @endif{{ $shippingAddress['state'] ?? '' }}
                                     </p>
-                                    <p>{{ $shippingAddress['postal_code'] ?? 'N/A' }},
-                                        {{ $shippingAddress['country'] ?? 'N/A' }}</p>
+                                    <p>{{ $shippingAddress['postal_code'] ?? '' }}@if (!empty($shippingAddress['postal_code']) && !empty($shippingAddress['country']))
+                                            ,
+                                        @endif{{ $shippingAddress['country'] ?? '' }}</p>
                                 </div>
                             @else
                                 <p class="text-sm text-gray-500">No disponible</p>
@@ -188,11 +191,14 @@
                             @endphp
                             @if ($billingAddress)
                                 <div class="text-sm text-gray-900">
-                                    <p class="font-medium">{{ $billingAddress['name'] ?? 'N/A' }}</p>
-                                    <p>{{ $billingAddress['address'] ?? 'N/A' }}</p>
-                                    <p>{{ $billingAddress['city'] ?? 'N/A' }}, {{ $billingAddress['state'] ?? 'N/A' }}</p>
-                                    <p>{{ $billingAddress['postal_code'] ?? 'N/A' }},
-                                        {{ $billingAddress['country'] ?? 'N/A' }}</p>
+                                    <p class="font-medium">{{ $billingAddress['name'] ?? '' }}</p>
+                                    <p>{{ $billingAddress['address'] ?? '' }}</p>
+                                    <p>{{ $billingAddress['city'] ?? '' }}@if (!empty($billingAddress['city']) && !empty($billingAddress['state']))
+                                            ,
+                                        @endif{{ $billingAddress['state'] ?? '' }}</p>
+                                    <p>{{ $billingAddress['postal_code'] ?? '' }}@if (!empty($billingAddress['postal_code']) && !empty($billingAddress['country']))
+                                            ,
+                                        @endif{{ $billingAddress['country'] ?? '' }}</p>
                                 </div>
                             @else
                                 <p class="text-sm text-gray-500">No disponible</p>
@@ -252,10 +258,12 @@
                                 {{ ucfirst($order->payment_status) }}
                             </span>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Método de Pago</label>
-                            <p class="text-sm text-gray-900">{{ $order->payment_method ?? 'N/A' }}</p>
-                        </div>
+                        @if ($order->payment_method)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Método de Pago</label>
+                                <p class="text-sm text-gray-900">{{ $order->payment_method }}</p>
+                            </div>
+                        @endif
                         @if ($order->payment_reference)
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Referencia de Pago</label>
