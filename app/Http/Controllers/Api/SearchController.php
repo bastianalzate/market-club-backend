@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class SearchController extends Controller
@@ -81,6 +83,9 @@ class SearchController extends Controller
 
         $products = $productsQuery->with(['category'])
             ->paginate($perPage);
+
+        // Agregar información de favoritos
+        $this->addFavoriteInfo($products->items());
 
         // Obtener categorías para filtros
         $categories = Category::where('is_active', true)
@@ -179,6 +184,9 @@ class SearchController extends Controller
             ->limit($limit)
             ->get();
 
+        // Agregar información de favoritos
+        $this->addFavoriteInfo($products);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -224,6 +232,9 @@ class SearchController extends Controller
             ->limit($limit)
             ->get();
 
+        // Agregar información de favoritos
+        $this->addFavoriteInfo($relatedProducts);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -232,5 +243,52 @@ class SearchController extends Controller
                 'count' => $relatedProducts->count(),
             ],
         ]);
+    }
+
+    /**
+     * Agregar información de favoritos a los productos
+     */
+    private function addFavoriteInfo($products)
+    {
+        // Obtener usuario autenticado de manera opcional
+        $user = $this->getOptionalAuthenticatedUser();
+
+        if (!$user) {
+            // Si no hay usuario autenticado, marcar todos como no favoritos
+            foreach ($products as $product) {
+                $product->is_favorite = false;
+            }
+            return;
+        }
+
+        // Obtener IDs de productos favoritos del usuario
+        $favoriteProductIds = Wishlist::where('user_id', $user->id)
+            ->pluck('product_id')
+            ->toArray();
+
+        // Agregar el campo is_favorite a cada producto
+        foreach ($products as $product) {
+            $product->is_favorite = in_array($product->id, $favoriteProductIds);
+        }
+    }
+
+    /**
+     * Obtener usuario autenticado de manera opcional
+     */
+    private function getOptionalAuthenticatedUser()
+    {
+        try {
+            // Verificar si hay un token Bearer en la petición
+            $token = request()->bearerToken();
+            if (!$token) {
+                return null;
+            }
+
+            // Intentar autenticar usando Sanctum
+            $user = Auth::guard('sanctum')->user();
+            return $user;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

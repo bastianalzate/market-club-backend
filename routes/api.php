@@ -62,6 +62,7 @@ Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
 // Carrito de compras (público - funciona con session_id)
 Route::get('/cart', [CartController::class, 'index']);
 Route::post('/cart/add', [CartController::class, 'addProduct']);
+Route::post('/cart/add-gift', [CartController::class, 'addGift']);
 Route::put('/cart/update', [CartController::class, 'updateQuantity']);
 Route::delete('/cart/remove', [CartController::class, 'removeProduct']);
 Route::delete('/cart/clear', [CartController::class, 'clear']);

@@ -10,14 +10,19 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'gift_id',
         'quantity',
         'unit_price',
         'total_price',
+        'gift_data',
+        'is_gift',
     ];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
+        'gift_data' => 'array',
+        'is_gift' => 'boolean',
     ];
 
     public function order(): BelongsTo

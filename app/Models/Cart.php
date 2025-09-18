@@ -86,6 +86,11 @@ class Cart extends Model
      */
     public function calculateTotals()
     {
+        // Cargar items si no están cargados
+        if (!$this->relationLoaded('items')) {
+            $this->load('items');
+        }
+        
         $subtotal = $this->items->sum('total_price');
         $taxRate = 0.19; // 19% IVA
         $taxAmount = $subtotal * $taxRate;
@@ -99,6 +104,44 @@ class Cart extends Model
             'total_amount' => $totalAmount,
         ]);
 
+        return $this;
+    }
+
+    /**
+     * Agregar regalo personalizado al carrito
+     */
+    public function addGift($giftId, $quantity = 1, $giftData = [])
+    {
+        // Verificar si ya existe un item con este ID de regalo
+        $existingItem = $this->items()->where('product_id', null)
+            ->where('gift_id', $giftId)
+            ->first();
+
+        $totalPrice = $giftData['totalPrice'] ?? 0;
+        $unitPrice = $totalPrice; // Para regalos, el precio unitario es el total
+
+        if ($existingItem) {
+            $existingItem->update([
+                'quantity' => $existingItem->quantity + $quantity,
+                'total_price' => ($existingItem->quantity + $quantity) * $unitPrice,
+            ]);
+        } else {
+            $this->items()->create([
+                'product_id' => null, // Null para productos especiales
+                'gift_id' => $giftId,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'total_price' => $quantity * $unitPrice,
+                'product_snapshot' => null,
+                'gift_data' => $giftData,
+                'is_gift' => true,
+            ]);
+        }
+
+        // Recargar los items antes de calcular totales
+        $this->load('items');
+        $this->calculateTotals();
+        
         return $this;
     }
 
@@ -151,12 +194,55 @@ class Cart extends Model
     }
 
     /**
+     * Actualizar cantidad de un regalo
+     */
+    public function updateGiftQuantity($giftId, $quantity)
+    {
+        if ($quantity <= 0) {
+            return $this->removeGift($giftId);
+        }
+
+        $item = $this->items()->where('product_id', null)
+            ->where('gift_id', $giftId)
+            ->first();
+        
+        if ($item) {
+            $item->update([
+                'quantity' => $quantity,
+                'total_price' => $quantity * $item->unit_price,
+            ]);
+        }
+
+        // Recargar los items antes de calcular totales
+        $this->load('items');
+        $this->calculateTotals();
+        
+        return $this;
+    }
+
+    /**
      * Remover producto del carrito
      */
     public function removeProduct($productId)
     {
         $this->items()->where('product_id', $productId)->delete();
         return $this->calculateTotals();
+    }
+
+    /**
+     * Remover regalo del carrito
+     */
+    public function removeGift($giftId)
+    {
+        $this->items()->where('product_id', null)
+            ->where('gift_id', $giftId)
+            ->delete();
+        
+        // Recargar los items antes de calcular totales
+        $this->load('items');
+        $this->calculateTotals();
+        
+        return $this;
     }
 
     /**

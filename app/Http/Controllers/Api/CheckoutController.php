@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -81,8 +82,13 @@ class CheckoutController extends Controller
         try {
             DB::beginTransaction();
 
-            // Verificar stock de todos los productos
+            // Verificar stock de todos los productos (solo productos regulares, no regalos)
             foreach ($cart->items as $item) {
+                // Saltar verificación de stock para regalos
+                if ($item->is_gift || !$item->product) {
+                    continue;
+                }
+                
                 if ($item->product->stock_quantity < $item->quantity) {
                     return response()->json([
                         'success' => false,
@@ -117,13 +123,27 @@ class CheckoutController extends Controller
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item->product_id,
+                    'gift_id' => $item->gift_id,
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
                     'total_price' => $item->total_price,
+                    'gift_data' => $item->gift_data,
+                    'is_gift' => $item->is_gift,
                 ]);
 
-                // Reducir stock
-                $item->product->decrement('stock_quantity', $item->quantity);
+                // Reducir stock solo para productos regulares, no para regalos
+                if (!$item->is_gift && $item->product) {
+                    $item->product->decrement('stock_quantity', $item->quantity);
+                } elseif ($item->is_gift && $item->gift_data) {
+                    // Para regalos, reducir stock de cada cerveza individual
+                    $beers = $item->gift_data['beers'] ?? [];
+                    foreach ($beers as $beer) {
+                        $product = Product::find($beer['id']);
+                        if ($product) {
+                            $product->decrement('stock_quantity', $item->quantity);
+                        }
+                    }
+                }
             }
 
             // Limpiar carrito
@@ -183,9 +203,14 @@ class CheckoutController extends Controller
             ], 400);
         }
 
-        // Verificar disponibilidad de productos
+        // Verificar disponibilidad de productos (solo productos regulares, no regalos)
         $unavailableItems = [];
         foreach ($cart->items as $item) {
+            // Saltar verificación para regalos
+            if ($item->is_gift || !$item->product) {
+                continue;
+            }
+            
             if ($item->product->stock_quantity < $item->quantity) {
                 $unavailableItems[] = [
                     'product' => $item->product,

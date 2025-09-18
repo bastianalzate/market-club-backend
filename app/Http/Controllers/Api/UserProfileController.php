@@ -486,15 +486,50 @@ class UserProfileController extends Controller
             'tracking_number' => $order->tracking_number ?? null,
             'estimated_delivery' => $order->estimated_delivery ?? null,
             'items' => $order->orderItems->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'product_id' => $item->product_id,
-                    'product_name' => $item->product->name,
-                    'product_image' => $item->product->image,
-                    'quantity' => $item->quantity,
-                    'unit_price' => (float) $item->unit_price,
-                    'total_price' => (float) $item->total_price,
-                ];
+                if ($item->is_gift) {
+                    // Para regalos, usar información del gift_data y agregar imágenes
+                    $giftData = $item->gift_data;
+                    
+                    // Enriquecer las cervezas con imágenes de la base de datos
+                    if (isset($giftData['beers'])) {
+                        $beerIds = collect($giftData['beers'])->pluck('id')->toArray();
+                        $products = \App\Models\Product::whereIn('id', $beerIds)->get()->keyBy('id');
+                        
+                        $giftData['beers'] = collect($giftData['beers'])->map(function ($beer) use ($products) {
+                            $product = $products->get($beer['id']);
+                            $beer['image'] = $product ? $product->image : null;
+                            $beer['image_url'] = $product && $product->image 
+                                ? asset('storage/' . $product->image) 
+                                : null;
+                            return $beer;
+                        })->toArray();
+                    }
+                    
+                    return [
+                        'id' => $item->id,
+                        'product_id' => null,
+                        'gift_id' => $item->gift_id,
+                        'product_name' => $giftData['name'] ?? 'Regalo Personalizado',
+                        'product_image' => null, // Los regalos no tienen imagen específica
+                        'quantity' => $item->quantity,
+                        'unit_price' => (float) $item->unit_price,
+                        'total_price' => (float) $item->total_price,
+                        'is_gift' => true,
+                        'gift_data' => $giftData,
+                    ];
+                } else {
+                    // Para productos regulares
+                    return [
+                        'id' => $item->id,
+                        'product_id' => $item->product_id,
+                        'product_name' => $item->product ? $item->product->name : 'Producto no disponible',
+                        'product_image' => $item->product ? $item->product->image : null,
+                        'quantity' => $item->quantity,
+                        'unit_price' => (float) $item->unit_price,
+                        'total_price' => (float) $item->total_price,
+                        'is_gift' => false,
+                    ];
+                }
             }),
         ];
     }

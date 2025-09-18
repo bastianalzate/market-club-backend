@@ -13,16 +13,21 @@ class CartItem extends Model
     protected $fillable = [
         'cart_id',
         'product_id',
+        'gift_id',
         'quantity',
         'unit_price',
         'total_price',
         'product_snapshot',
+        'gift_data',
+        'is_gift',
     ];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
         'product_snapshot' => 'array',
+        'gift_data' => 'array',
+        'is_gift' => 'boolean',
     ];
 
     /**
