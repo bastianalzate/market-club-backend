@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
@@ -59,6 +60,9 @@ Route::post('/payments/create-transaction', [PaymentController::class, 'createPa
 
 // Webhook de Wompi (sin autenticación)
 Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
+
+// Contacto (público)
+Route::post('/contact', [ContactController::class, 'store']);
 
 // Carrito de compras (público - funciona con session_id)
 Route::get('/cart', [CartController::class, 'index']);

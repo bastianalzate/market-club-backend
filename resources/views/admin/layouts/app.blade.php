@@ -209,6 +209,17 @@
                                         Clientes
                                     </a>
 
+                                    <a href="{{ route('admin.contacts.index') }}"
+                                        class="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.contacts.*') ? 'text-indigo-600 bg-indigo-50' : 'text-gray-900' }} rounded-lg hover:bg-gray-200 group">
+                                        <svg class="flex-shrink-0 w-5 h-5 mr-4" xmlns="http://www.w3.org/2000/svg"
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                        Contactos
+                                    </a>
+
                                     <a href="{{ route('admin.admin-users.index') }}"
                                         class="flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.admin-users.*') ? 'text-indigo-600 bg-indigo-50' : 'text-gray-900' }} rounded-lg hover:bg-gray-200 group">
                                         <svg class="flex-shrink-0 w-5 h-5 mr-4" xmlns="http://www.w3.org/2000/svg"

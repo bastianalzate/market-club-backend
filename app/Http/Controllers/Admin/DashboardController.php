@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\PaymentTransaction;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\UserSubscription;
@@ -19,8 +20,11 @@ class DashboardController extends Controller
             'total_categories' => Category::count(),
             'total_orders' => Order::count(),
             'total_users' => User::count(),
-            'total_revenue' => Order::where('payment_status', 'paid')->sum('total_amount'),
-            'today_sales' => Order::whereDate('created_at', today())->where('payment_status', 'paid')->sum('total_amount'),
+            // Corregido: usar transacciones de pago reales en lugar de totales de órdenes
+            'total_revenue' => PaymentTransaction::where('status', 'APPROVED')->sum('amount'),
+            'today_sales' => PaymentTransaction::whereDate('created_at', today())
+                ->where('status', 'APPROVED')
+                ->sum('amount'),
             'pending_orders' => Order::where('status', 'pending')->count(),
             'low_stock_products' => Product::where('stock_quantity', '<', 10)->count(),
             
@@ -43,19 +47,19 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // Ventas por mes (últimos 6 meses) - Compatible con SQLite y MySQL
+        // Ventas por mes (últimos 6 meses) - Basado en transacciones de pago reales
         $dbDriver = config('database.default');
         if ($dbDriver === 'sqlite') {
-            $monthly_sales = Order::selectRaw('strftime("%Y-%m", created_at) as month, SUM(total_amount) as total')
+            $monthly_sales = PaymentTransaction::selectRaw('strftime("%Y-%m", created_at) as month, SUM(amount) as total')
                 ->where('created_at', '>=', now()->subMonths(6))
-                ->where('payment_status', 'paid')
+                ->where('status', 'APPROVED')
                 ->groupBy('month')
                 ->orderBy('month')
                 ->get();
         } else {
-            $monthly_sales = Order::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(total_amount) as total')
+            $monthly_sales = PaymentTransaction::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(amount) as total')
                 ->where('created_at', '>=', now()->subMonths(6))
-                ->where('payment_status', 'paid')
+                ->where('status', 'APPROVED')
                 ->groupBy('month')
                 ->orderBy('month')
                 ->get();

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentTransactionController;
@@ -49,6 +50,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     
     // Gestión de transacciones de pago
     Route::resource('payment-transactions', PaymentTransactionController::class)->only(['index', 'show', 'destroy']);
+    
+    // Gestión de contactos
+    Route::resource('contacts', ContactController::class)->only(['index', 'show', 'update', 'destroy']);
+    Route::post('contacts/bulk-resolve', [ContactController::class, 'bulkResolve'])->name('contacts.bulk-resolve');
 });
 
 // Ruta de logout (placeholder)
