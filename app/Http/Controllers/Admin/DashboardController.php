@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\UserSubscription;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -22,6 +23,12 @@ class DashboardController extends Controller
             'today_sales' => Order::whereDate('created_at', today())->where('payment_status', 'paid')->sum('total_amount'),
             'pending_orders' => Order::where('status', 'pending')->count(),
             'low_stock_products' => Product::where('stock_quantity', '<', 10)->count(),
+            
+            // Estadísticas de suscripciones
+            'active_subscriptions' => UserSubscription::active()->count(),
+            'total_subscriptions' => UserSubscription::count(),
+            'subscription_revenue' => UserSubscription::where('status', 'active')->sum('price_paid'),
+            'expiring_soon' => UserSubscription::expiringSoon(7)->count(),
         ];
 
         // Órdenes recientes

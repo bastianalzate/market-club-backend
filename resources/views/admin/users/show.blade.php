@@ -179,6 +179,84 @@
 
             <!-- Resumen del Cliente -->
             <div class="space-y-6">
+                <!-- Suscripción Activa -->
+                @php
+                    $activeSubscription = $user->activeSubscription;
+                @endphp
+                <div class="bg-white border border-gray-200 rounded-xl">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h4 class="text-lg font-medium text-gray-900">Suscripción</h4>
+                    </div>
+                    <div class="p-6">
+                        @if ($activeSubscription)
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Plan Activo</span>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                                        @if($activeSubscription->subscriptionPlan->slug === 'curious_brewer') bg-green-100 text-green-800
+                                        @elseif($activeSubscription->subscriptionPlan->slug === 'collector_brewer') bg-yellow-100 text-yellow-800
+                                        @else bg-purple-100 text-purple-800 @endif">
+                                        {{ $activeSubscription->subscriptionPlan->name }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Precio Pagado</span>
+                                    <span class="text-sm font-medium text-gray-900">${{ number_format($activeSubscription->price_paid, 0, ',', '.') }} COP</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Estado</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                        @if($activeSubscription->status === 'active') bg-green-100 text-green-800
+                                        @elseif($activeSubscription->status === 'cancelled') bg-red-100 text-red-800
+                                        @else bg-gray-100 text-gray-800 @endif">
+                                        {{ ucfirst($activeSubscription->status) }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Fecha de Inicio</span>
+                                    <span class="text-sm font-medium text-gray-900">{{ $activeSubscription->starts_at->format('d/m/Y') }}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Fecha de Vencimiento</span>
+                                    <span class="text-sm font-medium text-gray-900">{{ $activeSubscription->ends_at->format('d/m/Y') }}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Días Restantes</span>
+                                    <span class="text-sm font-medium 
+                                        @if($activeSubscription->days_remaining <= 7) text-red-600
+                                        @elseif($activeSubscription->days_remaining <= 15) text-yellow-600
+                                        @else text-green-600 @endif">
+                                        {{ $activeSubscription->days_remaining }} días
+                                    </span>
+                                </div>
+                                
+                                <!-- Características del Plan -->
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <h5 class="text-sm font-medium text-gray-900 mb-2">Características del Plan</h5>
+                                    <ul class="space-y-1">
+                                        @foreach($activeSubscription->subscriptionPlan->features as $feature)
+                                            <li class="flex items-start">
+                                                <svg class="w-4 h-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="text-xs text-gray-600">{{ $feature }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
+                                </svg>
+                                <p class="text-sm text-gray-500 mb-2">Sin suscripción activa</p>
+                                <p class="text-xs text-gray-400">Este usuario no tiene ningún plan de suscripción</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
                 <!-- Estadísticas -->
                 <div class="bg-white border border-gray-200 rounded-xl">
                     <div class="px-6 py-4 border-b border-gray-200">

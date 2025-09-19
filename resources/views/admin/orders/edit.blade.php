@@ -171,8 +171,20 @@
                             @foreach ($order->orderItems as $item)
                                 <div class="flex items-center space-x-3">
                                     <div class="flex-shrink-0">
-                                        @if ($item->product->image)
-                                            <img src="{{ $item->product->image }}" alt="{{ $item->product->name }}"
+                                        @if ($item->is_gift)
+                                            {{-- Ícono para regalos personalizados --}}
+                                            <div
+                                                class="h-10 w-10 rounded-lg bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center border border-gray-200">
+                                                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7">
+                                                    </path>
+                                                </svg>
+                                            </div>
+                                        @elseif ($item->product && $item->product->image)
+                                            <img src="{{ asset('storage/' . $item->product->image) }}"
+                                                alt="{{ $item->product->name }}"
                                                 class="h-10 w-10 object-cover rounded-lg border border-gray-200">
                                         @else
                                             <div
@@ -187,9 +199,23 @@
                                         @endif
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 truncate">{{ $item->product->name }}
+                                        <p class="text-sm font-medium text-gray-900 truncate">
+                                            @if ($item->is_gift)
+                                                {{ $item->gift_data['name'] ?? 'Regalo Personalizado' }}
+                                                <span
+                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 ml-1">
+                                                    Regalo
+                                                </span>
+                                            @else
+                                                {{ $item->product?->name ?? 'Producto no disponible' }}
+                                            @endif
                                         </p>
-                                        <p class="text-sm text-gray-500">Cantidad: {{ $item->quantity }}</p>
+                                        <p class="text-sm text-gray-500">
+                                            Cantidad: {{ $item->quantity }}
+                                            @if ($item->is_gift && isset($item->gift_data['beers']))
+                                                - {{ count($item->gift_data['beers']) }} cervezas
+                                            @endif
+                                        </p>
                                     </div>
                                     <div class="text-sm text-gray-900">
                                         ${{ number_format($item->total_price, 2) }}
