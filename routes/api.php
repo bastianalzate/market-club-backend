@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
@@ -92,6 +93,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user/favorites/{productId}', [UserProfileController::class, 'removeFavorite']);
     Route::get('/user/settings', [UserProfileController::class, 'getSettings']);
     Route::put('/user/settings', [UserProfileController::class, 'updateSettings']);
+    
+    // Suscripciones
+    Route::get('/subscriptions/plans', [SubscriptionController::class, 'getPlans']);
+    Route::post('/subscriptions/subscribe', [SubscriptionController::class, 'subscribe']);
+    Route::get('/subscriptions/current', [SubscriptionController::class, 'getCurrentSubscription']);
+    Route::get('/subscriptions/history', [SubscriptionController::class, 'getSubscriptionHistory']);
+    Route::post('/subscriptions/cancel', [SubscriptionController::class, 'cancelSubscription']);
+    Route::post('/subscriptions/renew', [SubscriptionController::class, 'renewSubscription']);
     
     // Órdenes del usuario (alias para compatibilidad)
     Route::apiResource('orders', OrderController::class);

@@ -119,4 +119,41 @@ class User extends Authenticatable
     {
         return $this->is_wholesaler === true;
     }
+
+    /**
+     * Relación con las suscripciones del usuario
+     */
+    public function subscriptions()
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    /**
+     * Obtener la suscripción activa del usuario
+     */
+    public function activeSubscription()
+    {
+        return $this->hasOne(UserSubscription::class)
+                    ->where('status', 'active')
+                    ->where('starts_at', '<=', now())
+                    ->where('ends_at', '>=', now())
+                    ->with('subscriptionPlan');
+    }
+
+    /**
+     * Verificar si el usuario tiene una suscripción activa
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription()->exists();
+    }
+
+    /**
+     * Obtener el plan de suscripción activo del usuario
+     */
+    public function getActiveSubscriptionPlan()
+    {
+        $activeSubscription = $this->activeSubscription;
+        return $activeSubscription ? $activeSubscription->subscriptionPlan : null;
+    }
 }
