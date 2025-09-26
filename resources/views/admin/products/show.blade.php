@@ -365,7 +365,7 @@
                                                     </a>
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {{ $item->order->user?->name ?? 'Usuario no encontrado' }}
+                                                    {{ $item->order->user?->name ?? (isset($item->order->shipping_address['name']) ? $item->order->shipping_address['name'] : 'Usuario no encontrado') }}
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     {{ $item->quantity }}

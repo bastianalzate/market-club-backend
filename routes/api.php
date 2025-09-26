@@ -64,6 +64,9 @@ Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
 // Contacto (público)
 Route::post('/contact', [ContactController::class, 'store']);
 
+// Planes de suscripción (público)
+Route::get('/subscriptions/plans', [SubscriptionController::class, 'getPlans']);
+
 // Carrito de compras (público - funciona con session_id)
 Route::get('/cart', [CartController::class, 'index']);
 Route::post('/cart/add', [CartController::class, 'addProduct']);
@@ -99,7 +102,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/settings', [UserProfileController::class, 'updateSettings']);
     
     // Suscripciones
-    Route::get('/subscriptions/plans', [SubscriptionController::class, 'getPlans']);
     Route::post('/subscriptions/subscribe', [SubscriptionController::class, 'subscribe']);
     Route::get('/subscriptions/current', [SubscriptionController::class, 'getCurrentSubscription']);
     Route::get('/subscriptions/history', [SubscriptionController::class, 'getSubscriptionHistory']);

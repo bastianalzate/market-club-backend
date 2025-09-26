@@ -125,10 +125,10 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div>
                                         <div class="text-sm font-medium text-gray-900">
-                                            {{ $transaction->order->user?->name ?? ($transaction->customer_data['full_name'] ?? 'Usuario no encontrado') }}
+                                            {{ $transaction->order->user?->name ?? (isset($transaction->order->shipping_address['name']) ? $transaction->order->shipping_address['name'] : $transaction->customer_data['full_name'] ?? 'Usuario no encontrado') }}
                                         </div>
                                         <div class="text-sm text-gray-500">
-                                            {{ $transaction->order->user?->email ?? ($transaction->customer_data['email'] ?? 'Email no disponible') }}
+                                            {{ $transaction->order->user?->email ?? (isset($transaction->order->shipping_address['email']) ? $transaction->order->shipping_address['email'] : $transaction->customer_data['email'] ?? 'Email no disponible') }}
                                         </div>
                                     </div>
                                 </td>

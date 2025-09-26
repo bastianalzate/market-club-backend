@@ -27,6 +27,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export-sales', [DashboardController::class, 'exportSales'])->name('dashboard.export-sales');
     
     // Gestión de productos
     Route::resource('products', ProductController::class);

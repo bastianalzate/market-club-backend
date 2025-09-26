@@ -33,6 +33,7 @@ class CheckoutController extends Controller
         $validator = Validator::make($request->all(), [
             'shipping_address' => 'required|array',
             'shipping_address.name' => 'required|string|max:255',
+            'shipping_address.email' => 'required|email|max:255',
             'shipping_address.address' => 'required|string|max:500',
             'shipping_address.city' => 'required|string|max:100',
             'shipping_address.state' => 'required|string|max:100',
@@ -41,6 +42,7 @@ class CheckoutController extends Controller
             'shipping_address.phone' => 'required|string|max:20',
             'billing_address' => 'nullable|array',
             'billing_address.name' => 'required_with:billing_address|string|max:255',
+            'billing_address.email' => 'required_with:billing_address|email|max:255',
             'billing_address.address' => 'required_with:billing_address|string|max:500',
             'billing_address.city' => 'required_with:billing_address|string|max:100',
             'billing_address.state' => 'required_with:billing_address|string|max:100',
@@ -261,6 +263,7 @@ class CheckoutController extends Controller
         $validator = Validator::make($request->all(), [
             'shipping_address' => 'required|array',
             'shipping_address.name' => 'required|string|max:255',
+            'shipping_address.email' => 'required|email|max:255',
             'shipping_address.address' => 'required|string|max:500',
             'shipping_address.city' => 'required|string|max:100',
             'shipping_address.state' => 'required|string|max:100',

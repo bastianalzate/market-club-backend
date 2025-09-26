@@ -60,19 +60,27 @@
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                                <p class="text-sm text-gray-900">{{ $order->user?->name ?? 'Usuario no encontrado' }}</p>
+                                <p class="text-sm text-gray-900">
+                                    {{ $order->user?->name ?? (isset($order->shipping_address['name']) ? $order->shipping_address['name'] : 'Usuario no encontrado') }}
+                                </p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <p class="text-sm text-gray-900">{{ $order->user?->email ?? 'Email no disponible' }}</p>
+                                <p class="text-sm text-gray-900">
+                                    {{ $order->user?->email ?? (isset($order->shipping_address['email']) ? $order->shipping_address['email'] : 'Email no disponible') }}
+                                </p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                                <p class="text-sm text-gray-900">{{ $order->user?->phone ?? 'Teléfono no disponible' }}</p>
+                                <p class="text-sm text-gray-900">
+                                    {{ $order->user?->phone ?? (isset($order->shipping_address['phone']) ? $order->shipping_address['phone'] : 'Teléfono no disponible') }}
+                                </p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">País</label>
-                                <p class="text-sm text-gray-900">{{ $order->user?->country ?? 'País no disponible' }}</p>
+                                <p class="text-sm text-gray-900">
+                                    {{ $order->user?->country ?? (isset($order->shipping_address['country']) ? $order->shipping_address['country'] : 'País no disponible') }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -233,7 +241,8 @@
                                     @if (isset($giftItem->gift_data['beers']) && is_array($giftItem->gift_data['beers']))
                                         <div class="bg-blue-50 rounded-lg p-3">
                                             <h6 class="text-xs font-medium text-gray-700 mb-2">Cervezas Incluidas
-                                                ({{ count($giftItem->gift_data['beers']) }})</h6>
+                                                ({{ count($giftItem->gift_data['beers']) }})
+                                            </h6>
                                             <div class="space-y-2">
                                                 @foreach ($giftItem->gift_data['beers'] as $beer)
                                                     <div class="flex items-center justify-between bg-white rounded p-2">

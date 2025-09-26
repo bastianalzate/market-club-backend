@@ -152,7 +152,7 @@
                     <div class="flex flex-wrap items-center justify-between">
                         <p class="text-base font-bold text-gray-900 lg:order-1">Reporte de Ventas</p>
 
-                        <button type="button"
+                        <button type="button" id="exportCSVBtn"
                             class="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm lg:order-2 2xl:order-3 md:order-last hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                             <svg class="w-4 h-4 mr-1 -ml-1" xmlns="http://www.w3.org/2000/svg" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -164,18 +164,18 @@
 
                         <nav
                             class="flex items-center justify-center mt-4 space-x-1 2xl:order-2 lg:order-3 md:mt-0 lg:mt-4 sm:space-x-2 2xl:mt-0">
-                            <a href="#" title=""
-                                class="px-2 py-2 text-xs font-bold text-gray-900 transition-all border border-gray-900 rounded-lg sm:px-4 hover:bg-gray-100 duration-200">
-                                12 Meses </a>
-                            <a href="#" title=""
-                                class="px-2 py-2 text-xs font-bold text-gray-500 transition-all border border-transparent rounded-lg sm:px-4 hover:bg-gray-100 duration-200">
-                                6 Meses </a>
-                            <a href="#" title=""
-                                class="px-2 py-2 text-xs font-bold text-gray-500 transition-all border border-transparent rounded-lg sm:px-4 hover:bg-gray-100 duration-200">
-                                30 Días </a>
-                            <a href="#" title=""
-                                class="px-2 py-2 text-xs font-bold text-gray-500 transition-all border border-transparent rounded-lg sm:px-4 hover:bg-gray-100 duration-200">
-                                7 Días </a>
+                            <button type="button" data-period="12_months"
+                                class="period-btn px-2 py-2 text-xs font-bold text-gray-900 transition-all border border-gray-900 rounded-lg sm:px-4 hover:bg-gray-100 duration-200">
+                                12 Meses </button>
+                            <button type="button" data-period="6_months"
+                                class="period-btn px-2 py-2 text-xs font-bold text-gray-500 transition-all border border-transparent rounded-lg sm:px-4 hover:bg-gray-100 duration-200">
+                                6 Meses </button>
+                            <button type="button" data-period="30_days"
+                                class="period-btn px-2 py-2 text-xs font-bold text-gray-500 transition-all border border-transparent rounded-lg sm:px-4 hover:bg-gray-100 duration-200">
+                                30 Días </button>
+                            <button type="button" data-period="7_days"
+                                class="period-btn px-2 py-2 text-xs font-bold text-gray-500 transition-all border border-transparent rounded-lg sm:px-4 hover:bg-gray-100 duration-200">
+                                7 Días </button>
                         </nav>
                     </div>
 
@@ -183,61 +183,106 @@
                 </div>
             </div>
 
-            <!-- Traffic Sources -->
+            <!-- Subscription Analytics -->
             <div class="overflow-hidden bg-white border border-gray-200 rounded-xl lg:col-span-2">
                 <div class="px-4 py-5 sm:p-6">
                     <div class="sm:flex sm:items-center sm:justify-between">
-                        <p class="text-base font-bold text-gray-900">Fuentes de Tráfico</p>
+                        <div>
+                            <p class="text-base font-bold text-gray-900">Suscripciones</p>
+                            <p class="mt-1 text-sm font-medium text-gray-500">Estado de los planes de suscripción</p>
+                        </div>
                         <div class="mt-4 sm:mt-0">
-                            <div>
-                                <label for="" class="sr-only"> Duración </label>
-                                <select name="" id=""
-                                    class="block w-full py-0 pl-0 pr-10 text-base border-none rounded-lg focus:outline-none focus:ring-0 sm:text-sm">
-                                    <option>Últimos 7 días</option>
-                                </select>
-                            </div>
+                            <a href="{{ route('admin.orders.index') }}" title=""
+                                class="inline-flex items-center text-xs font-semibold tracking-widest text-gray-500 uppercase hover:text-gray-900">
+                                Ver órdenes
+                                <svg class="w-4 h-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
                         </div>
                     </div>
 
                     <div class="mt-8 space-y-6">
                         <div>
                             <div class="flex items-center justify-between">
-                                <p class="text-sm font-medium text-gray-900">Directo</p>
-                                <p class="text-sm font-medium text-gray-900">1,43,382</p>
+                                <p class="text-sm font-medium text-gray-900">Suscripciones Activas</p>
+                                <p class="text-sm font-bold text-green-600">
+                                    {{ number_format($stats['active_subscriptions']) }}</p>
                             </div>
                             <div class="mt-2 bg-gray-200 h-1.5 rounded-full relative">
-                                <div class="absolute inset-y-0 left-0 bg-indigo-600 rounded-full w-[60%]"></div>
+                                @php
+                                    $activePercentage =
+                                        $stats['total_subscriptions'] > 0
+                                            ? ($stats['active_subscriptions'] / $stats['total_subscriptions']) * 100
+                                            : 0;
+                                @endphp
+                                <div class="absolute inset-y-0 left-0 bg-green-600 rounded-full"
+                                    style="width: {{ $activePercentage }}%"></div>
                             </div>
+                            <p class="mt-1 text-xs text-gray-500">de {{ number_format($stats['total_subscriptions']) }}
+                                total</p>
                         </div>
 
                         <div>
                             <div class="flex items-center justify-between">
-                                <p class="text-sm font-medium text-gray-900">Referencias</p>
-                                <p class="text-sm font-medium text-gray-900">87,974</p>
+                                <p class="text-sm font-medium text-gray-900">Ingresos por Suscripciones</p>
+                                <p class="text-sm font-bold text-blue-600">
+                                    ${{ number_format($stats['subscription_revenue'], 0, ',', '.') }}</p>
                             </div>
                             <div class="mt-2 bg-gray-200 h-1.5 rounded-full relative">
-                                <div class="absolute inset-y-0 left-0 bg-indigo-600 rounded-full w-[50%]"></div>
+                                @php
+                                    $revenuePercentage =
+                                        $stats['total_revenue'] > 0
+                                            ? ($stats['subscription_revenue'] / $stats['total_revenue']) * 100
+                                            : 0;
+                                @endphp
+                                <div class="absolute inset-y-0 left-0 bg-blue-600 rounded-full"
+                                    style="width: {{ min($revenuePercentage, 100) }}%"></div>
                             </div>
+                            <p class="mt-1 text-xs text-gray-500">del total de ingresos</p>
                         </div>
 
                         <div>
                             <div class="flex items-center justify-between">
-                                <p class="text-sm font-medium text-gray-900">Redes Sociales</p>
-                                <p class="text-sm font-medium text-gray-900">45,211</p>
+                                <p class="text-sm font-medium text-gray-900">Por Vencer (7 días)</p>
+                                <p class="text-sm font-bold text-orange-600">{{ number_format($stats['expiring_soon']) }}
+                                </p>
                             </div>
-                            <div class="mt-2 bg-gray-200 h-1.5 rounded-full relative">
-                                <div class="absolute inset-y-0 left-0 bg-indigo-600 rounded-full w-[30%]"></div>
-                            </div>
+                            @if ($stats['expiring_soon'] > 0)
+                                <div class="mt-2 bg-gray-200 h-1.5 rounded-full relative">
+                                    @php
+                                        $expiringPercentage =
+                                            $stats['active_subscriptions'] > 0
+                                                ? ($stats['expiring_soon'] / $stats['active_subscriptions']) * 100
+                                                : 0;
+                                    @endphp
+                                    <div class="absolute inset-y-0 left-0 bg-orange-600 rounded-full"
+                                        style="width: {{ min($expiringPercentage, 100) }}%"></div>
+                                </div>
+                                <p class="mt-1 text-xs text-orange-600">Requieren atención</p>
+                            @else
+                                <div class="mt-2 bg-gray-200 h-1.5 rounded-full relative">
+                                    <div class="absolute inset-y-0 left-0 bg-green-600 rounded-full w-full"></div>
+                                </div>
+                                <p class="mt-1 text-xs text-green-600">Todas al día</p>
+                            @endif
                         </div>
 
-                        <div>
+                        <div class="pt-4 border-t border-gray-200">
                             <div class="flex items-center justify-between">
-                                <p class="text-sm font-medium text-gray-900">Email</p>
-                                <p class="text-sm font-medium text-gray-900">21,893</p>
+                                <p class="text-sm font-medium text-gray-900">Promedio por Suscripción</p>
+                                <p class="text-sm font-bold text-purple-600">
+                                    @php
+                                        $avgSubscription =
+                                            $stats['active_subscriptions'] > 0
+                                                ? $stats['subscription_revenue'] / $stats['active_subscriptions']
+                                                : 0;
+                                    @endphp
+                                    ${{ number_format($avgSubscription, 0, ',', '.') }}
+                                </p>
                             </div>
-                            <div class="mt-2 bg-gray-200 h-1.5 rounded-full relative">
-                                <div class="absolute inset-y-0 left-0 bg-indigo-600 rounded-full w-[15%]"></div>
-                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Valor promedio mensual</p>
                         </div>
                     </div>
                 </div>
@@ -389,6 +434,9 @@
 
 @push('scripts')
     <script>
+        // Variables globales
+        let currentPeriod = '12_months';
+
         // Sales Chart
         var salesChartOptions = {
             chart: {
@@ -454,5 +502,38 @@
 
         var salesChart = new ApexCharts(document.querySelector('#salesChart'), salesChartOptions)
         salesChart.render()
+
+        // Manejar selección de período
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Actualizar estado visual
+                document.querySelectorAll('.period-btn').forEach(b => {
+                    b.classList.remove('text-gray-900', 'border-gray-900');
+                    b.classList.add('text-gray-500', 'border-transparent');
+                });
+
+                this.classList.remove('text-gray-500', 'border-transparent');
+                this.classList.add('text-gray-900', 'border-gray-900');
+
+                // Actualizar período actual
+                currentPeriod = this.dataset.period;
+            });
+        });
+
+        // Manejar exportación CSV
+        document.getElementById('exportCSVBtn').addEventListener('click', function() {
+            // Crear URL con parámetro de período
+            const exportUrl = '{{ route('admin.dashboard.export-sales') }}?period=' + currentPeriod;
+
+            // Crear enlace temporal para descarga
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.download = 'ventas_' + currentPeriod + '_{{ now()->format('Y-m-d') }}.csv';
+
+            // Simular click para iniciar descarga
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
     </script>
 @endpush

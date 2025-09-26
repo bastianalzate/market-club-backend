@@ -83,28 +83,37 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Nombre</label>
                             <p class="mt-1 text-sm text-gray-900">
-                                {{ $paymentTransaction->order->user?->name ?? ($paymentTransaction->customer_data['full_name'] ?? 'Usuario no encontrado') }}
+                                {{ $paymentTransaction->order->user?->name ?? (isset($paymentTransaction->order->shipping_address['name']) ? $paymentTransaction->order->shipping_address['name'] : $paymentTransaction->customer_data['full_name'] ?? 'Usuario no encontrado') }}
                             </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Email</label>
                             <p class="mt-1 text-sm text-gray-900">
-                                {{ $paymentTransaction->order->user?->email ?? ($paymentTransaction->customer_data['email'] ?? 'Email no disponible') }}
+                                {{ $paymentTransaction->order->user?->email ?? (isset($paymentTransaction->order->shipping_address['email']) ? $paymentTransaction->order->shipping_address['email'] : $paymentTransaction->customer_data['email'] ?? 'Email no disponible') }}
                             </p>
                         </div>
-                        @if ($paymentTransaction->order->user?->phone ?? $paymentTransaction->customer_data['phone_number'])
+                        @if (
+                            $paymentTransaction->order->user?->phone ??
+                                (isset($paymentTransaction->order->shipping_address['phone'])
+                                    ? $paymentTransaction->order->shipping_address['phone']
+                                    : $paymentTransaction->customer_data['phone_number']))
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Teléfono</label>
                                 <p class="mt-1 text-sm text-gray-900">
-                                    {{ $paymentTransaction->order->user?->phone ?? $paymentTransaction->customer_data['phone_number'] }}
+                                    {{ $paymentTransaction->order->user?->phone ?? (isset($paymentTransaction->order->shipping_address['phone']) ? $paymentTransaction->order->shipping_address['phone'] : $paymentTransaction->customer_data['phone_number']) }}
                                 </p>
                             </div>
                         @endif
-                        @if ($paymentTransaction->order->user?->country)
+                        @if (
+                            $paymentTransaction->order->user?->country ??
+                                (isset($paymentTransaction->order->shipping_address['country'])
+                                    ? $paymentTransaction->order->shipping_address['country']
+                                    : null))
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">País</label>
                                 <p class="mt-1 text-sm text-gray-900">
-                                    {{ $paymentTransaction->order->user?->country ?? 'No disponible' }}</p>
+                                    {{ $paymentTransaction->order->user?->country ?? (isset($paymentTransaction->order->shipping_address['country']) ? $paymentTransaction->order->shipping_address['country'] : 'No disponible') }}
+                                </p>
                             </div>
                         @endif
                     </div>

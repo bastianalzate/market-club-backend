@@ -119,10 +119,13 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $order->user?->name ?? 'Cliente' }}
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ $order->user?->name ?? (isset($order->shipping_address['name']) ? $order->shipping_address['name'] : 'Cliente') }}
                                     </div>
-                                    @if ($order->user?->email)
-                                        <div class="text-sm text-gray-500">{{ $order->user->email }}</div>
+                                    @if ($order->user?->email ?? (isset($order->shipping_address['email']) ? $order->shipping_address['email'] : null))
+                                        <div class="text-sm text-gray-500">
+                                            {{ $order->user?->email ?? (isset($order->shipping_address['email']) ? $order->shipping_address['email'] : null) }}
+                                        </div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
