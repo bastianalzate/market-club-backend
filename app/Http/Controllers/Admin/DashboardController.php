@@ -73,112 +73,107 @@ class DashboardController extends Controller
      */
     public function exportSales(Request $request)
     {
-        $period = $request->get('period', '12_months'); // 12_months, 6_months, 30_days, 7_days
-        
-        // Determinar fechas según el período
-        switch ($period) {
-            case '7_days':
-                $startDate = now()->subDays(7);
-                break;
-            case '30_days':
-                $startDate = now()->subDays(30);
-                break;
-            case '6_months':
-                $startDate = now()->subMonths(6);
-                break;
-            case '12_months':
-            default:
-                $startDate = now()->subMonths(12);
-                break;
+        try {
+            // Aumentar límites de memoria y tiempo de ejecución
+            ini_set('memory_limit', '512M');
+            set_time_limit(300); // 5 minutos
+
+            $period = $request->get('period', '12_months'); // 12_months, 6_months, 30_days, 7_days
+            
+            // Determinar fechas según el período
+            switch ($period) {
+                case '7_days':
+                    $startDate = now()->subDays(7);
+                    break;
+                case '30_days':
+                    $startDate = now()->subDays(30);
+                    break;
+                case '6_months':
+                    $startDate = now()->subMonths(6);
+                    break;
+                case '12_months':
+                default:
+                    $startDate = now()->subMonths(12);
+                    break;
+            }
+
+            // Mapeo de estados
+            $statusLabels = [
+                'pending' => 'Pendiente',
+                'processing' => 'Procesando',
+                'shipped' => 'Enviado',
+                'delivered' => 'Entregado',
+                'cancelled' => 'Cancelado',
+            ];
+
+            // Crear nombre del archivo
+            $filename = 'ordenes_' . $period . '_' . now()->format('Y-m-d') . '.csv';
+
+            // Headers para descarga
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'no-cache, must-revalidate',
+                'Expires' => 'Sat, 26 Jul 1997 05:00:00 GMT',
+            ];
+
+            // Crear callback para generar CSV usando chunk para optimizar memoria
+            $callback = function() use ($startDate, $statusLabels) {
+                $file = fopen('php://output', 'w');
+                
+                // BOM para UTF-8 (para que Excel abra correctamente caracteres especiales)
+                fwrite($file, "\xEF\xBB\xBF");
+
+                // Encabezados de la tabla (según la imagen proporcionada)
+                fputcsv($file, ['# DE ORDEN', 'CLIENTE', 'MONTO', 'PRODUCTOS', 'ESTADO']);
+
+                // Procesar órdenes en chunks para optimizar memoria
+                Order::with(['user', 'orderItems.product'])
+                    ->where('created_at', '>=', $startDate)
+                    ->orderBy('created_at', 'desc')
+                    ->chunk(100, function ($orders) use ($file, $statusLabels) {
+                        foreach ($orders as $order) {
+                            // Obtener lista de productos con verificación de null
+                            $products = $order->orderItems->map(function ($item) {
+                                if ($item->product && $item->product->name) {
+                                    return $item->product->name . ' (x' . $item->quantity . ')';
+                                }
+                                // Mostrar más información cuando el producto no se encuentra
+                                $price = $item->unit_price ? '$' . number_format($item->unit_price, 0) : 'Precio N/A';
+                                return "Producto eliminado o no disponible (x{$item->quantity}) - {$price}";
+                            })->join(', ');
+
+                            // Obtener estado traducido
+                            $status = $statusLabels[$order->status] ?? ucfirst($order->status);
+
+                            // Verificar que el usuario existe
+                            $userName = 'Cliente no encontrado';
+                            if ($order->user && $order->user->name) {
+                                $userName = $order->user->name;
+                            }
+
+                            fputcsv($file, [
+                                $order->order_number ?? 'N/A',
+                                $userName,
+                                '$' . number_format($order->total_amount ?? 0, 2),
+                                $products,
+                                $status
+                            ]);
+                        }
+                    });
+
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+
+        } catch (\Exception $e) {
+            \Log::error('Error en exportación CSV: ' . $e->getMessage());
+            
+            return response()->json([
+                'error' => 'Error al generar el archivo CSV. Por favor, inténtalo de nuevo.',
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        // Obtener datos de ventas diarias
-        $dailySales = PaymentTransaction::selectRaw('DATE(created_at) as date, COUNT(*) as orders_count, SUM(amount) as total_amount')
-            ->where('created_at', '>=', $startDate)
-            ->where('status', 'APPROVED')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        // Obtener datos de productos vendidos
-        $productSales = \DB::table('order_items')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->join('payment_transactions', 'orders.id', '=', 'payment_transactions.order_id')
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->selectRaw('products.name as product_name, SUM(order_items.quantity) as total_quantity, SUM(order_items.total_price) as total_revenue')
-            ->where('payment_transactions.created_at', '>=', $startDate)
-            ->where('payment_transactions.status', 'APPROVED')
-            ->groupBy('products.id', 'products.name')
-            ->orderBy('total_quantity', 'desc')
-            ->get();
-
-        // Crear nombre del archivo
-        $filename = 'ventas_' . $period . '_' . now()->format('Y-m-d') . '.csv';
-
-        // Headers para descarga
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-
-        // Crear callback para generar CSV
-        $callback = function() use ($dailySales, $productSales, $period) {
-            $file = fopen('php://output', 'w');
-            
-            // BOM para UTF-8 (para que Excel abra correctamente caracteres especiales)
-            fwrite($file, "\xEF\xBB\xBF");
-
-            // Encabezado del reporte
-            fputcsv($file, ['REPORTE DE VENTAS - MARKET CLUB']);
-            fputcsv($file, ['Período:', $period]);
-            fputcsv($file, ['Generado:', now()->format('d/m/Y H:i:s')]);
-            fputcsv($file, []); // Línea vacía
-
-            // Sección 1: Ventas Diarias
-            fputcsv($file, ['VENTAS DIARIAS']);
-            fputcsv($file, ['Fecha', 'Número de Órdenes', 'Ingresos Totales (COP)']);
-            
-            $totalOrders = 0;
-            $totalRevenue = 0;
-            
-            foreach ($dailySales as $sale) {
-                fputcsv($file, [
-                    $sale->date,
-                    $sale->orders_count,
-                    number_format($sale->total_amount, 2)
-                ]);
-                $totalOrders += $sale->orders_count;
-                $totalRevenue += $sale->total_amount;
-            }
-            
-            // Totales
-            fputcsv($file, ['TOTAL', $totalOrders, number_format($totalRevenue, 2)]);
-            fputcsv($file, []); // Línea vacía
-
-            // Sección 2: Productos Más Vendidos
-            fputcsv($file, ['PRODUCTOS MÁS VENDIDOS']);
-            fputcsv($file, ['Producto', 'Cantidad Vendida', 'Ingresos Generados (COP)']);
-            
-            foreach ($productSales as $product) {
-                fputcsv($file, [
-                    $product->product_name,
-                    $product->total_quantity,
-                    number_format($product->total_revenue, 2)
-                ]);
-            }
-            fputcsv($file, []); // Línea vacía
-
-            // Resumen del período
-            fputcsv($file, ['RESUMEN DEL PERÍODO']);
-            fputcsv($file, ['Métrica', 'Valor']);
-            fputcsv($file, ['Total de Órdenes', $totalOrders]);
-            fputcsv($file, ['Ingresos Totales', number_format($totalRevenue, 2)]);
-            fputcsv($file, ['Promedio por Orden', $totalOrders > 0 ? number_format($totalRevenue / $totalOrders, 2) : '0']);
-            fputcsv($file, ['Productos Únicos Vendidos', $productSales->count()]);
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
     }
 }
