@@ -12,8 +12,13 @@ class UserController extends Controller
     {
         $query = User::query();
 
-        // Solo mostrar clientes (usuarios con rol 'customer')
+        // Solo mostrar clientes (incluir mayoristas si se filtra específicamente)
         $query->where('role', 'customer');
+        
+        // Si no se especifica filtro de mayorista, mostrar solo clientes regulares
+        if (!$request->filled('is_wholesaler')) {
+            $query->where('is_wholesaler', false);
+        }
 
         // Búsqueda
         if ($request->filled('search')) {
@@ -27,11 +32,6 @@ class UserController extends Controller
         // Filtro por país
         if ($request->filled('country')) {
             $query->where('country', $request->country);
-        }
-
-        // Filtro por tipo de cliente (mayorista o regular)
-        if ($request->has('is_wholesaler') && $request->is_wholesaler !== '') {
-            $query->where('is_wholesaler', $request->boolean('is_wholesaler'));
         }
 
         // Ordenamiento

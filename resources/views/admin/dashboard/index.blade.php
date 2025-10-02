@@ -153,20 +153,13 @@
                         <p class="text-base font-bold text-gray-900 lg:order-1">Reporte de Ventas</p>
 
                         <button type="button" id="exportCSVBtn"
-                            class="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm lg:order-2 2xl:order-3 md:order-last hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg id="exportIcon" class="w-4 h-4 mr-1 -ml-1" xmlns="http://www.w3.org/2000/svg"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm lg:order-2 2xl:order-3 md:order-last hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <svg class="w-4 h-4 mr-1 -ml-1" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <svg id="loadingSpinner" class="w-4 h-4 mr-1 -ml-1 animate-spin hidden"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            <span id="exportText">Exportar CSV</span>
-                            <span id="loadingText" class="hidden">Generando...</span>
+                            Exportar CSV
                         </button>
 
                         <nav
@@ -529,72 +522,18 @@
 
         // Manejar exportación CSV
         document.getElementById('exportCSVBtn').addEventListener('click', function() {
-            const btn = this;
-            const exportIcon = document.getElementById('exportIcon');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const exportText = document.getElementById('exportText');
-            const loadingText = document.getElementById('loadingText');
-
-            // Activar estado de loading
-            btn.disabled = true;
-            exportIcon.classList.add('hidden');
-            loadingSpinner.classList.remove('hidden');
-            exportText.classList.add('hidden');
-            loadingText.classList.remove('hidden');
-
             // Crear URL con parámetro de período
             const exportUrl = '{{ route('admin.dashboard.export-sales') }}?period=' + currentPeriod;
 
-            // Usar fetch para manejar la descarga y errores
-            fetch(exportUrl, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'text/csv, application/json'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+            // Crear enlace temporal para descarga
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.download = 'ventas_' + currentPeriod + '_{{ now()->format('Y-m-d') }}.csv';
 
-                    // Verificar si la respuesta es JSON (error) o CSV
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        return response.json().then(data => {
-                            throw new Error(data.message || 'Error al generar el archivo');
-                        });
-                    }
-
-                    return response.blob();
-                })
-                .then(blob => {
-                    // Crear enlace de descarga
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = 'ordenes_' + currentPeriod + '_{{ now()->format('Y-m-d') }}.csv';
-
-                    // Simular click para iniciar descarga
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-
-                    // Limpiar URL
-                    window.URL.revokeObjectURL(url);
-                })
-                .catch(error => {
-                    console.error('Error en exportación:', error);
-                    alert('Error al exportar el archivo: ' + error.message);
-                })
-                .finally(() => {
-                    // Desactivar estado de loading
-                    btn.disabled = false;
-                    exportIcon.classList.remove('hidden');
-                    loadingSpinner.classList.add('hidden');
-                    exportText.classList.remove('hidden');
-                    loadingText.classList.add('hidden');
-                });
+            // Simular click para iniciar descarga
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         });
     </script>
 @endpush
