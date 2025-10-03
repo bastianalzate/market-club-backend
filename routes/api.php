@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\WholesalerCartController;
 use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -77,6 +78,16 @@ Route::delete('/cart/remove', [CartController::class, 'removeProduct']);
 Route::delete('/cart/clear', [CartController::class, 'clear']);
 Route::get('/cart/summary', [CartController::class, 'summary']);
 
+// Carrito de mayoristas (público - funciona con session_id)
+Route::get('/wholesaler/cart', [WholesalerCartController::class, 'index']);
+Route::post('/wholesaler/cart/add', [WholesalerCartController::class, 'addProduct']);
+Route::put('/wholesaler/cart/update', [WholesalerCartController::class, 'updateQuantity']);
+Route::delete('/wholesaler/cart/remove', [WholesalerCartController::class, 'removeProduct']);
+Route::delete('/wholesaler/cart/clear', [WholesalerCartController::class, 'clear']);
+Route::get('/wholesaler/cart/summary', [WholesalerCartController::class, 'summary']);
+Route::post('/wholesaler/cart/discount', [WholesalerCartController::class, 'applyDiscount']);
+Route::post('/wholesaler/cart/notes', [WholesalerCartController::class, 'addNotes']);
+
 // Checkout (público - funciona con session_id)
 Route::get('/checkout/summary', [CheckoutController::class, 'getCheckoutSummary']);
 Route::post('/checkout/validate-address', [CheckoutController::class, 'validateShippingAddress']);
@@ -114,6 +125,9 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Sincronización de carrito (solo para usuarios autenticados)
     Route::post('/cart/sync', [CartController::class, 'sync']);
+    
+    // Sincronización de carrito de mayoristas (solo para mayoristas autenticados)
+    Route::post('/wholesaler/cart/sync', [WholesalerCartController::class, 'sync']);
     
     // Wishlist
     Route::get('/wishlist', [WishlistController::class, 'index']);

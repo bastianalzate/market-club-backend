@@ -13,7 +13,19 @@ return new class extends Migration
     {
         Schema::create('wholesaler_carts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('wholesaler_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('session_id')->nullable(); // Para mayoristas no autenticados
+            $table->decimal('subtotal', 12, 2)->default(0);
+            $table->decimal('tax_amount', 12, 2)->default(0);
+            $table->decimal('shipping_amount', 12, 2)->default(0);
+            $table->decimal('discount_amount', 12, 2)->default(0);
+            $table->decimal('total_amount', 12, 2)->default(0);
+            $table->json('metadata')->nullable(); // Para datos adicionales
+            $table->text('notes')->nullable(); // Notas del mayorista
             $table->timestamps();
+
+            $table->index(['wholesaler_id', 'session_id']);
+            $table->unique(['wholesaler_id', 'session_id']);
         });
     }
 
