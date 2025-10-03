@@ -43,7 +43,7 @@
                             <div>
                                 @if ($product->image)
                                     <div class="relative">
-                                        <img src="{{ Storage::url($product->image) }}" alt="{{ $product->name }}"
+                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
                                             class="w-full h-80 object-cover rounded-lg border border-gray-200">
                                         <div class="absolute top-2 right-2">
                                             @if ($product->is_featured)
