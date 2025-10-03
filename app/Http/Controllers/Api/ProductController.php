@@ -34,6 +34,11 @@ class ProductController extends Controller
             $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.beer_style')) = ?", [$request->beer_style]);
         }
 
+        // Filtro por tipo de envase (nuevo)
+        if ($request->has('packaging_type') && $request->packaging_type) {
+            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.packaging_type')) = ?", [$request->packaging_type]);
+        }
+
         // Filtro por rango de precios (nuevo)
         if ($request->has('price_range') && $request->price_range) {
             $this->applyPriceFilter($query, $request->price_range);
@@ -299,8 +304,8 @@ class ProductController extends Controller
     private function normalizeCountryName($country)
     {
         $countryMap = [
-            'inglaterra' => 'Reino Unido',
-            'reino unido' => 'Reino Unido',
+            'inglaterra' => 'Inglaterra',
+            'reino unido' => 'Inglaterra',
             'colombia' => 'Colombia',
             'alemania' => 'Alemania',
             'italia' => 'Italia',
@@ -362,5 +367,64 @@ class ProductController extends Controller
         $products->each(function ($product) use ($favoriteProductIds) {
             $product->is_favorite = in_array($product->id, $favoriteProductIds);
         });
+    }
+
+    /**
+     * Get filter options for products
+     */
+    public function getFilters()
+    {
+        $products = Product::where('is_active', true)
+            ->whereNotNull('product_specific_data')
+            ->get();
+
+        $countries = [];
+        $beerStyles = [];
+        $packagingTypes = [];
+        $priceRanges = [];
+
+        foreach ($products as $product) {
+            $data = $product->product_specific_data;
+            
+            // Países de origen
+            if (isset($data['country_of_origin']) && $data['country_of_origin']) {
+                $countries[] = $data['country_of_origin'];
+            }
+            
+            // Estilos de cerveza
+            if (isset($data['beer_style']) && $data['beer_style']) {
+                $beerStyles[] = $data['beer_style'];
+            }
+            
+            // Tipos de envase
+            if (isset($data['packaging_type']) && $data['packaging_type']) {
+                $packagingTypes[] = $data['packaging_type'];
+            }
+            
+            // Rangos de precio (simplificado)
+            if ($product->price) {
+                if ($product->price <= 10000) {
+                    $priceRanges[] = '0-10k';
+                } elseif ($product->price <= 25000) {
+                    $priceRanges[] = '10k-25k';
+                } elseif ($product->price <= 50000) {
+                    $priceRanges[] = '25k-50k';
+                } else {
+                    $priceRanges[] = '50k+';
+                }
+            }
+        }
+
+        // Asegurar que siempre incluya todos los tipos de envase posibles
+        $allPackagingTypes = ['lata', 'botella', 'barril', 'growler'];
+        $finalPackagingTypes = array_unique(array_merge($packagingTypes, $allPackagingTypes));
+        sort($finalPackagingTypes);
+
+        return response()->json([
+            'countries' => array_values(array_unique($countries)),
+            'beer_styles' => array_values(array_unique($beerStyles)),
+            'packaging_types' => array_values($finalPackagingTypes),
+            'price_ranges' => array_values(array_unique($priceRanges))
+        ]);
     }
 }

@@ -34,6 +34,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/featured', [ProductController::class, 'featured']);
 Route::get('/products/latest-beers', [ProductController::class, 'latestBeers']);
+Route::get('/products/filters', [ProductController::class, 'getFilters']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 
 // Rutas de categorías públicas

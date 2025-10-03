@@ -109,8 +109,8 @@
                                 <select name="country_of_origin" id="country_of_origin" required
                                     class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                     <option value="">Selecciona un país</option>
-                                    <option value="Reino Unido"
-                                        {{ old('country_of_origin') === 'Reino Unido' ? 'selected' : '' }}>Reino Unido
+                                    <option value="Inglaterra"
+                                        {{ old('country_of_origin') === 'Inglaterra' ? 'selected' : '' }}>Inglaterra
                                     </option>
                                     <option value="Colombia"
                                         {{ old('country_of_origin') === 'Colombia' ? 'selected' : '' }}>Colombia</option>

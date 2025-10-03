@@ -372,7 +372,6 @@ class PaymentController extends Controller
             'Francia' => 'FR',
             'Alemania' => 'DE',
             'Italia' => 'IT',
-            'Reino Unido' => 'GB',
             'Inglaterra' => 'GB',
             'Bélgica' => 'BE',
             'Países Bajos' => 'NL',
