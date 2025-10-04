@@ -24,6 +24,9 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'date_of_birth',
+        'profession',
+        'nit',
         'country',
         'role',
         'is_active',
@@ -60,6 +63,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'date_of_birth' => 'date',
             'is_active' => 'boolean',
             'is_wholesaler' => 'boolean',
             'address' => 'array',

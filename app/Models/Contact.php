@@ -15,6 +15,8 @@ class Contact extends Model
         'last_name',
         'email',
         'phone',
+        'date_of_birth',
+        'profession',
         'message',
         'status',
         'admin_notes',
@@ -23,6 +25,7 @@ class Contact extends Model
     ];
 
     protected $casts = [
+        'date_of_birth' => 'date',
         'resolved_at' => 'datetime',
     ];
 

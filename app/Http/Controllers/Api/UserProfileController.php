@@ -33,6 +33,9 @@ class UserProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
+                'date_of_birth' => $user->date_of_birth,
+                'profession' => $user->profession,
+                'nit' => $user->nit,
                 'is_wholesaler' => $user->is_wholesaler,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
@@ -53,6 +56,9 @@ class UserProfileController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'phone' => 'sometimes|nullable|string|max:20',
+            'date_of_birth' => 'sometimes|nullable|date|before:today',
+            'profession' => 'sometimes|nullable|string|max:255',
+            'nit' => 'sometimes|nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -63,12 +69,21 @@ class UserProfileController extends Controller
             ], 422);
         }
 
-        // Actualizar solo nombre y teléfono
+        // Actualizar campos del perfil
         if ($request->has('name')) {
             $user->name = $request->name;
         }
         if ($request->has('phone')) {
             $user->phone = $request->phone;
+        }
+        if ($request->has('date_of_birth')) {
+            $user->date_of_birth = $request->date_of_birth;
+        }
+        if ($request->has('profession')) {
+            $user->profession = $request->profession;
+        }
+        if ($request->has('nit')) {
+            $user->nit = $request->nit;
         }
         
         // Guardar cambios
@@ -82,6 +97,9 @@ class UserProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
+                'date_of_birth' => $user->date_of_birth,
+                'profession' => $user->profession,
+                'nit' => $user->nit,
                 'updated_at' => $user->updated_at,
             ],
         ]);

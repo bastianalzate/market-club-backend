@@ -19,12 +19,16 @@ class ContactController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
+            'date_of_birth' => 'nullable|date|before:today',
+            'profession' => 'nullable|string|max:255',
             'message' => 'required|string|max:2000',
         ], [
             'first_name.required' => 'El primer nombre es obligatorio.',
             'last_name.required' => 'Los apellidos son obligatorios.',
             'email.required' => 'El email es obligatorio.',
             'email.email' => 'El email debe tener un formato válido.',
+            'date_of_birth.date' => 'La fecha de nacimiento debe ser una fecha válida.',
+            'date_of_birth.before' => 'La fecha de nacimiento debe ser anterior a hoy.',
             'message.required' => 'El mensaje es obligatorio.',
             'message.max' => 'El mensaje no puede exceder 2000 caracteres.',
         ]);
@@ -54,6 +58,8 @@ class ContactController extends Controller
                 'last_name' => $request->last_name,
                 'email' => $request->email,
                 'phone' => $phone,
+                'date_of_birth' => $request->date_of_birth,
+                'profession' => $request->profession,
                 'message' => $request->message,
                 'status' => 'new',
             ]);
