@@ -17,7 +17,7 @@ class SubscriptionPlansSeeder extends Seeder
             [
                 'name' => 'Curioso Cervecero',
                 'slug' => 'curious_brewer',
-                'description' => 'Para quienes quieren iniciar en el mundo cervecero sin complicaciones. Tres cervezas seleccionadas de distintos estilos y países, siempre con propuestas equilibradas y fáciles de disfrutar. Algunas veces, la caja puede incluir un licor especial para ampliar la experiencia.',
+                'description' => 'Para quienes quieren iniciarse en el mundo cervecero sin complicaciones. Incluye tres cervezas seleccionadas de distintos estilos y países, con propuestas equilibradas y fáciles de disfrutar. Ocasionalmente, la caja puede incluir un licor especial para ampliar la experiencia.',
                 'price' => 150000,
                 'features' => [
                     '3 cervezas artesanales o importadas de distintos estilos',
@@ -45,7 +45,7 @@ class SubscriptionPlansSeeder extends Seeder
             [
                 'name' => 'Coleccionista Cervecero',
                 'slug' => 'master_brewer',
-                'description' => 'Selección sin límites. Tres cervezas con lo mejor del mundo cervecero y los destilados, ediciones especiales, etiquetas de culto y, a veces, un licor experimental de encontrar.',
+                'description' => 'Selección de Élite. La máxima expresión de lo premium y lo inalcanzable. Recibe tres cervezas de la cúspide del mundo cervecero y los destilados. Cada caja es un manifiesto de exclusividad que incluye etiquetas de culto, ediciones especiales y, ocasionalmente, una botella de licor excepcional seleccionada para llevar la experiencia al nivel de lo sublime.',
                 'price' => 200000,
                 'features' => [
                     '3 cervezas de alta gama o ediciones limitadas',
