@@ -14,39 +14,54 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        $isWholesaler = $request->boolean('is_wholesaler', false);
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => $isWholesaler ? 'nullable|string|min:8' : 'required|string|min:8',
             'phone' => 'nullable|string|max:20',
             'date_of_birth' => 'nullable|date|before:today',
             'profession' => 'nullable|string|max:255',
-            'nit' => 'nullable|string|max:20',
+            'nit' => $isWholesaler ? 'required|string|max:20' : 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
             'is_wholesaler' => 'boolean',
         ]);
 
+        // Generar contraseña automática para mayoristas
+        $password = $isWholesaler 
+            ? 'TempPass' . rand(1000, 9999) . '!' 
+            : $request->password;
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($password),
             'phone' => $request->phone,
             'date_of_birth' => $request->date_of_birth,
             'profession' => $request->profession,
             'nit' => $request->nit,
             'country' => $request->country,
             'role' => 'customer',
-            'is_active' => true,
-            'is_wholesaler' => $request->boolean('is_wholesaler', false),
+            'is_active' => $isWholesaler ? false : true, // Mayoristas inactivos hasta aprobación
+            'is_wholesaler' => $isWholesaler,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
+        $response = [
             'user' => $user,
             'token' => $token,
             'token_type' => 'Bearer',
-        ], Response::HTTP_CREATED);
+        ];
+
+        // Agregar información específica para mayoristas
+        if ($isWholesaler) {
+            $response['message'] = 'Registro exitoso, pronto nos pondremos en contacto contigo.';
+            $response['is_wholesaler_pending'] = true;
+        }
+
+        return response()->json($response, Response::HTTP_CREATED);
     }
 
     public function login(Request $request)
