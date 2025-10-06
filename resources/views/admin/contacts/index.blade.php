@@ -290,7 +290,7 @@
                 <form method="POST" action="{{ route('admin.contacts.bulk-resolve') }}"
                     class="flex items-center space-x-4">
                     @csrf
-                    <input type="hidden" name="contact_ids" id="selected-contacts">
+                    <div id="selected-contacts-inputs"></div>
                     <span class="text-sm text-gray-700">Contactos seleccionados: <span id="selected-count">0</span></span>
                     <button type="submit"
                         class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
@@ -327,7 +327,6 @@
             const contactCheckboxes = document.querySelectorAll('.contact-checkbox');
             const bulkActions = document.getElementById('bulk-actions');
             const selectedCountSpan = document.getElementById('selected-count');
-            const selectedContactsInput = document.getElementById('selected-contacts');
 
             function updateBulkActions() {
                 const checkedBoxes = document.querySelectorAll('.contact-checkbox:checked');
@@ -336,8 +335,18 @@
                 selectedCountSpan.textContent = count;
                 bulkActions.style.display = count > 0 ? 'block' : 'none';
 
-                const ids = Array.from(checkedBoxes).map(cb => cb.value);
-                selectedContactsInput.value = JSON.stringify(ids);
+                // Limpiar inputs existentes
+                const inputsContainer = document.getElementById('selected-contacts-inputs');
+                inputsContainer.innerHTML = '';
+
+                // Crear inputs ocultos para cada ID seleccionado
+                checkedBoxes.forEach(checkbox => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'contact_ids[]';
+                    input.value = checkbox.value;
+                    inputsContainer.appendChild(input);
+                });
             }
 
             selectAllCheckbox.addEventListener('change', function() {
