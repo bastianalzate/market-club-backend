@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -14,9 +15,9 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $isWholesaler = $request->boolean('is_wholesaler', false);
+        $isWholesaler = filter_var($request->input('is_wholesaler'), FILTER_VALIDATE_BOOLEAN);
         
-        $request->validate([
+        $validationRules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => $isWholesaler ? 'nullable|string|min:8' : 'required|string|min:8',
@@ -26,12 +27,43 @@ class AuthController extends Controller
             'nit' => $isWholesaler ? 'required|string|max:20' : 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
             'is_wholesaler' => 'boolean',
-        ]);
+        ];
+
+        // Agregar validación para archivo de mayorista
+        if ($isWholesaler) {
+            $validationRules['wholesaler_document'] = 'required|file|mimes:jpg,jpeg,png,pdf|max:5120'; // 5MB máximo
+        }
+
+        $request->validate($validationRules);
 
         // Generar contraseña automática para mayoristas
         $password = $isWholesaler 
             ? 'TempPass' . rand(1000, 9999) . '!' 
             : $request->password;
+
+        // Manejar subida de archivo para mayoristas
+        $wholesalerDocumentPath = null;
+        $wholesalerDocumentOriginalName = null;
+        
+        if ($isWholesaler && $request->hasFile('wholesaler_document')) {
+            try {
+                $fileUploadService = new FileUploadService();
+                $uploadResult = $fileUploadService->uploadPrivateFile(
+                    $request->file('wholesaler_document'),
+                    'wholesaler-documents',
+                    ['jpg', 'jpeg', 'png', 'pdf'],
+                    5 // 5MB máximo
+                );
+                
+                $wholesalerDocumentPath = $uploadResult['path'];
+                $wholesalerDocumentOriginalName = $uploadResult['original_name'];
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al subir el documento: ' . $e->getMessage()
+                ], 422);
+            }
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -45,6 +77,8 @@ class AuthController extends Controller
             'role' => 'customer',
             'is_active' => $isWholesaler ? false : true, // Mayoristas inactivos hasta aprobación
             'is_wholesaler' => $isWholesaler,
+            'wholesaler_document_path' => $wholesalerDocumentPath,
+            'wholesaler_document_original_name' => $wholesalerDocumentOriginalName,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;

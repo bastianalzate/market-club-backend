@@ -32,6 +32,8 @@ class User extends Authenticatable
         'is_active',
         'is_wholesaler',
         'profile_image',
+        'wholesaler_document_path',
+        'wholesaler_document_original_name',
         'address',
         'email_notifications',
         'sms_notifications',

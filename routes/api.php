@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\WholesalerCartController;
 use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\PrivateFileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -65,6 +66,12 @@ Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
 
 // Contacto (público)
 Route::post('/contact', [ContactController::class, 'store']);
+
+// Archivos privados (requieren autenticación)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/private-file/{path}', [PrivateFileController::class, 'serve'])->where('path', '.*');
+    Route::get('/private-file/{path}/download', [PrivateFileController::class, 'download'])->where('path', '.*');
+});
 
 // Planes de suscripción (público)
 Route::get('/subscriptions/plans', [SubscriptionController::class, 'getPlans']);
