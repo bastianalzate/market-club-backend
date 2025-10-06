@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class WholesalerController extends Controller
 {
@@ -142,6 +143,52 @@ class WholesalerController extends Controller
 
         return redirect()->route('admin.wholesalers.index')
             ->with('success', 'Mayorista eliminado exitosamente.');
+    }
+
+    /**
+     * Servir archivos de mayoristas de forma segura
+     */
+    public function serveFile(User $wholesaler, $filename)
+    {
+        // Verificar que el usuario sea un mayorista
+        if (!$wholesaler->is_wholesaler) {
+            abort(404, 'Mayorista no encontrado');
+        }
+
+        // Verificar que el archivo existe y pertenece al mayorista
+        if (!$wholesaler->wholesaler_document_path || !Storage::disk('local')->exists($wholesaler->wholesaler_document_path)) {
+            abort(404, 'Archivo no encontrado');
+        }
+
+        // Obtener la ruta completa del archivo desde storage local (private)
+        $filePath = Storage::disk('local')->path($wholesaler->wholesaler_document_path);
+        
+        // Verificar que el archivo existe físicamente
+        if (!file_exists($filePath)) {
+            abort(404, 'Archivo no encontrado');
+        }
+
+        // Determinar el tipo MIME
+        $mimeType = mime_content_type($filePath);
+        
+        // Verificar que es un tipo de archivo permitido (PDF o imagen)
+        $allowedTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp'
+        ];
+
+        if (!in_array($mimeType, $allowedTypes)) {
+            abort(403, 'Tipo de archivo no permitido');
+        }
+
+        // Servir el archivo desde storage private
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $wholesaler->wholesaler_document_original_name . '"'
+        ]);
     }
 }
 

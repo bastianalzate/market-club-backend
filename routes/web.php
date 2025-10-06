@@ -62,6 +62,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::resource('contacts', ContactController::class)->only(['index', 'show', 'update', 'destroy']);
     Route::post('contacts/bulk-resolve', [ContactController::class, 'bulkResolve'])->name('contacts.bulk-resolve');
     Route::get('contacts/new-count', [ContactController::class, 'getNewContactsCount'])->name('contacts.new-count');
+    
+    // Servir archivos de mayoristas
+    Route::get('wholesalers/{wholesaler}/files/{filename}', [WholesalerController::class, 'serveFile'])->name('wholesalers.serve-file');
 });
 
 // Ruta de logout (placeholder)
