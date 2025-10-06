@@ -76,7 +76,7 @@
 
                     <div class="flex items-center justify-end ml-auto space-x-6">
                         <div class="relative">
-                            <button type="button"
+                            <button type="button" onclick="openContactsModal()"
                                 class="p-1 text-gray-700 transition-all duration-200 bg-white rounded-full hover:text-gray-900 focus:outline-none hover:bg-gray-100">
                                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -85,11 +85,19 @@
                                     </path>
                                 </svg>
                             </button>
-                            <span
-                                class="inline-flex items-center px-1.5 absolute -top-px -right-1 py-0.5 rounded-full text-xs font-semibold bg-indigo-600 text-white">2</span>
+                            @php
+                                $newContactsCount = \App\Models\Contact::new()->count();
+                            @endphp
+                            @if($newContactsCount > 0)
+                                <span id="contactsBadge"
+                                    class="inline-flex items-center justify-center px-1 absolute -top-px -right-1 py-0.5 rounded-full text-[10px] font-medium bg-indigo-600 text-white min-w-[14px] h-3.5">
+                                    {{ $newContactsCount > 9 ? '9+' : $newContactsCount }}
+                                </span>
+                            @endif
                         </div>
 
-                        <div class="relative">
+                        {{-- Botón de notificaciones (campana) oculto temporalmente --}}
+                        {{-- <div class="relative">
                             <button type="button"
                                 class="p-1 text-gray-700 transition-all duration-200 bg-white rounded-full hover:text-gray-900 focus:outline-none hover:bg-gray-100">
                                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -99,7 +107,7 @@
                                     </path>
                                 </svg>
                             </button>
-                        </div>
+                        </div> --}}
 
                         <div class="relative">
                             <button type="button"
@@ -330,6 +338,160 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('hidden');
         }
+
+        // Función para actualizar el badge del contador (solo para el modal)
+        function updateContactsBadge(count) {
+            const badge = document.getElementById('contactsBadge');
+            if (!badge) {
+                console.error('❌ Badge element not found');
+                return;
+            }
+            
+            if (count > 9) {
+                badge.textContent = '9+';
+            } else {
+                badge.textContent = count.toString();
+            }
+            
+            // Ocultar el badge si no hay contactos nuevos
+            if (count === 0) {
+                badge.style.display = 'none';
+            } else {
+                badge.style.display = 'inline-flex';
+            }
+            
+            console.log('✅ Badge updated with count:', count);
+        }
+    </script>
+
+    <!-- Modal de Contactos Nuevos -->
+    <div id="contactsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <!-- Header del Modal -->
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Mensajes Nuevos</h3>
+                    <button onclick="closeContactsModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Contenido del Modal -->
+                <div id="contactsContent" class="max-h-96 overflow-y-auto">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                        <p class="mt-2 text-gray-600">Cargando mensajes...</p>
+                    </div>
+                </div>
+
+                <!-- Footer del Modal -->
+                <div class="flex justify-end mt-4">
+                    <button onclick="closeContactsModal()" 
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                        Cerrar
+                    </button>
+                    <a href="{{ route('admin.contacts.index', ['status' => 'new']) }}" 
+                        class="ml-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Ver Todos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openContactsModal() {
+            document.getElementById('contactsModal').classList.remove('hidden');
+            loadNewContacts();
+        }
+
+        function closeContactsModal() {
+            document.getElementById('contactsModal').classList.add('hidden');
+        }
+
+        function loadNewContacts() {
+            fetch('{{ route("admin.contacts.index") }}?status=new&format=json', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const content = document.getElementById('contactsContent');
+                    if (data.contacts && data.contacts.length > 0) {
+                        content.innerHTML = data.contacts.map(contact => `
+                            <div class="border-b border-gray-200 py-3">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                                            <span class="text-indigo-600 text-sm font-medium">
+                                                ${contact.first_name.charAt(0)}${contact.last_name.charAt(0)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-sm font-medium text-gray-900">
+                                                ${contact.first_name} ${contact.last_name}
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                ${new Date(contact.created_at).toLocaleDateString('es-ES')}
+                                            </p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">${contact.email}</p>
+                                        <p class="text-sm text-gray-600 mt-1 truncate">
+                                            ${contact.message.length > 100 ? contact.message.substring(0, 100) + '...' : contact.message}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        content.innerHTML = '<div class="text-center py-8"><p class="text-gray-500">No hay mensajes nuevos</p></div>';
+                    }
+                    
+                    // Actualizar el contador del badge
+                    updateContactsBadge(data.contacts ? data.contacts.length : 0);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('contactsContent').innerHTML = '<div class="text-center py-8"><p class="text-red-500">Error al cargar los mensajes</p></div>';
+                });
+        }
+
+        // Función para actualizar el badge
+        function updateContactsBadge(count) {
+            const badge = document.getElementById('contactsBadge');
+            if (count > 9) {
+                badge.textContent = '9+';
+            } else {
+                badge.textContent = count.toString();
+            }
+            
+            // Ocultar el badge si no hay contactos nuevos
+            if (count === 0) {
+                badge.style.display = 'none';
+            } else {
+                badge.style.display = 'inline-flex';
+            }
+        }
+
+        // Cerrar modal al hacer clic fuera de él
+        document.getElementById('contactsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeContactsModal();
+            }
+        });
     </script>
 
     @stack('scripts')

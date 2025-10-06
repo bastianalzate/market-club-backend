@@ -50,6 +50,14 @@ class ContactController extends Controller
             'today' => Contact::whereDate('created_at', today())->count(),
         ];
 
+        // Si es una petición AJAX o se solicita formato JSON, devolver JSON
+        if ($request->ajax() || $request->get('format') === 'json') {
+            return response()->json([
+                'contacts' => $contacts->items(),
+                'stats' => $stats
+            ]);
+        }
+
         return view('admin.contacts.index', compact('contacts', 'stats'));
     }
 
@@ -144,5 +152,14 @@ class ContactController extends Controller
                 now()->endOfWeek()
             ])->count(),
         ];
+    }
+
+    /**
+     * Obtener solo la cantidad de contactos nuevos
+     */
+    public function getNewContactsCount()
+    {
+        $count = Contact::new()->count();
+        return response()->json(['count' => $count]);
     }
 }

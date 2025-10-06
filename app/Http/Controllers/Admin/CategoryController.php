@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -54,24 +53,15 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:categories',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'image' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
-
-        $imagePath = null;
-        
-        // Manejar subida de imagen
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $imagePath = $file->storeAs('categories', $fileName, 'public');
-        }
 
         Category::create([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
             'description' => $request->description,
-            'image' => $imagePath,
+            'image' => $request->image,
             'is_active' => $request->has('is_active'),
         ]);
 
@@ -107,29 +97,15 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'image' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
-
-        $imagePath = $category->image; // Mantener imagen actual por defecto
-        
-        // Manejar subida de nueva imagen
-        if ($request->hasFile('image')) {
-            // Eliminar imagen anterior si existe
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
-            }
-            
-            $file = $request->file('image');
-            $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $imagePath = $file->storeAs('categories', $fileName, 'public');
-        }
 
         $category->update([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
             'description' => $request->description,
-            'image' => $imagePath,
+            'image' => $request->image,
             'is_active' => $request->has('is_active'),
         ]);
 
