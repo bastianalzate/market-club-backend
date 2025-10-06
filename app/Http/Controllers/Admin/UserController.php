@@ -12,11 +12,11 @@ class UserController extends Controller
     {
         $query = User::query();
 
-        // Solo mostrar clientes (incluir mayoristas si se filtra específicamente)
+        // Solo mostrar clientes regulares (excluir mayoristas por defecto)
         $query->where('role', 'customer');
         
-        // Si no se especifica filtro de mayorista, mostrar solo clientes regulares
-        if (!$request->filled('is_wholesaler')) {
+        // Excluir mayoristas a menos que se especifique explícitamente incluir mayoristas
+        if (!$request->filled('include_wholesalers') || $request->get('include_wholesalers') !== 'true') {
             $query->where('is_wholesaler', false);
         }
 

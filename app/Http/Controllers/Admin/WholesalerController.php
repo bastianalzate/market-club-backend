@@ -3,22 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Wholesaler;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class WholesalerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Wholesaler::query();
+        $query = User::query();
+
+        // Solo mostrar usuarios que son mayoristas
+        $query->where('is_wholesaler', true);
 
         // Búsqueda
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('business_name', 'like', "%{$search}%")
-                  ->orWhere('contact_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
@@ -27,14 +30,9 @@ class WholesalerController extends Controller
             $query->where('country', $request->country);
         }
 
-        // Filtro por estado
+        // Filtro por estado (usando is_active en lugar de status)
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Filtro por tipo de negocio
-        if ($request->filled('business_type')) {
-            $query->where('business_type', $request->business_type);
+            $query->where('is_active', $request->status === 'enabled');
         }
 
         // Ordenamiento
@@ -42,107 +40,104 @@ class WholesalerController extends Controller
         $direction = $request->get('direction', 'desc');
         $query->orderBy($sort, $direction);
 
-        $wholesalers = $query->with('approver')->paginate(10);
+        $wholesalers = $query->paginate(10);
 
         return view('admin.wholesalers.index', compact('wholesalers'));
     }
 
-    public function create()
+    // Los métodos create y store no son necesarios ya que los mayoristas
+    // se registran a través del sistema de usuarios normales con is_wholesaler = true
+
+    public function show(User $wholesaler)
     {
-        return view('admin.wholesalers.create');
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'business_name' => 'required|string|max:255',
-            'contact_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:wholesalers,email',
-            'phone' => 'nullable|string|max:20',
-            'tax_id' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:500',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:20',
-            'business_type' => 'required|in:restaurant,bar,retail_store,distributor,other',
-            'business_description' => 'nullable|string',
-            'credit_limit' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
-
-        Wholesaler::create($request->all());
-
-        return redirect()->route('admin.wholesalers.index')
-            ->with('success', 'Mayorista creado exitosamente.');
-    }
-
-    public function show(Wholesaler $wholesaler)
-    {
-        $wholesaler->load('approver');
+        // Verificar que el usuario sea un mayorista
+        if (!$wholesaler->is_wholesaler) {
+            abort(404, 'Mayorista no encontrado');
+        }
+        
         return view('admin.wholesalers.show', compact('wholesaler'));
     }
 
-    public function edit(Wholesaler $wholesaler)
+    public function edit(User $wholesaler)
     {
+        // Verificar que el usuario sea un mayorista
+        if (!$wholesaler->is_wholesaler) {
+            abort(404, 'Mayorista no encontrado');
+        }
+        
         return view('admin.wholesalers.edit', compact('wholesaler'));
     }
 
-    public function update(Request $request, Wholesaler $wholesaler)
+    public function update(Request $request, User $wholesaler)
     {
+        // Verificar que el usuario sea un mayorista
+        if (!$wholesaler->is_wholesaler) {
+            abort(404, 'Mayorista no encontrado');
+        }
+        
         $request->validate([
-            'business_name' => 'required|string|max:255',
-            'contact_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:wholesalers,email,' . $wholesaler->id,
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $wholesaler->id,
             'phone' => 'nullable|string|max:20',
-            'tax_id' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:500',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:20',
-            'business_type' => 'required|in:restaurant,bar,retail_store,distributor,other',
-            'business_description' => 'nullable|string',
-            'status' => 'required|in:enabled,disabled',
-            'notes' => 'nullable|string',
+            'is_active' => 'boolean',
         ]);
 
-        $wholesaler->update($request->all());
+        $wholesaler->update($request->only(['name', 'email', 'phone', 'country', 'is_active']));
 
         return redirect()->route('admin.wholesalers.index')
             ->with('success', 'Mayorista actualizado exitosamente.');
     }
 
-    public function approve(Wholesaler $wholesaler)
+    public function approve(User $wholesaler)
     {
+        // Verificar que el usuario sea un mayorista
+        if (!$wholesaler->is_wholesaler) {
+            abort(404, 'Mayorista no encontrado');
+        }
+        
         $wholesaler->update([
-            'status' => 'enabled',
-            'approved_at' => now(),
-            'approved_by' => auth()->id(),
+            'is_active' => true,
         ]);
 
         return redirect()->route('admin.wholesalers.index')
             ->with('success', 'Mayorista habilitado exitosamente.');
     }
 
-    public function toggleStatus(Wholesaler $wholesaler)
+    public function toggleStatus(User $wholesaler)
     {
-        $newStatus = $wholesaler->status === 'enabled' ? 'disabled' : 'enabled';
+        // Verificar que el usuario sea un mayorista
+        if (!$wholesaler->is_wholesaler) {
+            abort(404, 'Mayorista no encontrado');
+        }
         
-        $wholesaler->update(['status' => $newStatus]);
+        $newStatus = !$wholesaler->is_active;
+        
+        $wholesaler->update(['is_active' => $newStatus]);
 
-        $statusText = $newStatus === 'enabled' ? 'habilitado' : 'deshabilitado';
+        $statusText = $newStatus ? 'habilitado' : 'deshabilitado';
         
         return response()->json([
             'success' => true,
             'message' => "Mayorista {$statusText} exitosamente.",
-            'status' => $newStatus,
+            'status' => $newStatus ? 'enabled' : 'disabled',
             'status_text' => $statusText
         ]);
     }
 
-    public function destroy(Wholesaler $wholesaler)
+    public function destroy(User $wholesaler)
     {
+        // Verificar que el usuario sea un mayorista
+        if (!$wholesaler->is_wholesaler) {
+            abort(404, 'Mayorista no encontrado');
+        }
+        
+        // Verificar si el usuario tiene órdenes
+        if ($wholesaler->orders()->count() > 0) {
+            return redirect()->route('admin.wholesalers.index')
+                ->with('error', 'No se puede eliminar el mayorista porque tiene órdenes asociadas.');
+        }
+
         $wholesaler->delete();
 
         return redirect()->route('admin.wholesalers.index')

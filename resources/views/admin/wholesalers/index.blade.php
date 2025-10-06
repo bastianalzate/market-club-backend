@@ -9,17 +9,7 @@
             <h1 class="text-2xl font-bold text-gray-900">Mayoristas</h1>
             <p class="mt-1 text-sm text-gray-500">Gestiona todos los mayoristas registrados en tu tienda</p>
         </div>
-        <div>
-            <a href="{{ route('admin.wholesalers.create') }}"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                    aria-hidden="true">
-                    <path
-                        d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                </svg>
-                Nuevo Mayorista
-            </a>
-        </div>
+        
     </div>
 
     <!-- Filtros -->
@@ -98,9 +88,6 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Ubicación
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo
-                                de Negocio
-                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Estado
                             </th>
@@ -123,11 +110,11 @@
                                             <div
                                                 class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
                                                 <span
-                                                    class="text-indigo-600 text-sm font-medium">{{ strtoupper(substr($wholesaler->business_name, 0, 2)) }}</span>
+                                                    class="text-indigo-600 text-sm font-medium">{{ strtoupper(substr($wholesaler->name, 0, 2)) }}</span>
                                             </div>
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">{{ $wholesaler->business_name }}
+                                            <div class="text-sm font-medium text-gray-900">{{ $wholesaler->name }}
                                             </div>
                                             <div class="text-sm text-gray-500">ID: {{ $wholesaler->id }}</div>
                                         </div>
@@ -142,7 +129,7 @@
                                             </path>
                                         </svg>
                                         <div>
-                                            <div class="text-sm text-gray-900">{{ $wholesaler->contact_name }}</div>
+                                            <div class="text-sm text-gray-900">{{ $wholesaler->name }}</div>
                                             <div class="text-sm text-gray-500">{{ $wholesaler->email }}</div>
                                         </div>
                                     </div>
@@ -172,26 +159,16 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         </svg>
-                                        <div class="text-sm text-gray-900">{{ $wholesaler->city ?? 'Sin ubicación' }},
-                                            {{ $wholesaler->country }}</div>
+                                        <div class="text-sm text-gray-900">{{ $wholesaler->country ?? 'Sin ubicación' }}</div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        {{ ucfirst(str_replace('_', ' ', $wholesaler->business_type)) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span
                                         class="status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                        @if ($wholesaler->status === 'enabled') bg-green-100 text-green-800
+                                        @if ($wholesaler->is_active) bg-green-100 text-green-800
                                         @else bg-red-100 text-red-800 @endif"
                                         data-wholesaler-id="{{ $wholesaler->id }}">
-                                        @if ($wholesaler->status === 'enabled')
+                                        @if ($wholesaler->is_active)
                                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                             </svg>
@@ -210,12 +187,12 @@
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" class="sr-only peer wholesaler-toggle"
                                             data-wholesaler-id="{{ $wholesaler->id }}"
-                                            {{ $wholesaler->status === 'enabled' ? 'checked' : '' }}>
+                                            {{ $wholesaler->is_active ? 'checked' : '' }}>
                                         <div
                                             class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
                                         </div>
                                         <span class="ml-3 text-sm font-medium text-gray-900">
-                                            {{ $wholesaler->status === 'enabled' ? 'Sí' : 'No' }}
+                                            {{ $wholesaler->is_active ? 'Sí' : 'No' }}
                                         </span>
                                     </label>
                                 </td>
@@ -237,7 +214,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-2">
-                                        @if ($wholesaler->status === 'pending_approval')
+                                        @if (!$wholesaler->is_active)
                                             <form action="{{ route('admin.wholesalers.approve', $wholesaler) }}"
                                                 method="POST" class="inline">
                                                 @csrf
@@ -309,17 +286,6 @@
                 </svg>
                 <h3 class="mt-2 text-sm font-medium text-gray-900">No hay mayoristas</h3>
                 <p class="mt-1 text-sm text-gray-500">No se encontraron mayoristas con los filtros aplicados.</p>
-                <div class="mt-6">
-                    <a href="{{ route('admin.wholesalers.create') }}"
-                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                            fill="currentColor" aria-hidden="true">
-                            <path
-                                d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                        </svg>
-                        Nuevo Mayorista
-                    </a>
-                </div>
             </div>
         @endif
     </div>
