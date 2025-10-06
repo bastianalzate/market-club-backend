@@ -10,28 +10,30 @@ use Illuminate\Support\Str;
 class ImageController extends Controller
 {
     /**
-     * Upload a product image
+     * Upload an image (product or category)
      */
     public function upload(Request $request)
     {
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
+            'type' => 'nullable|in:product,category', // Tipo de imagen
         ]);
 
         try {
             $file = $request->file('image');
+            $type = $request->get('type', 'product'); // Por defecto es producto
             
             // Generar nombre único para el archivo
             $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
             
-            // Crear directorio si no existe
-            $directory = 'products/' . date('Y/m');
+            // Crear directorio según el tipo
+            $directory = $type === 'category' ? 'categories' : 'products/' . date('Y/m');
             
             // Guardar la imagen
             $path = $file->storeAs($directory, $fileName, 'public');
             
             // Generar URL pública
-            $url = Storage::disk('public')->url($path);
+            $url = asset('storage/' . $path);
             
             return response()->json([
                 'success' => true,
@@ -94,7 +96,7 @@ class ImageController extends Controller
             foreach ($files as $file) {
                 $images[] = [
                     'path' => $file,
-                    'url' => Storage::disk('public')->url($file),
+                    'url' => asset('storage/' . $file),
                     'name' => basename($file),
                     'size' => Storage::disk('public')->size($file),
                     'modified' => Storage::disk('public')->lastModified($file),
