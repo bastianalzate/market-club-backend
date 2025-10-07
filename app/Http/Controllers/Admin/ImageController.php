@@ -118,4 +118,28 @@ class ImageController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Serve an image file directly (fallback if symlink doesn't work)
+     * Use this route if the storage:link doesn't work in production
+     */
+    public function serve($path)
+    {
+        // Sanitize the path to prevent directory traversal
+        $path = str_replace(['..', '\\'], '', $path);
+        
+        // Check if file exists
+        if (!Storage::disk('public')->exists($path)) {
+            abort(404, 'Image not found');
+        }
+
+        // Get file content and mime type
+        $file = Storage::disk('public')->get($path);
+        $mimeType = Storage::disk('public')->mimeType($path);
+
+        // Return the image with proper headers
+        return response($file, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    }
 }

@@ -16,6 +16,12 @@ Route::get('/', function () {
     return view('store.placeholder');
 })->name('home');
 
+// Ruta alternativa para servir imágenes si el enlace simbólico no funciona
+// Usa esta ruta solo si 'php artisan storage:link' no funciona en producción
+Route::get('/storage/{path}', [App\Http\Controllers\Admin\ImageController::class, 'serve'])
+    ->where('path', '.*')
+    ->name('storage.serve');
+
 // Rutas de autenticación del admin
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

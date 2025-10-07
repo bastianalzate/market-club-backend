@@ -21,6 +21,10 @@ SET time_zone = "+00:00";
 -- Base de datos: `market_club`
 --
 
+-- Crear la base de datos si no existe y seleccionarla
+CREATE DATABASE IF NOT EXISTS `market_club` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `market_club`;
+
 -- --------------------------------------------------------
 
 --
