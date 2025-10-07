@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('wholesaler_carts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('wholesaler_id')->nullable()->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('wholesaler_id')->nullable();
             $table->string('session_id')->nullable(); // Para mayoristas no autenticados
             $table->decimal('subtotal', 12, 2)->default(0);
             $table->decimal('tax_amount', 12, 2)->default(0);
