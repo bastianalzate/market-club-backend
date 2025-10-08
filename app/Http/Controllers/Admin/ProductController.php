@@ -151,6 +151,22 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        // Si solo se está actualizando el estado (desde el botón de acciones rápidas)
+        $requestData = $request->only(['is_active', '_token', '_method']);
+        if ($request->has('is_active') && count($requestData) <= 3) {
+            $request->validate([
+                'is_active' => 'required|in:0,1',
+            ]);
+            
+            $product->update([
+                'is_active' => $request->input('is_active') == 1,
+            ]);
+            
+            return redirect()->route('admin.products.show', $product)
+                ->with('success', 'Estado del producto actualizado exitosamente.');
+        }
+        
+        // Validación completa para actualizaciones normales
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -161,8 +177,8 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'product_type_id' => 'nullable|exists:product_types,id',
             'image' => 'nullable|string',
-            'is_featured' => 'boolean',
-            'is_active' => 'boolean',
+            'is_featured' => 'nullable|in:0,1',
+            'is_active' => 'nullable|in:0,1',
         ]);
 
         // Procesar datos específicos del tipo de producto
@@ -209,8 +225,8 @@ class ProductController extends Controller
             'category_id' => $request->category_id,
             'product_type_id' => $request->product_type_id,
             'image' => $request->image,
-            'is_featured' => $request->has('is_featured'),
-            'is_active' => $request->has('is_active'),
+            'is_featured' => $request->input('is_featured', 0) == 1,
+            'is_active' => $request->input('is_active', 0) == 1,
         ]);
 
         // Actualizar product_specific_data por separado

@@ -274,6 +274,19 @@ class ProductController extends Controller
     private function applyPriceFilter($query, $priceRange)
     {
         switch ($priceRange) {
+            case '0-10k':
+                $query->where('price', '<=', 10000);
+                break;
+            case '10k-25k':
+                $query->whereBetween('price', [10001, 25000]);
+                break;
+            case '25k-50k':
+                $query->whereBetween('price', [25001, 50000]);
+                break;
+            case '50k+':
+                $query->where('price', '>', 50000);
+                break;
+            // Mantener compatibilidad con formato anterior
             case 'less_than_15000':
                 $query->where('price', '<', 15000);
                 break;
