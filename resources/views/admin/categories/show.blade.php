@@ -116,8 +116,8 @@
                                     <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                         <div class="flex items-start space-x-3">
                                             <div class="flex-shrink-0">
-                                                @if ($product->image)
-                                                    <img src="{{ $product->image }}" alt="{{ $product->name }}"
+                                                @if ($product->image_url)
+                                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                                                         class="h-12 w-12 object-cover rounded-lg border border-gray-200">
                                                 @else
                                                     <div

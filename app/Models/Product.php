@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -72,9 +73,16 @@ class Product extends Model
         }
 
         // Si la ruta ya incluye 'uploads/', usarla directamente
-        // Si no, asumir que es una ruta antigua de storage/
         if (str_starts_with($this->image, 'uploads/')) {
             return asset($this->image);
+        }
+        
+        // Si la ruta incluye 'products/', asumimos que está en storage/app/public
+        if (str_starts_with($this->image, 'products/')) {
+            // Verificar si el archivo existe en storage/app/public
+            if (Storage::disk('public')->exists($this->image)) {
+                return asset('storage/' . $this->image);
+            }
         }
         
         // Compatibilidad con rutas antiguas
