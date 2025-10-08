@@ -39,6 +39,27 @@ fi
 
 print_success "Directorio de proyecto encontrado"
 
+# Verificar problemas de propiedad de Git
+print_info "Verificando configuración de Git..."
+CURRENT_DIR=$(pwd)
+if ! git status > /dev/null 2>&1; then
+    print_warning "Problema de propiedad detectado en el repositorio Git"
+    print_info "Intentando corregir..."
+    
+    # Opción 1: Intentar agregar como directorio seguro
+    git config --global --add safe.directory "$CURRENT_DIR"
+    
+    if git status > /dev/null 2>&1; then
+        print_success "Problema de Git corregido"
+    else
+        print_error "No se pudo corregir el problema de Git"
+        print_info "Ejecuta manualmente: sudo chown -R \$USER:\$USER $CURRENT_DIR"
+        exit 1
+    fi
+else
+    print_success "Configuración de Git OK"
+fi
+
 # 1. Modo de mantenimiento
 print_info "Activando modo de mantenimiento..."
 php artisan down --render="errors::503" --retry=60

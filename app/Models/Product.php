@@ -71,6 +71,13 @@ class Product extends Model
             return null;
         }
 
+        // Si la ruta ya incluye 'uploads/', usarla directamente
+        // Si no, asumir que es una ruta antigua de storage/
+        if (str_starts_with($this->image, 'uploads/')) {
+            return asset($this->image);
+        }
+        
+        // Compatibilidad con rutas antiguas
         return asset('storage/' . $this->image);
     }
 }

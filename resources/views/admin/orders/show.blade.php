@@ -127,9 +127,9 @@
                                                                 </path>
                                                             </svg>
                                                         </div>
-                                                    @elseif ($item->product && $item->product->image)
+                                                    @elseif ($item->product && $item->product->image_url)
                                                         <img class="h-10 w-10 rounded-lg object-cover"
-                                                            src="{{ asset('storage/' . $item->product->image) }}"
+                                                            src="{{ $item->product->image_url }}"
                                                             alt="{{ $item->product->name }}">
                                                     @else
                                                         <div

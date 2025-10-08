@@ -361,7 +361,7 @@
                     @if ($product->image)
                         <div id="current-image" class="mb-4">
                             <div class="relative inline-block">
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="Imagen actual"
+                                <img src="{{ $product->image_url }}" alt="Imagen actual"
                                     class="h-32 w-32 object-cover rounded-lg border border-gray-300">
                                 <button type="button" id="remove-current-image"
                                     class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors">

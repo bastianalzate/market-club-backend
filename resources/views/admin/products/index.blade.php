@@ -135,10 +135,9 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-12 w-12">
-                                            @if ($product->image)
+                                            @if ($product->image_url)
                                                 <img class="h-12 w-12 rounded-lg object-cover"
-                                                    src="{{ asset('storage/' . $product->image) }}"
-                                                    alt="{{ $product->name }}">
+                                                    src="{{ $product->image_url }}" alt="{{ $product->name }}">
                                             @else
                                                 <div
                                                     class="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">

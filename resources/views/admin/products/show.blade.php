@@ -41,9 +41,9 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Imagen del producto -->
                             <div>
-                                @if ($product->image)
+                                @if ($product->image_url)
                                     <div class="relative">
-                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
+                                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                                             class="w-full h-80 object-cover rounded-lg border border-gray-200">
                                         <div class="absolute top-2 right-2">
                                             @if ($product->is_featured)

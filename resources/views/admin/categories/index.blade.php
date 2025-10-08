@@ -63,7 +63,7 @@
                     <!-- Imagen de la categoría -->
                     <div class="h-48 bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
                         @if ($category->image)
-                            <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
+                            <img src="{{ asset($category->image) }}" alt="{{ $category->name }}"
                                 class="w-full h-full object-cover">
                         @else
                             <div class="text-center">

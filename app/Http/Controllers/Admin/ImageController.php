@@ -24,14 +24,21 @@ class ImageController extends Controller
             // Generar nombre único para el archivo
             $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
             
-            // Crear directorio si no existe
-            $directory = 'products/' . date('Y/m');
+            // Crear directorio si no existe (directamente en public/)
+            $folder = 'uploads/products/' . date('Y/m');
+            $destinationPath = public_path($folder);
             
-            // Guardar la imagen
-            $path = $file->storeAs($directory, $fileName, 'public');
+            // Asegurarse de que el directorio exista
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
             
-            // Generar URL pública
-            $url = Storage::disk('public')->url($path);
+            // Guardar el archivo directamente en public/
+            $file->move($destinationPath, $fileName);
+            
+            // Ruta relativa para guardar en BD y generar URL
+            $path = $folder . '/' . $fileName;
+            $url = asset($path);
             
             return response()->json([
                 'success' => true,
@@ -59,9 +66,12 @@ class ImageController extends Controller
         ]);
 
         try {
+            // Construir ruta completa
+            $fullPath = public_path($request->path);
+            
             // Verificar que el archivo existe
-            if (Storage::disk('public')->exists($request->path)) {
-                Storage::disk('public')->delete($request->path);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
                 
                 return response()->json([
                     'success' => true,
@@ -89,16 +99,34 @@ class ImageController extends Controller
     {
         try {
             $images = [];
-            $files = Storage::disk('public')->allFiles('products');
+            $directory = public_path('uploads/products');
+            
+            if (!is_dir($directory)) {
+                return response()->json([
+                    'success' => true,
+                    'images' => []
+                ]);
+            }
+            
+            // Obtener todos los archivos recursivamente
+            $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($directory),
+                \RecursiveIteratorIterator::LEAVES_ONLY
+            );
             
             foreach ($files as $file) {
-                $images[] = [
-                    'path' => $file,
-                    'url' => Storage::disk('public')->url($file),
-                    'name' => basename($file),
-                    'size' => Storage::disk('public')->size($file),
-                    'modified' => Storage::disk('public')->lastModified($file),
-                ];
+                if ($file->isFile()) {
+                    $relativePath = str_replace(public_path() . DIRECTORY_SEPARATOR, '', $file->getPathname());
+                    $relativePath = str_replace('\\', '/', $relativePath);
+                    
+                    $images[] = [
+                        'path' => $relativePath,
+                        'url' => asset($relativePath),
+                        'name' => $file->getFilename(),
+                        'size' => $file->getSize(),
+                        'modified' => $file->getMTime(),
+                    ];
+                }
             }
             
             // Ordenar por fecha de modificación (más recientes primero)
@@ -120,26 +148,29 @@ class ImageController extends Controller
     }
 
     /**
-     * Serve an image file directly (fallback if symlink doesn't work)
-     * Use this route if the storage:link doesn't work in production
+     * Serve an image file directly
+     * Sirve archivos desde public/uploads/
      */
     public function serve($path)
     {
         // Sanitize the path to prevent directory traversal
         $path = str_replace(['..', '\\'], '', $path);
         
+        // Construir ruta completa
+        $fullPath = public_path('uploads/' . $path);
+        
         // Check if file exists
-        if (!Storage::disk('public')->exists($path)) {
+        if (!file_exists($fullPath)) {
             abort(404, 'Image not found');
         }
 
-        // Get file content and mime type
-        $file = Storage::disk('public')->get($path);
-        $mimeType = Storage::disk('public')->mimeType($path);
+        // Get mime type
+        $mimeType = mime_content_type($fullPath);
 
         // Return the image with proper headers
-        return response($file, 200)
-            ->header('Content-Type', $mimeType)
-            ->header('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Cache-Control' => 'public, max-age=31536000', // Cache for 1 year
+        ]);
     }
 }
