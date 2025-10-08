@@ -12,24 +12,32 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Primero crear una columna temporal
-        Schema::table('wholesalers', function (Blueprint $table) {
-            $table->enum('status_temp', ['enabled', 'disabled'])->default('disabled')->after('status');
-        });
-        
-        // Migrar los datos
-        DB::statement("UPDATE wholesalers SET status_temp = 'enabled' WHERE status = 'active'");
-        DB::statement("UPDATE wholesalers SET status_temp = 'disabled' WHERE status = 'inactive'");
-        DB::statement("UPDATE wholesalers SET status_temp = 'disabled' WHERE status = 'pending_approval'");
-        
-        // Eliminar la columna original y renombrar la temporal
-        Schema::table('wholesalers', function (Blueprint $table) {
-            $table->dropColumn('status');
-        });
-        
-        Schema::table('wholesalers', function (Blueprint $table) {
-            $table->renameColumn('status_temp', 'status');
-        });
+        // Verificar si la columna status existe
+        if (Schema::hasColumn('wholesalers', 'status')) {
+            // Primero crear una columna temporal
+            Schema::table('wholesalers', function (Blueprint $table) {
+                $table->enum('status_temp', ['enabled', 'disabled'])->default('disabled')->after('status');
+            });
+            
+            // Migrar los datos
+            DB::statement("UPDATE wholesalers SET status_temp = 'enabled' WHERE status = 'active'");
+            DB::statement("UPDATE wholesalers SET status_temp = 'disabled' WHERE status = 'inactive'");
+            DB::statement("UPDATE wholesalers SET status_temp = 'disabled' WHERE status = 'pending_approval'");
+            
+            // Eliminar la columna original y renombrar la temporal
+            Schema::table('wholesalers', function (Blueprint $table) {
+                $table->dropColumn('status');
+            });
+            
+            Schema::table('wholesalers', function (Blueprint $table) {
+                $table->renameColumn('status_temp', 'status');
+            });
+        } else {
+            // Si no existe la columna status, crear la nueva columna directamente
+            Schema::table('wholesalers', function (Blueprint $table) {
+                $table->enum('status', ['enabled', 'disabled'])->default('disabled');
+            });
+        }
     }
 
     /**
