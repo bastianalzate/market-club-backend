@@ -110,4 +110,182 @@ class EmailService
             return false;
         }
     }
+
+    /**
+     * Enviar email de renovación de suscripción exitosa
+     */
+    public function sendSubscriptionRenewalSuccessEmail($user, $subscription, $transaction): bool
+    {
+        try {
+            $plan = $subscription->subscriptionPlan;
+            
+            $data = [
+                'user' => $user,
+                'subscription' => $subscription,
+                'plan' => $plan,
+                'transaction' => $transaction,
+                'amount' => $plan->price,
+                'next_billing_date' => $subscription->next_billing_date->format('d/m/Y'),
+            ];
+
+            Mail::send('emails.subscription-renewal-success', $data, function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                    ->subject('Suscripción Renovada Exitosamente - Market Club');
+            });
+
+            Log::info("Subscription renewal success email sent to user {$user->id}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Subscription renewal success email error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Enviar email de fallo de pago
+     */
+    public function sendPaymentFailedEmail($user, $subscription, string $errorMessage): bool
+    {
+        try {
+            $plan = $subscription->subscriptionPlan;
+            $retryCount = $subscription->payment_retry_count;
+            $maxRetries = 4;
+            $retriesLeft = $maxRetries - $retryCount;
+
+            $data = [
+                'user' => $user,
+                'subscription' => $subscription,
+                'plan' => $plan,
+                'error_message' => $errorMessage,
+                'retry_count' => $retryCount,
+                'retries_left' => $retriesLeft,
+                'payment_method' => $subscription->masked_payment_method,
+            ];
+
+            Mail::send('emails.payment-failed', $data, function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                    ->subject('⚠️ Fallo en el Pago de tu Suscripción - Market Club');
+            });
+
+            Log::info("Payment failed email sent to user {$user->id}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Payment failed email error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Enviar email de suscripción suspendida
+     */
+    public function sendSubscriptionSuspendedEmail($user, $subscription): bool
+    {
+        try {
+            $plan = $subscription->subscriptionPlan;
+
+            $data = [
+                'user' => $user,
+                'subscription' => $subscription,
+                'plan' => $plan,
+                'suspended_at' => $subscription->suspended_at->format('d/m/Y H:i'),
+            ];
+
+            Mail::send('emails.subscription-suspended', $data, function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                    ->subject('🔒 Suscripción Suspendida - Market Club');
+            });
+
+            Log::info("Subscription suspended email sent to user {$user->id}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Subscription suspended email error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Enviar email recordatorio antes del cobro
+     */
+    public function sendUpcomingBillingReminderEmail($user, $subscription): bool
+    {
+        try {
+            $plan = $subscription->subscriptionPlan;
+            $daysUntilBilling = now()->diffInDays($subscription->next_billing_date);
+
+            $data = [
+                'user' => $user,
+                'subscription' => $subscription,
+                'plan' => $plan,
+                'amount' => $plan->price,
+                'billing_date' => $subscription->next_billing_date->format('d/m/Y'),
+                'days_until_billing' => $daysUntilBilling,
+                'payment_method' => $subscription->masked_payment_method,
+            ];
+
+            Mail::send('emails.upcoming-billing-reminder', $data, function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                    ->subject('Recordatorio: Próximo Cobro de Suscripción - Market Club');
+            });
+
+            Log::info("Upcoming billing reminder email sent to user {$user->id}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Upcoming billing reminder email error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Enviar resumen de renovaciones al administrador
+     */
+    public function sendAdminRenewalSummaryEmail(string $adminEmail, array $summary): bool
+    {
+        try {
+            Mail::send('emails.admin-renewal-summary', [
+                'summary' => $summary,
+            ], function ($message) use ($adminEmail, $summary) {
+                $message->to($adminEmail)
+                    ->subject("Resumen de Renovaciones - {$summary['date']}");
+            });
+
+            Log::info("Admin renewal summary email sent");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Admin renewal summary email error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Enviar email de confirmación de cambio de método de pago
+     */
+    public function sendPaymentMethodUpdatedEmail($user, $subscription): bool
+    {
+        try {
+            $data = [
+                'user' => $user,
+                'subscription' => $subscription,
+                'plan' => $subscription->subscriptionPlan,
+                'payment_method' => $subscription->masked_payment_method,
+                'updated_at' => now()->format('d/m/Y H:i'),
+            ];
+
+            Mail::send('emails.payment-method-updated', $data, function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                    ->subject('Método de Pago Actualizado - Market Club');
+            });
+
+            Log::info("Payment method updated email sent to user {$user->id}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Payment method updated email error: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

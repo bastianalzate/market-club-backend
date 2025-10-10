@@ -127,6 +127,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscriptions/cancel', [SubscriptionController::class, 'cancelSubscription']);
     Route::post('/subscriptions/renew', [SubscriptionController::class, 'renewSubscription']);
     
+    // Gestión de métodos de pago y renovación automática
+    Route::post('/subscriptions/payment-method', [SubscriptionController::class, 'updatePaymentMethod']);
+    Route::delete('/subscriptions/payment-method', [SubscriptionController::class, 'removePaymentMethod']);
+    Route::post('/subscriptions/auto-renew', [SubscriptionController::class, 'toggleAutoRenew']);
+    Route::post('/subscriptions/reactivate', [SubscriptionController::class, 'reactivateSubscription']);
+    
     // Órdenes del usuario (alias para compatibilidad)
     Route::apiResource('orders', OrderController::class);
     

@@ -237,4 +237,175 @@ class WompiService
         // Generar hash SHA256
         return hash('sha256', $signatureString);
     }
+
+    /**
+     * Crear token permanente para pagos recurrentes
+     * Nota: En Wompi, los tokens de tarjeta tienen una vida útil limitada.
+     * Para pagos recurrentes reales, necesitarías usar Tokenización de Tarjetas o Customer Tokens
+     */
+    public function createPermanentToken(array $cardData): array
+    {
+        try {
+            // Crear token de tarjeta regular
+            $tokenResult = $this->createPaymentToken($cardData);
+            
+            if (!$tokenResult['success']) {
+                return $tokenResult;
+            }
+
+            // En producción, aquí deberías usar la API de Customer Tokens de Wompi
+            // Por ahora, usamos el token de tarjeta estándar
+            return [
+                'success' => true,
+                'data' => [
+                    'token' => $tokenResult['data']['id'],
+                    'type' => 'CARD',
+                    'last_four' => substr($cardData['number'], -4),
+                    'card_holder' => $cardData['card_holder'],
+                    'exp_month' => $cardData['exp_month'],
+                    'exp_year' => $cardData['exp_year'],
+                ],
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Wompi permanent token creation error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error al crear token permanente',
+            ];
+        }
+    }
+
+    /**
+     * Procesar pago recurrente con token guardado
+     */
+    public function processRecurringPayment(string $token, float $amount, string $reference, array $customerData): array
+    {
+        try {
+            $amountInCents = $this->convertToCents($amount);
+
+            $paymentData = [
+                'acceptance_token' => $token,
+                'amount_in_cents' => $amountInCents,
+                'currency' => 'COP',
+                'customer_email' => $customerData['email'],
+                'reference' => $reference,
+                'payment_method' => [
+                    'type' => 'CARD',
+                    'token' => $token,
+                    'installments' => 1,
+                ],
+            ];
+
+            // Agregar información adicional del cliente
+            if (isset($customerData['name'])) {
+                $paymentData['customer_data'] = [
+                    'full_name' => $customerData['name'],
+                    'phone_number' => $customerData['phone'] ?? '',
+                ];
+            }
+
+            return $this->createTransaction($paymentData);
+
+        } catch (\Exception $e) {
+            Log::error('Wompi recurring payment error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error al procesar pago recurrente: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Validar si un token es válido
+     */
+    public function validateToken(string $token): array
+    {
+        try {
+            // Intentar obtener información del token
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->publicKey,
+            ])->get($this->baseUrl . '/tokens/cards/' . $token);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'valid' => true,
+                    'data' => $response->json()['data'],
+                ];
+            }
+
+            return [
+                'success' => true,
+                'valid' => false,
+                'message' => 'Token no válido o expirado',
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Wompi token validation error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error al validar token',
+            ];
+        }
+    }
+
+    /**
+     * Obtener estado de transacción recurrente
+     */
+    public function getRecurringTransactionStatus(string $transactionId): array
+    {
+        $result = $this->getTransaction($transactionId);
+        
+        if (!$result['success']) {
+            return $result;
+        }
+
+        $transaction = $result['data']['data'];
+        
+        return [
+            'success' => true,
+            'data' => [
+                'status' => $transaction['status'],
+                'amount' => $transaction['amount_in_cents'] / 100,
+                'reference' => $transaction['reference'],
+                'payment_method' => $transaction['payment_method_type'],
+                'created_at' => $transaction['created_at'],
+                'finalized_at' => $transaction['finalized_at'] ?? null,
+            ],
+        ];
+    }
+
+    /**
+     * Generar referencia para pago recurrente
+     */
+    public function generateRecurringReference(int $subscriptionId, string $period): string
+    {
+        return "SUBS_{$subscriptionId}_" . strtoupper($period) . '_' . time();
+    }
+
+    /**
+     * Verificar si el pago fue aprobado
+     */
+    public function isPaymentApproved(array $transactionData): bool
+    {
+        return isset($transactionData['data']['status']) && 
+               $transactionData['data']['status'] === 'APPROVED';
+    }
+
+    /**
+     * Obtener mensaje de error de transacción
+     */
+    public function getTransactionErrorMessage(array $transactionData): string
+    {
+        if (isset($transactionData['data']['status_message'])) {
+            return $transactionData['data']['status_message'];
+        }
+
+        if (isset($transactionData['error']['messages'])) {
+            return implode(', ', $transactionData['error']['messages']);
+        }
+
+        return 'Error desconocido en la transacción';
+    }
 }
