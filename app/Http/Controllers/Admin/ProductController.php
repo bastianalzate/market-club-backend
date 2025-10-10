@@ -51,7 +51,13 @@ class ProductController extends Controller
         $categories = Category::where('is_active', true)->get();
         $productTypes = ProductType::where('is_active', true)->get();
 
-        return view('admin.products.index', compact('products', 'categories', 'productTypes'));
+        return response()
+            ->view('admin.products.index', compact('products', 'categories', 'productTypes'))
+            ->withHeaders([
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0'
+            ]);
     }
 
     /**
@@ -133,7 +139,13 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         $product->load('category', 'productType', 'orderItems.order');
-        return view('admin.products.show', compact('product'));
+        return response()
+            ->view('admin.products.show', compact('product'))
+            ->withHeaders([
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0'
+            ]);
     }
 
     /**
@@ -143,7 +155,13 @@ class ProductController extends Controller
     {
         $categories = Category::where('is_active', true)->get();
         $productTypes = ProductType::where('is_active', true)->get();
-        return view('admin.products.edit', compact('product', 'categories', 'productTypes'));
+        return response()
+            ->view('admin.products.edit', compact('product', 'categories', 'productTypes'))
+            ->withHeaders([
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0'
+            ]);
     }
 
     /**
@@ -151,9 +169,16 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        // Log para depuración
+        \Log::info('Updating product', [
+            'product_id' => $product->id,
+            'request_data' => $request->all()
+        ]);
+        
         // Si solo se está actualizando el estado (desde el botón de acciones rápidas)
-        $requestData = $request->only(['is_active', '_token', '_method']);
-        if ($request->has('is_active') && count($requestData) <= 3) {
+        // Verificar que SOLO venga is_active, _token y _method (sin name, sku, price, etc.)
+        $allData = $request->except(['_token', '_method']);
+        if (count($allData) === 1 && $request->has('is_active') && !$request->has('name')) {
             $request->validate([
                 'is_active' => 'required|in:0,1',
             ]);
@@ -167,19 +192,29 @@ class ProductController extends Controller
         }
         
         // Validación completa para actualizaciones normales
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0',
-            'sku' => 'required|string|unique:products,sku,' . $product->id,
-            'stock_quantity' => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'product_type_id' => 'nullable|exists:product_types,id',
-            'image' => 'nullable|string',
-            'is_featured' => 'nullable|in:0,1',
-            'is_active' => 'nullable|in:0,1',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'price' => 'required|numeric|min:0',
+                'sale_price' => 'nullable|numeric|min:0',
+                'sku' => 'required|string|unique:products,sku,' . $product->id,
+                'stock_quantity' => 'required|integer|min:0',
+                'category_id' => 'required|exists:categories,id',
+                'product_type_id' => 'nullable|exists:product_types,id',
+                'image' => 'nullable|string',
+                'is_featured' => 'nullable|in:0,1',
+                'is_active' => 'nullable|in:0,1',
+            ]);
+            
+            \Log::info('Validation passed');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed', [
+                'errors' => $e->errors(),
+                'product_id' => $product->id
+            ]);
+            throw $e;
+        }
 
         // Procesar datos específicos del tipo de producto
         $productSpecificData = $product->product_specific_data ?? []; // Preservar datos existentes
@@ -213,8 +248,8 @@ class ProductController extends Controller
         }
 
 
-        // Actualizar campos básicos
-        $product->update([
+        // Actualizar todos los campos de una vez
+        $updateData = [
             'name' => $request->name,
             'slug' => Str::slug($request->name),
             'description' => $request->description,
@@ -227,14 +262,43 @@ class ProductController extends Controller
             'image' => $request->image,
             'is_featured' => $request->input('is_featured', 0) == 1,
             'is_active' => $request->input('is_active', 0) == 1,
+            'product_specific_data' => $productSpecificData,
+        ];
+        
+        \Log::info('Product update data', [
+            'product_id' => $product->id,
+            'update_data' => $updateData
         ]);
-
-        // Actualizar product_specific_data por separado
-        $product->product_specific_data = $productSpecificData;
-        $product->save();
+        
+        try {
+            $result = $product->update($updateData);
+            
+            \Log::info('Product update result', [
+                'product_id' => $product->id,
+                'result' => $result
+            ]);
+            
+            $product->refresh();
+            
+            \Log::info('Product updated successfully', [
+                'product_id' => $product->id,
+                'updated_product' => $product->toArray()
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Product update failed', [
+                'product_id' => $product->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error al actualizar el producto: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.products.index')
-            ->with('success', 'Producto actualizado exitosamente.');
+            ->with('success', 'Producto actualizado exitosamente.')
+            ->withHeaders(['Cache-Control' => 'no-cache, no-store, must-revalidate']);
     }
 
     /**
