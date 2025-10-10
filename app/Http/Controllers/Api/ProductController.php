@@ -429,7 +429,7 @@ class ProductController extends Controller
         }
 
         // Asegurar que siempre incluya todos los tipos de envase posibles
-        $allPackagingTypes = ['lata', 'botella', 'barril', 'growler'];
+        $allPackagingTypes = ['lata', 'botella', 'barril'];
         $finalPackagingTypes = array_unique(array_merge($packagingTypes, $allPackagingTypes));
         sort($finalPackagingTypes);
 
