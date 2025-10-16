@@ -92,6 +92,12 @@ class DashboardController extends Controller
                 break;
         }
 
+        // Obtener órdenes detalladas con información completa
+        $orders = Order::with(['user', 'orderItems.product', 'paymentTransaction'])
+            ->where('created_at', '>=', $startDate)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         // Obtener datos de ventas diarias
         $dailySales = PaymentTransaction::selectRaw('DATE(created_at) as date, COUNT(*) as orders_count, SUM(amount) as total_amount')
             ->where('created_at', '>=', $startDate)
@@ -113,7 +119,7 @@ class DashboardController extends Controller
             ->get();
 
         // Crear nombre del archivo
-        $filename = 'ventas_' . $period . '_' . now()->format('Y-m-d') . '.csv';
+        $filename = 'reporte_ventas_' . $period . '_' . now()->format('Y-m-d') . '.csv';
 
         // Headers para descarga
         $headers = [
@@ -122,7 +128,7 @@ class DashboardController extends Controller
         ];
 
         // Crear callback para generar CSV
-        $callback = function() use ($dailySales, $productSales, $period) {
+        $callback = function() use ($orders, $dailySales, $productSales, $period) {
             $file = fopen('php://output', 'w');
             
             // BOM para UTF-8 (para que Excel abra correctamente caracteres especiales)
@@ -134,47 +140,33 @@ class DashboardController extends Controller
             fputcsv($file, ['Generado:', now()->format('d/m/Y H:i:s')]);
             fputcsv($file, []); // Línea vacía
 
-            // Sección 1: Ventas Diarias
-            fputcsv($file, ['VENTAS DIARIAS']);
-            fputcsv($file, ['Fecha', 'Número de Órdenes', 'Ingresos Totales (COP)']);
+            // Tabla principal con solo las 5 columnas requeridas
+            fputcsv($file, ['# DE ORDEN', 'CLIENTE', 'MONTO', 'PRODUCTOS', 'ESTADO']);
             
-            $totalOrders = 0;
-            $totalRevenue = 0;
-            
-            foreach ($dailySales as $sale) {
+            foreach ($orders as $order) {
+                // Obtener lista de productos
+                $products = $order->orderItems->map(function ($item) {
+                    return $item->product->name . ' (x' . $item->quantity . ')';
+                })->implode(', ');
+                
+                // Obtener estado en español
+                $statusLabels = [
+                    'pending' => 'Pendiente',
+                    'processing' => 'Procesando',
+                    'shipped' => 'Enviado',
+                    'delivered' => 'Entregado',
+                    'cancelled' => 'Cancelado',
+                ];
+                $status = $statusLabels[$order->status] ?? ucfirst($order->status);
+                
                 fputcsv($file, [
-                    $sale->date,
-                    $sale->orders_count,
-                    number_format($sale->total_amount, 2)
-                ]);
-                $totalOrders += $sale->orders_count;
-                $totalRevenue += $sale->total_amount;
-            }
-            
-            // Totales
-            fputcsv($file, ['TOTAL', $totalOrders, number_format($totalRevenue, 2)]);
-            fputcsv($file, []); // Línea vacía
-
-            // Sección 2: Productos Más Vendidos
-            fputcsv($file, ['PRODUCTOS MÁS VENDIDOS']);
-            fputcsv($file, ['Producto', 'Cantidad Vendida', 'Ingresos Generados (COP)']);
-            
-            foreach ($productSales as $product) {
-                fputcsv($file, [
-                    $product->product_name,
-                    $product->total_quantity,
-                    number_format($product->total_revenue, 2)
+                    $order->order_number,
+                    $order->user->name ?? 'Cliente no registrado',
+                    number_format($order->total_amount, 2),
+                    $products,
+                    $status
                 ]);
             }
-            fputcsv($file, []); // Línea vacía
-
-            // Resumen del período
-            fputcsv($file, ['RESUMEN DEL PERÍODO']);
-            fputcsv($file, ['Métrica', 'Valor']);
-            fputcsv($file, ['Total de Órdenes', $totalOrders]);
-            fputcsv($file, ['Ingresos Totales', number_format($totalRevenue, 2)]);
-            fputcsv($file, ['Promedio por Orden', $totalOrders > 0 ? number_format($totalRevenue / $totalOrders, 2) : '0']);
-            fputcsv($file, ['Productos Únicos Vendidos', $productSales->count()]);
 
             fclose($file);
         };

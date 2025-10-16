@@ -222,3 +222,7 @@ echo "  - PRODUCTION_IMAGE_FIX.md"
 echo "  - QUICK_FIX_IMAGENES.md"
 echo ""
 echo "Script completado."
+
+
+
+
