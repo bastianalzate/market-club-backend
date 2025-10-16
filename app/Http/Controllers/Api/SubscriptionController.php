@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class SubscriptionController extends Controller
@@ -543,5 +544,235 @@ class SubscriptionController extends Controller
                 'message' => 'Error al reactivar la suscripción',
             ], 500);
         }
+    }
+
+    /**
+     * Crear sesión de pago para suscripción con Wompi
+     */
+    public function createPaymentSession(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'plan_id' => 'required|string|exists:subscription_plans,slug',
+            'duration_months' => 'nullable|integer|min:1|max:12',
+            'redirect_url' => 'required|url',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $user = Auth::user();
+            $plan = SubscriptionPlan::where('slug', $request->plan_id)->firstOrFail();
+            $durationMonths = $request->duration_months ?? 1;
+
+            // Verificar si el usuario ya tiene una suscripción activa
+            $activeSubscription = $user->activeSubscription;
+            if ($activeSubscription) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya tienes una suscripción activa. Cancela tu suscripción actual antes de suscribirte a un nuevo plan.',
+                    'current_subscription' => [
+                        'plan_name' => $activeSubscription->subscriptionPlan->name,
+                        'ends_at' => $activeSubscription->ends_at->format('Y-m-d'),
+                        'days_remaining' => $activeSubscription->days_remaining,
+                    ],
+                ], 400);
+            }
+
+            // Calcular el monto total
+            $totalAmount = $plan->price * $durationMonths;
+
+            // Generar referencia única para la suscripción
+            $reference = $this->wompiService->generateReference('SUBS_' . $plan->slug . '_' . $user->id);
+
+            // Generar firma de integridad
+            $signature = $this->generateSubscriptionSignature($reference, (float) $totalAmount);
+
+            // Preparar datos del cliente
+            $customerData = [
+                'name' => $user->name,
+                'email' => $user->email,
+                'phoneNumber' => $user->phone ?? '3000000000',
+                'phoneNumberPrefix' => '+57',
+            ];
+
+            // Preparar datos para el Widget de Wompi
+            $widgetData = [
+                'publicKey' => config('services.wompi.public_key'),
+                'reference' => $reference,
+                'amount' => $this->wompiService->convertToCents((float) $totalAmount),
+                'currency' => 'COP',
+                'integrity_signature' => $signature,
+                'redirectUrl' => $request->redirect_url,
+                'customerData' => $customerData,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sesión de pago creada exitosamente',
+                'data' => [
+                    'widget_data' => $widgetData,
+                    'subscription_info' => [
+                        'plan_name' => $plan->name,
+                        'plan_id' => $plan->slug,
+                        'duration_months' => $durationMonths,
+                        'total_amount' => $totalAmount,
+                        'reference' => $reference,
+                    ],
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error creating subscription payment session: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor',
+            ], 500);
+        }
+    }
+
+    /**
+     * Confirmar suscripción después del pago exitoso
+     */
+    public function confirmSubscription(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'reference' => 'required|string',
+            'transaction_id' => 'required|string',
+            'plan_id' => 'required|string|exists:subscription_plans,slug',
+            'duration_months' => 'nullable|integer|min:1|max:12',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $user = Auth::user();
+            $plan = SubscriptionPlan::where('slug', $request->plan_id)->firstOrFail();
+            $durationMonths = $request->duration_months ?? 1;
+
+            // Verificar la transacción en Wompi
+            $transactionResult = $this->wompiService->getTransaction($request->transaction_id);
+            
+            if (!$transactionResult['success']) {
+                throw new \Exception('No se pudo verificar la transacción');
+            }
+
+            $transaction = $transactionResult['data']['data'];
+            
+            // Verificar que la transacción fue aprobada
+            if ($transaction['status'] !== 'APPROVED') {
+                throw new \Exception('La transacción no fue aprobada');
+            }
+
+            // Verificar que la referencia coincide
+            if ($transaction['reference'] !== $request->reference) {
+                throw new \Exception('La referencia de la transacción no coincide');
+            }
+
+            // Crear la suscripción
+            $startsAt = now();
+            $endsAt = $startsAt->copy()->addMonths($durationMonths);
+
+            $subscription = UserSubscription::create([
+                'user_id' => $user->id,
+                'subscription_plan_id' => $plan->id,
+                'status' => 'active',
+                'price_paid' => $plan->price * $durationMonths,
+                'starts_at' => $startsAt,
+                'ends_at' => $endsAt,
+                'next_billing_date' => $endsAt,
+                'payment_token' => $transaction['payment_method']['token'] ?? null,
+                'payment_method_type' => $transaction['payment_method']['type'] ?? 'CARD',
+                'last_four_digits' => $transaction['payment_method']['extra']['last_four'] ?? null,
+                'auto_renew' => true,
+                'metadata' => [
+                    'payment_method' => $transaction['payment_method']['type'] ?? 'CARD',
+                    'duration_months' => $durationMonths,
+                    'subscribed_at' => now(),
+                    'wompi_transaction_id' => $request->transaction_id,
+                    'wompi_reference' => $request->reference,
+                ],
+            ]);
+
+            // Crear transacción de pago
+            \App\Models\PaymentTransaction::create([
+                'order_id' => null, // No es una orden, es una suscripción
+                'subscription_id' => $subscription->id,
+                'wompi_transaction_id' => $request->transaction_id,
+                'reference' => $request->reference,
+                'payment_method' => $transaction['payment_method']['type'] ?? 'CARD',
+                'amount' => $plan->price * $durationMonths,
+                'currency' => 'COP',
+                'status' => 'APPROVED',
+                'wompi_status' => 'APPROVED',
+                'wompi_response' => $transactionResult['data'],
+                'customer_data' => [
+                    'email' => $user->email,
+                    'full_name' => $user->name,
+                    'phone_number' => $user->phone,
+                ],
+                'processed_at' => now(),
+            ]);
+
+            // Enviar email de confirmación
+            try {
+                $this->emailService->sendSubscriptionConfirmation($subscription);
+            } catch (\Exception $e) {
+                Log::error("Failed to send subscription confirmation email: " . $e->getMessage());
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Suscripción confirmada exitosamente',
+                'data' => [
+                    'subscription' => [
+                        'id' => $subscription->id,
+                        'plan_name' => $plan->name,
+                        'price_paid' => (float) $subscription->price_paid,
+                        'starts_at' => $subscription->starts_at->format('Y-m-d'),
+                        'ends_at' => $subscription->ends_at->format('Y-m-d'),
+                        'next_billing_date' => $subscription->next_billing_date->format('Y-m-d'),
+                        'status' => $subscription->status,
+                        'auto_renew' => $subscription->auto_renew,
+                    ],
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error confirming subscription: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Generar firma de integridad para suscripciones
+     */
+    private function generateSubscriptionSignature(string $reference, float $amount): string
+    {
+        $integrityKey = config('services.wompi.integrity_key');
+        $amountInCents = $this->wompiService->convertToCents($amount);
+        
+        $signatureString = $reference . $amountInCents . 'COP' . $integrityKey;
+        
+        return hash('sha256', $signatureString);
     }
 }

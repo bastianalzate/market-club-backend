@@ -12,6 +12,7 @@ class PaymentTransaction extends Model
 
     protected $fillable = [
         'order_id',
+        'subscription_id',
         'wompi_transaction_id',
         'reference',
         'payment_method',
@@ -38,6 +39,14 @@ class PaymentTransaction extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Relación con la suscripción
+     */
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(UserSubscription::class);
     }
 
     /**

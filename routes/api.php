@@ -133,6 +133,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscriptions/auto-renew', [SubscriptionController::class, 'toggleAutoRenew']);
     Route::post('/subscriptions/reactivate', [SubscriptionController::class, 'reactivateSubscription']);
     
+    // Nuevos endpoints para integración con Wompi
+    Route::post('/subscriptions/create-payment-session', [SubscriptionController::class, 'createPaymentSession']);
+    Route::post('/subscriptions/confirm-subscription', [SubscriptionController::class, 'confirmSubscription']);
+    
     // Órdenes del usuario (alias para compatibilidad)
     Route::apiResource('orders', OrderController::class);
     

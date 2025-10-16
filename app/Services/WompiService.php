@@ -19,7 +19,7 @@ class WompiService
         $this->isProduction = config('services.wompi.production', false);
         $this->baseUrl = $this->isProduction 
             ? 'https://production.wompi.co/v1' 
-            : 'https://sandbox.wompi.co/v1';
+            : 'https://api.wompi.co/v1';
     }
 
     /**

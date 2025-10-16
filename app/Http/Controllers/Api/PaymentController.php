@@ -246,35 +246,21 @@ class PaymentController extends Controller
 
             $transactionId = $data['data']['id'];
             $status = $data['data']['status'];
+            $reference = $data['data']['reference'] ?? null;
 
-            // Buscar orden por referencia de pago
-            $order = Order::where('payment_reference', $transactionId)->first();
+            Log::info('Wompi webhook received', [
+                'transaction_id' => $transactionId,
+                'status' => $status,
+                'reference' => $reference,
+            ]);
 
-            if ($order) {
-                $paymentStatus = $this->mapWompiStatusToOrderStatus($status);
-                $orderStatus = $paymentStatus === 'paid' ? 'processing' : 'pending';
-
-                $order->update([
-                    'payment_status' => $paymentStatus,
-                    'status' => $orderStatus,
-                    'wompi_transaction_id' => $transactionId,
-                    'payment_reference' => $data['data']['reference'] ?? null,
-                ]);
-
-                // Crear o actualizar transacción de pago
-                $this->createOrUpdatePaymentTransaction($order, $data, $status);
-
-                // Enviar email de confirmación si el pago fue exitoso
-                if ($paymentStatus === 'paid') {
-                    try {
-                        $this->emailService->sendOrderConfirmation($order);
-                        $this->emailService->sendPaymentConfirmation($order);
-                    } catch (\Exception $e) {
-                        Log::error("Failed to send confirmation emails for order {$order->id}: " . $e->getMessage());
-                    }
-                }
-
-                Log::info("Order {$order->id} payment status updated to {$paymentStatus}");
+            // Determinar si es una transacción de orden o suscripción
+            if ($reference && str_starts_with($reference, 'SUBS_')) {
+                // Es una transacción de suscripción
+                $this->processSubscriptionWebhook($data, $transactionId, $status, $reference);
+            } else {
+                // Es una transacción de orden
+                $this->processOrderWebhook($data, $transactionId, $status);
             }
 
             DB::commit();
@@ -1061,6 +1047,124 @@ class PaymentController extends Controller
      * Mapear estados de Wompi a estados de orden
      */
     private function mapWompiStatusToOrderStatus(string $wompiStatus): string
+    {
+        return match ($wompiStatus) {
+            'APPROVED' => 'paid',
+            'DECLINED', 'VOIDED' => 'failed',
+            'PENDING' => 'pending',
+            default => 'pending',
+        };
+    }
+
+    /**
+     * Procesar webhook de suscripción
+     */
+    private function processSubscriptionWebhook($data, $transactionId, $status, $reference)
+    {
+        try {
+            // Buscar transacción de pago existente
+            $paymentTransaction = \App\Models\PaymentTransaction::where('wompi_transaction_id', $transactionId)->first();
+            
+            if ($paymentTransaction && $paymentTransaction->subscription_id) {
+                $subscription = $paymentTransaction->subscription;
+                
+                if ($subscription) {
+                    // Actualizar estado de la suscripción
+                    $paymentStatus = $this->mapWompiStatusToSubscriptionStatus($status);
+                    
+                    if ($paymentStatus === 'paid' && $subscription->status !== 'active') {
+                        // Reactivar suscripción si el pago fue exitoso
+                        $subscription->update([
+                            'status' => 'active',
+                            'payment_status' => 'paid',
+                        ]);
+                        
+                        // Enviar email de confirmación
+                        try {
+                            $this->emailService->sendSubscriptionConfirmation($subscription);
+                        } catch (\Exception $e) {
+                            Log::error("Failed to send subscription confirmation email: " . $e->getMessage());
+                        }
+                        
+                        Log::info("Subscription {$subscription->id} reactivated after payment");
+                    } elseif ($paymentStatus === 'failed') {
+                        // Suspender suscripción si el pago falló
+                        $subscription->update([
+                            'status' => 'suspended',
+                            'payment_status' => 'failed',
+                            'last_payment_error' => $data['data']['status_message'] ?? 'Payment failed',
+                            'last_payment_attempt_at' => now(),
+                        ]);
+                        
+                        Log::info("Subscription {$subscription->id} suspended due to payment failure");
+                    }
+                }
+            }
+            
+            // Actualizar transacción de pago
+            $this->updatePaymentTransactionStatus($paymentTransaction, $data, $status);
+            
+        } catch (\Exception $e) {
+            Log::error('Error processing subscription webhook: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Procesar webhook de orden
+     */
+    private function processOrderWebhook($data, $transactionId, $status)
+    {
+        // Buscar orden por referencia de pago
+        $order = Order::where('payment_reference', $transactionId)->first();
+
+        if ($order) {
+            $paymentStatus = $this->mapWompiStatusToOrderStatus($status);
+            $orderStatus = $paymentStatus === 'paid' ? 'processing' : 'pending';
+
+            $order->update([
+                'payment_status' => $paymentStatus,
+                'status' => $orderStatus,
+                'wompi_transaction_id' => $transactionId,
+                'payment_reference' => $data['data']['reference'] ?? null,
+            ]);
+
+            // Crear o actualizar transacción de pago
+            $this->createOrUpdatePaymentTransaction($order, $data, $status);
+
+            // Enviar email de confirmación si el pago fue exitoso
+            if ($paymentStatus === 'paid') {
+                try {
+                    $this->emailService->sendOrderConfirmation($order);
+                    $this->emailService->sendPaymentConfirmation($order);
+                } catch (\Exception $e) {
+                    Log::error("Failed to send confirmation emails for order {$order->id}: " . $e->getMessage());
+                }
+            }
+
+            Log::info("Order {$order->id} payment status updated to {$paymentStatus}");
+        }
+    }
+
+    /**
+     * Actualizar estado de transacción de pago
+     */
+    private function updatePaymentTransactionStatus($paymentTransaction, $data, $status)
+    {
+        if ($paymentTransaction) {
+            $paymentTransaction->update([
+                'status' => $this->mapWompiStatusToTransactionStatus($status),
+                'wompi_status' => $status,
+                'wompi_response' => $data,
+                'processed_at' => $status === 'APPROVED' ? now() : null,
+            ]);
+        }
+    }
+
+    /**
+     * Mapear estados de Wompi a estados de suscripción
+     */
+    private function mapWompiStatusToSubscriptionStatus(string $wompiStatus): string
     {
         return match ($wompiStatus) {
             'APPROVED' => 'paid',

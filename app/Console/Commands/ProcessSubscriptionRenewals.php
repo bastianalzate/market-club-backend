@@ -163,10 +163,7 @@ class ProcessSubscriptionRenewals extends Command
             );
 
             if (!$paymentResult['success']) {
-                $errorMessage = is_array($paymentResult['error']) 
-                    ? json_encode($paymentResult['error']) 
-                    : ($paymentResult['error'] ?? 'Error desconocido en el pago');
-                throw new \Exception($errorMessage);
+                throw new \Exception($paymentResult['error'] ?? 'Error desconocido en el pago');
             }
 
             // Verificar si el pago fue aprobado
