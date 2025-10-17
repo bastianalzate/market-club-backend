@@ -30,9 +30,9 @@ class PaymentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'number' => 'required|string|size:16',
-            'cvc' => 'required|string|size:3',
+            'cvc' => 'required|string|between:3,4',
             'exp_month' => 'required|string|size:2',
-            'exp_year' => 'required|string|size:4',
+            'exp_year' => 'required|string|size:2',
             'card_holder' => 'required|string|max:255',
         ]);
 
