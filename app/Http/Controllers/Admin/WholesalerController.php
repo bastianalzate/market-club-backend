@@ -4,11 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Wholesaler;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class WholesalerController extends Controller
 {
+    protected $emailService;
+
+    public function __construct(EmailService $emailService)
+    {
+        $this->emailService = $emailService;
+    }
     public function index(Request $request)
     {
         $query = User::query();
@@ -101,8 +110,15 @@ class WholesalerController extends Controller
             'is_active' => true,
         ]);
 
+        // Enviar email de activación
+        $emailSent = $this->emailService->sendWholesalerActivationEmailForUser($wholesaler);
+
+        $message = $emailSent
+            ? 'Mayorista habilitado exitosamente y correo de activación enviado.'
+            : 'Mayorista habilitado exitosamente, pero hubo un problema al enviar el correo.';
+
         return redirect()->route('admin.wholesalers.index')
-            ->with('success', 'Mayorista habilitado exitosamente.');
+            ->with('success', $message);
     }
 
     public function toggleStatus(User $wholesaler)
@@ -117,13 +133,81 @@ class WholesalerController extends Controller
         $wholesaler->update(['is_active' => $newStatus]);
 
         $statusText = $newStatus ? 'habilitado' : 'deshabilitado';
-        
+
+        // Si se habilita, enviar email de activación
+        $emailSent = false;
+        if ($newStatus === true) {
+            $emailSent = $this->emailService->sendWholesalerActivationEmailForUser($wholesaler);
+        }
+
         return response()->json([
             'success' => true,
-            'message' => "Mayorista {$statusText} exitosamente.",
+            'message' => "Mayorista {$statusText} exitosamente." . ($newStatus && $emailSent ? ' Se envió el correo de activación.' : ''),
             'status' => $newStatus ? 'enabled' : 'disabled',
-            'status_text' => $statusText
+            'status_text' => $statusText,
+            'email_sent' => $emailSent,
         ]);
+    }
+
+    /**
+     * Habilitar mayorista del modelo Wholesaler y enviar email de activación
+     */
+    public function activateWholesaler(Wholesaler $wholesaler)
+    {
+        try {
+            // Actualizar estado del mayorista
+            $wholesaler->update([
+                'status' => 'enabled',
+                'approved_at' => now(),
+                'approved_by' => Auth::id()
+            ]);
+
+            // Enviar email de activación
+            $emailSent = $this->emailService->sendWholesalerActivationEmail($wholesaler);
+
+            if ($emailSent) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Mayorista habilitado exitosamente y email de activación enviado.',
+                    'email_sent' => true
+                ]);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Mayorista habilitado exitosamente, pero hubo un problema al enviar el email.',
+                    'email_sent' => false
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al habilitar mayorista: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Deshabilitar mayorista del modelo Wholesaler
+     */
+    public function deactivateWholesaler(Wholesaler $wholesaler)
+    {
+        try {
+            $wholesaler->update([
+                'status' => 'disabled'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mayorista deshabilitado exitosamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al deshabilitar mayorista: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(User $wholesaler)

@@ -58,6 +58,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::post('wholesalers/{wholesaler}/approve', [WholesalerController::class, 'approve'])->name('wholesalers.approve');
     Route::post('wholesalers/{wholesaler}/toggle-status', [WholesalerController::class, 'toggleStatus'])->name('wholesalers.toggle-status');
     
+    // Rutas específicas para modelo Wholesaler
+    Route::post('wholesalers-model/{wholesaler}/activate', [WholesalerController::class, 'activateWholesaler'])->name('wholesalers-model.activate');
+    Route::post('wholesalers-model/{wholesaler}/deactivate', [WholesalerController::class, 'deactivateWholesaler'])->name('wholesalers-model.deactivate');
+    
     // Gestión de administradores
     Route::resource('admin-users', AdminUserController::class);
     
