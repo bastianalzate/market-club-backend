@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\FileUploadService;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,13 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    protected $emailService;
+
+    public function __construct(EmailService $emailService)
+    {
+        $this->emailService = $emailService;
+    }
+
     public function register(Request $request)
     {
         $isWholesaler = filter_var($request->input('is_wholesaler'), FILTER_VALIDATE_BOOLEAN);
@@ -91,8 +99,12 @@ class AuthController extends Controller
 
         // Agregar información específica para mayoristas
         if ($isWholesaler) {
+            // Enviar email de confirmación de solicitud
+            $emailSent = $this->emailService->sendWholesalerApplicationConfirmationEmail($user);
+            
             $response['message'] = 'Registro exitoso, pronto nos pondremos en contacto contigo.';
             $response['is_wholesaler_pending'] = true;
+            $response['confirmation_email_sent'] = $emailSent;
         }
 
         return response()->json($response, Response::HTTP_CREATED);

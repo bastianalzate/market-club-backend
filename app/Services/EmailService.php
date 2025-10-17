@@ -194,63 +194,143 @@ class EmailService
             $subject = '¡Tu cuenta de mayorista ha sido activada en Market Club!';
 
             $appUrl = env('APP_URL', 'https://marketclub.com');
-            $loginUrl = rtrim($appUrl, '/') . '/mayorista/login';
+            $loginUrl = rtrim($appUrl, '/');
 
             $safeName = htmlspecialchars($user->name ?? '');
 
             $htmlContent = '
             <!DOCTYPE html>
-            <html>
+            <html lang="es">
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Cuenta de Mayorista Activada</title>
+                <title>Cuenta de Mayorista Activada - Market Club</title>
                 <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background-color: #1f2937; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 30px; background-color: #f9fafb; }
-                    .button { display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-                    .footer { background-color: #e5e7eb; padding: 20px; text-align: center; font-size: 14px; color: #6b7280; }
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { 
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+                        line-height: 1.6; 
+                        color: #374151; 
+                        background-color: #f8fafc;
+                    }
+                    .email-container { 
+                        max-width: 500px; 
+                        margin: 0 auto; 
+                        background-color: #ffffff;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    }
+                    .header { 
+                        background: linear-gradient(135deg, #B48C2B 0%, #D4A843 100%);
+                        color: white; 
+                        padding: 25px 20px; 
+                        text-align: center;
+                    }
+                    .header h1 { 
+                        font-size: 22px; 
+                        font-weight: 700; 
+                        margin-bottom: 5px;
+                    }
+                    .header p {
+                        font-size: 14px;
+                        opacity: 0.9;
+                    }
+                    .content { 
+                        padding: 25px 20px; 
+                        background-color: #ffffff;
+                    }
+                    .greeting {
+                        font-size: 16px;
+                        color: #1f2937;
+                        margin-bottom: 15px;
+                        font-weight: 600;
+                    }
+                    .cta-button {
+                        display: inline-block;
+                        background: linear-gradient(135deg, #B48C2B 0%, #D4A843 100%);
+                        color: #ffffff !important;
+                        padding: 12px 25px;
+                        text-decoration: none;
+                        border-radius: 6px;
+                        font-weight: 600;
+                        font-size: 14px;
+                        margin: 15px 0;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    }
+                    .cta-section {
+                        text-align: center;
+                        margin: 20px 0;
+                        padding: 20px;
+                        background: linear-gradient(135deg, #fef9e7 0%, #fdf4d3 100%);
+                        border-radius: 8px;
+                        border: 1px solid #f4d03f;
+                    }
+                    .cta-section p {
+                        font-size: 14px;
+                        color: #8B6914;
+                        margin-bottom: 10px;
+                    }
+                    .footer { 
+                        background-color: #B48C2B; 
+                        color: #ffffff; 
+                        padding: 20px; 
+                        text-align: center; 
+                        font-size: 12px;
+                    }
+                    .footer .brand {
+                        color: #ffffff;
+                        font-weight: 600;
+                        font-size: 14px;
+                        margin-bottom: 5px;
+                    }
+                    .footer p {
+                        margin: 3px 0;
+                        opacity: 0.9;
+                    }
+                    @media (max-width: 500px) {
+                        .email-container { margin: 0; }
+                        .header, .content, .footer { padding: 15px; }
+                        .header h1 { font-size: 20px; }
+                    }
                 </style>
             </head>
             <body>
-                <div class="container">
+                <div class="email-container">
                     <div class="header">
-                        <h1>¡Bienvenido a Market Club!</h1>
+                        <h1>Bienvenido a Market Club</h1>
+                        <p style="color: white;">Tu cuenta de mayorista ha sido activada</p>
                     </div>
                     <div class="content">
-                        <h2>Hola ' . $safeName . ',</h2>
-                        <p>¡Excelentes noticias! Tu cuenta de mayorista ha sido activada exitosamente.</p>
+                        <div class="greeting">Hola ' . $safeName . ',</div>
                         
-                        <p>Ahora puedes acceder a todos los beneficios de nuestro programa de mayoristas:</p>
-                        <ul>
-                            <li>Precios especiales de mayorista</li>
-                            <li>Catálogo exclusivo de productos</li>
-                            <li>Gestión de pedidos simplificada</li>
-                            <li>Soporte prioritario</li>
-                        </ul>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;">Excelentes noticias! Tu cuenta de mayorista ha sido activada y ya puedes acceder a todos nuestros beneficios.</p>
                         
-                        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-                            <h3 style="margin-top: 0; color: #1f2937;">🔐 Tus credenciales de acceso:</h3>
-                            <p style="margin: 10px 0;"><strong>Email:</strong> ' . htmlspecialchars($user->email) . '</p>
-                            <p style="margin: 10px 0;"><strong>Contraseña temporal:</strong> <code style="background-color: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-family: monospace;">' . htmlspecialchars($newPassword) . '</code></p>
-                            <p style="margin: 10px 0; font-size: 14px; color: #6b7280;"><em>Por seguridad, te recomendamos cambiar esta contraseña después de tu primer inicio de sesión.</em></p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;">Tu solicitud ha sido aprobada y tu cuenta está lista para usar.</p>
+                        
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;"><strong>Beneficios de ser mayorista:</strong></p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">• Precios especiales de mayorista</p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">• Catálogo exclusivo de productos</p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">• Gestión de pedidos simplificada</p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;">• Soporte prioritario</p>
+                        
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;"><strong>Tus credenciales de acceso:</strong></p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">Email: ' . htmlspecialchars($user->email) . '</p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;">Contraseña: ' . htmlspecialchars($newPassword) . '</p>
+                        
+                        <p style="font-size: 14px; color: #991b1b; margin-bottom: 20px; font-weight: 500;">Por seguridad, te recomendamos cambiar esta contraseña después de tu primer inicio de sesión.</p>
+                        
+                        <div class="cta-section">
+                            <p><strong>Comienza a explorar tu nueva cuenta!</strong></p>
+                            <a href="' . $loginUrl . '" class="cta-button" style="color: #ffffff !important;">Acceder a mi cuenta</a>
                         </div>
                         
-                        <p>Para comenzar a realizar pedidos, simplemente inicia sesión en tu cuenta y navega por nuestro catálogo de productos.</p>
-                        
-                        <div style="text-align: center;">
-                            <a href="' . $loginUrl . '" class="button">Acceder a mi cuenta</a>
-                        </div>
-                        
-                        <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos.</p>
-                        
-                        <p>¡Gracias por ser parte de Market Club!</p>
+                        <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 20px;">
+                            ¿Necesitas ayuda? Contáctanos y te ayudaremos.
+                        </p>
                     </div>
                     <div class="footer">
-                        <p>Market Club - Tu plataforma de confianza para productos de calidad</p>
-                        <p>Este es un email automático, por favor no respondas a este mensaje.</p>
+                        <div class="brand">Market Club</div>
+                        <p>Tu plataforma de confianza para productos de calidad</p>
+                        <p style="font-size: 11px; opacity: 0.8; margin-top: 10px;">Email automático - No responder</p>
                     </div>
                 </div>
             </body>
@@ -506,5 +586,193 @@ Este es un email automático, por favor no respondas a este mensaje.
         ]);
         
         return $newPassword;
+    }
+
+    /**
+     * Enviar email de confirmación de solicitud de mayorista
+     */
+    public function sendWholesalerApplicationConfirmationEmail(User $user): bool
+    {
+        try {
+            $subject = 'Solicitud de Mayorista Recibida - Market Club';
+
+            $appUrl = env('APP_URL', 'https://marketclub.com');
+            $safeName = htmlspecialchars($user->name ?? '');
+
+            $htmlContent = '
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Solicitud de Mayorista Recibida - Market Club</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { 
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+                        line-height: 1.6; 
+                        color: #374151; 
+                        background-color: #f8fafc;
+                    }
+                    .email-container { 
+                        max-width: 500px; 
+                        margin: 0 auto; 
+                        background-color: #ffffff;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    }
+                    .header { 
+                        background: linear-gradient(135deg, #B48C2B 0%, #D4A843 100%);
+                        color: white; 
+                        padding: 25px 20px; 
+                        text-align: center;
+                    }
+                    .header h1 { 
+                        font-size: 22px; 
+                        font-weight: 700; 
+                        margin-bottom: 5px;
+                    }
+                    .header p {
+                        font-size: 14px;
+                        opacity: 0.9;
+                    }
+                    .content { 
+                        padding: 25px 20px; 
+                        background-color: #ffffff;
+                    }
+                    .greeting {
+                        font-size: 16px;
+                        color: #1f2937;
+                        margin-bottom: 15px;
+                        font-weight: 600;
+                    }
+                    .cta-section {
+                        text-align: center;
+                        margin: 20px 0;
+                        padding: 20px;
+                        background: linear-gradient(135deg, #fef9e7 0%, #fdf4d3 100%);
+                        border-radius: 8px;
+                        border: 1px solid #f4d03f;
+                    }
+                    .cta-section p {
+                        font-size: 14px;
+                        color: #8B6914;
+                        margin-bottom: 10px;
+                    }
+                    .footer { 
+                        background-color: #B48C2B; 
+                        color: #ffffff; 
+                        padding: 20px; 
+                        text-align: center; 
+                        font-size: 12px;
+                    }
+                    .footer .brand {
+                        color: #ffffff;
+                        font-weight: 600;
+                        font-size: 14px;
+                        margin-bottom: 5px;
+                    }
+                    .footer p {
+                        margin: 3px 0;
+                        opacity: 0.9;
+                    }
+                    @media (max-width: 500px) {
+                        .email-container { margin: 0; }
+                        .header, .content, .footer { padding: 15px; }
+                        .header h1 { font-size: 20px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="header">
+                        <h1>Solicitud Recibida</h1>
+                        <p>Tu solicitud de mayorista ha sido procesada</p>
+                    </div>
+                    <div class="content">
+                        <div class="greeting">Hola ' . $safeName . ',</div>
+                        
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;">Gracias por tu interés en convertirte en mayorista de Market Club.</p>
+                        
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;">Hemos recibido tu solicitud y nuestro equipo la está revisando.</p>
+                        
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;"><strong>Información de tu solicitud:</strong></p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">Email: ' . htmlspecialchars($user->email) . '</p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">NIT: ' . htmlspecialchars($user->nit ?? 'No especificado') . '</p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;">Fecha: ' . now()->format('d/m/Y H:i') . '</p>
+                        
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 15px;"><strong>¿Qué sigue ahora?</strong></p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">• Revisaremos tu solicitud y documentos</p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 5px;">• Te contactaremos en 2-3 días hábiles</p>
+                        <p style="font-size: 14px; color: #4b5563; margin-bottom: 20px;">• Recibirás tus credenciales al ser aprobado</p>
+                        
+                        <div class="cta-section">
+                            <p><strong>¿Tienes preguntas?</strong></p>
+                            <p>Contáctanos y te ayudaremos con cualquier duda sobre tu solicitud.</p>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div class="brand">Market Club</div>
+                        <p>Tu plataforma de confianza para productos de calidad</p>
+                        <p style="font-size: 11px; opacity: 0.8; margin-top: 10px;">Email automático - No responder</p>
+                    </div>
+                </div>
+            </body>
+            </html>';
+
+            $textContent = "
+¡Solicitud de Mayorista Recibida!
+
+Hola {$user->name},
+
+¡Gracias por tu interés en convertirte en mayorista de Market Club!
+
+📋 TU SOLICITUD HA SIDO RECIBIDA
+Hemos recibido tu solicitud para convertirte en mayorista y estamos revisando tu información.
+
+¿QUÉ SIGUE AHORA?
+- Nuestro equipo revisará tu solicitud y documentos
+- Te contactaremos en un plazo de 2-3 días hábiles
+- Una vez aprobada, recibirás tus credenciales de acceso
+- Podrás acceder a precios especiales y catálogo exclusivo
+
+INFORMACIÓN DE TU SOLICITUD:
+- Nombre: {$user->name}
+- Email: {$user->email}
+- NIT: " . ($user->nit ?? 'No especificado') . "
+- País: " . ($user->country ?? 'No especificado') . "
+- Fecha de solicitud: " . now()->format('d/m/Y H:i') . "
+
+Si tienes alguna pregunta o necesitas información adicional, no dudes en contactarnos.
+
+¡Gracias por elegir Market Club!
+
+Market Club - Tu plataforma de confianza para productos de calidad
+Este es un email automático, por favor no respondas a este mensaje.
+            ";
+
+            $result = $this->brevoService->sendEmail(
+                [$user->email => ($user->name ?? 'Usuario')],
+                $subject,
+                $htmlContent,
+                $textContent
+            );
+
+            if ($result) {
+                Log::info('Wholesaler application confirmation email sent successfully', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->name
+                ]);
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('Wholesaler application confirmation email error: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'email' => $user->email ?? null
+            ]);
+            return false;
+        }
     }
 }
