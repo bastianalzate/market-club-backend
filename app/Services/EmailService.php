@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Wholesaler;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class EmailService
 {
@@ -119,7 +121,6 @@ class EmailService
     }
 
     /**
-<<<<<<< HEAD
      * Enviar email de habilitación de mayorista usando Brevo
      */
     public function sendWholesalerActivationEmail(Wholesaler $wholesaler): bool
@@ -146,7 +147,11 @@ class EmailService
                 'wholesaler_id' => $wholesaler->id,
                 'email' => $wholesaler->email
             ]);
-=======
+            return false;
+        }
+    }
+
+    /**
      * Enviar email de renovación de suscripción exitosa
      */
     public function sendSubscriptionRenewalSuccessEmail($user, $subscription, $transaction): bool
@@ -173,18 +178,19 @@ class EmailService
 
         } catch (\Exception $e) {
             Log::error('Subscription renewal success email error: ' . $e->getMessage());
->>>>>>> 4e4b7bde922545824fd87de7214aec096f902455
             return false;
         }
     }
 
     /**
-<<<<<<< HEAD
      * Enviar email de habilitación de mayorista para un usuario (is_wholesaler = true)
      */
     public function sendWholesalerActivationEmailForUser(User $user): bool
     {
         try {
+            // Generar nueva contraseña para el usuario
+            $newPassword = $this->generateAndUpdateUserPassword($user);
+            
             $subject = '¡Tu cuenta de mayorista ha sido activada en Market Club!';
 
             $appUrl = env('APP_URL', 'https://marketclub.com');
@@ -225,6 +231,13 @@ class EmailService
                             <li>Soporte prioritario</li>
                         </ul>
                         
+                        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+                            <h3 style="margin-top: 0; color: #1f2937;">🔐 Tus credenciales de acceso:</h3>
+                            <p style="margin: 10px 0;"><strong>Email:</strong> ' . htmlspecialchars($user->email) . '</p>
+                            <p style="margin: 10px 0;"><strong>Contraseña temporal:</strong> <code style="background-color: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-family: monospace;">' . htmlspecialchars($newPassword) . '</code></p>
+                            <p style="margin: 10px 0; font-size: 14px; color: #6b7280;"><em>Por seguridad, te recomendamos cambiar esta contraseña después de tu primer inicio de sesión.</em></p>
+                        </div>
+                        
                         <p>Para comenzar a realizar pedidos, simplemente inicia sesión en tu cuenta y navega por nuestro catálogo de productos.</p>
                         
                         <div style="text-align: center;">
@@ -256,6 +269,12 @@ Ahora puedes acceder a todos los beneficios de nuestro programa de mayoristas:
 - Gestión de pedidos simplificada
 - Soporte prioritario
 
+🔐 TUS CREDENCIALES DE ACCESO:
+Email: {$user->email}
+Contraseña temporal: {$newPassword}
+
+IMPORTANTE: Por seguridad, te recomendamos cambiar esta contraseña después de tu primer inicio de sesión.
+
 Para comenzar a realizar pedidos, simplemente inicia sesión en tu cuenta y navega por nuestro catálogo de productos.
 
 Acceder a mi cuenta: {$loginUrl}
@@ -276,9 +295,10 @@ Este es un email automático, por favor no respondas a este mensaje.
             );
 
             if ($result) {
-                Log::info('Wholesaler activation email (User) sent successfully via Brevo', [
+                Log::info('Wholesaler activation email (User) sent successfully via Brevo with new password', [
                     'user_id' => $user->id,
                     'email' => $user->email,
+                    'password_generated' => true
                 ]);
             }
 
@@ -289,7 +309,11 @@ Este es un email automático, por favor no respondas a este mensaje.
                 'user_id' => $user->id ?? null,
                 'email' => $user->email ?? null,
             ]);
-=======
+            return false;
+        }
+    }
+
+    /**
      * Enviar email de fallo de pago
      */
     public function sendPaymentFailedEmail($user, $subscription, string $errorMessage): bool
@@ -432,8 +456,55 @@ Este es un email automático, por favor no respondas a este mensaje.
 
         } catch (\Exception $e) {
             Log::error('Payment method updated email error: ' . $e->getMessage());
->>>>>>> 4e4b7bde922545824fd87de7214aec096f902455
             return false;
         }
+    }
+
+    /**
+     * Generar una contraseña segura aleatoria
+     */
+    public function generateSecurePassword(int $length = 12): string
+    {
+        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        $numbers = '0123456789';
+        $symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        
+        $allChars = $uppercase . $lowercase . $numbers . $symbols;
+        
+        $password = '';
+        
+        // Asegurar al menos un carácter de cada tipo
+        $password .= $uppercase[random_int(0, strlen($uppercase) - 1)];
+        $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
+        $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+        $password .= $symbols[random_int(0, strlen($symbols) - 1)];
+        
+        // Completar con caracteres aleatorios
+        for ($i = 4; $i < $length; $i++) {
+            $password .= $allChars[random_int(0, strlen($allChars) - 1)];
+        }
+        
+        // Mezclar la contraseña
+        return str_shuffle($password);
+    }
+
+    /**
+     * Generar nueva contraseña para un usuario y actualizarla en la base de datos
+     */
+    public function generateAndUpdateUserPassword(User $user): string
+    {
+        $newPassword = $this->generateSecurePassword();
+        
+        $user->update([
+            'password' => Hash::make($newPassword)
+        ]);
+        
+        Log::info("New password generated for user {$user->id}", [
+            'user_id' => $user->id,
+            'email' => $user->email
+        ]);
+        
+        return $newPassword;
     }
 }

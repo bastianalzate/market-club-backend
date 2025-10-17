@@ -114,8 +114,8 @@ class WholesalerController extends Controller
         $emailSent = $this->emailService->sendWholesalerActivationEmailForUser($wholesaler);
 
         $message = $emailSent
-            ? 'Mayorista habilitado exitosamente y correo de activación enviado.'
-            : 'Mayorista habilitado exitosamente, pero hubo un problema al enviar el correo.';
+            ? 'Mayorista habilitado exitosamente. Se generó una nueva contraseña y se envió el correo de activación con las credenciales.'
+            : 'Mayorista habilitado exitosamente, pero hubo un problema al enviar el correo con las credenciales.';
 
         return redirect()->route('admin.wholesalers.index')
             ->with('success', $message);
@@ -142,7 +142,7 @@ class WholesalerController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Mayorista {$statusText} exitosamente." . ($newStatus && $emailSent ? ' Se envió el correo de activación.' : ''),
+            'message' => "Mayorista {$statusText} exitosamente." . ($newStatus && $emailSent ? ' Se generó una nueva contraseña y se envió el correo de activación con las credenciales.' : ''),
             'status' => $newStatus ? 'enabled' : 'disabled',
             'status_text' => $statusText,
             'email_sent' => $emailSent,
