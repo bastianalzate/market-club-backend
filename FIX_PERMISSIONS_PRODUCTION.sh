@@ -42,3 +42,6 @@ echo "✅ Permisos arreglados. Ahora puedes hacer git pull."
 
 
 
+
+
+

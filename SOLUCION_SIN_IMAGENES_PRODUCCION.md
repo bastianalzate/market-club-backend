@@ -148,3 +148,6 @@ echo 'URL: ' . \$product->image_url . PHP_EOL;
 
 
 
+
+
+
