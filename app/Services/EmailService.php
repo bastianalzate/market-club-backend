@@ -775,4 +775,294 @@ Este es un email automático, por favor no respondas a este mensaje.
             return false;
         }
     }
+
+    /**
+     * Enviar email de confirmación de suscripción
+     */
+    public function sendSubscriptionConfirmation($subscription): bool
+    {
+        try {
+            $user = $subscription->user;
+            $plan = $subscription->subscriptionPlan;
+            
+            $subject = "¡Bienvenido al Club de Socios Market Club! 🎉";
+            
+            $htmlContent = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>
+                    <h1 style='margin: 0; font-size: 28px;'>¡Bienvenido al Club de Socios!</h1>
+                    <p style='margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;'>Tu suscripción ha sido activada exitosamente</p>
+                </div>
+                
+                <div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>
+                    <h2 style='color: #333; margin-top: 0;'>Detalles de tu suscripción:</h2>
+                    
+                    <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;'>
+                        <h3 style='margin: 0 0 10px 0; color: #667eea;'>{$plan->name}</h3>
+                        <p style='margin: 5px 0; color: #666;'><strong>Precio:</strong> $" . number_format($plan->price, 0, ',', '.') . " COP/mes</p>
+                        <p style='margin: 5px 0; color: #666;'><strong>Válida hasta:</strong> " . $subscription->ends_at->format('d/m/Y') . "</p>
+                        <p style='margin: 5px 0; color: #666;'><strong>Renovación automática:</strong> " . ($subscription->auto_renew ? 'Activada' : 'Desactivada') . "</p>
+                    </div>
+                    
+                    <h3 style='color: #333;'>Beneficios de tu membresía:</h3>
+                    <ul style='color: #666; line-height: 1.6;'>
+                        <li>Descuentos exclusivos en todos los productos</li>
+                        <li>Acceso prioritario a nuevos lanzamientos</li>
+                        <li>Envío gratuito en todas las compras</li>
+                        <li>Asesoría personalizada de productos</li>
+                        <li>Eventos y promociones especiales</li>
+                    </ul>
+                    
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='" . config('app.frontend_url') . "/club-socios' 
+                           style='background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;'>
+                            Ver mi membresía
+                        </a>
+                    </div>
+                </div>
+                
+                <div style='text-align: center; margin-top: 20px; color: #666; font-size: 14px;'>
+                    <p>¡Gracias por ser parte del Club de Socios Market Club!</p>
+                    <p>Este es un email automático, por favor no respondas a este mensaje.</p>
+                </div>
+            </div>
+            ";
+
+            $textContent = "
+¡Bienvenido al Club de Socios Market Club!
+
+Tu suscripción ha sido activada exitosamente.
+
+Detalles de tu suscripción:
+- Plan: {$plan->name}
+- Precio: $" . number_format($plan->price, 0, ',', '.') . " COP/mes
+- Válida hasta: " . $subscription->ends_at->format('d/m/Y') . "
+- Renovación automática: " . ($subscription->auto_renew ? 'Activada' : 'Desactivada') . "
+
+Beneficios de tu membresía:
+- Descuentos exclusivos en todos los productos
+- Acceso prioritario a nuevos lanzamientos
+- Envío gratuito en todas las compras
+- Asesoría personalizada de productos
+- Eventos y promociones especiales
+
+¡Gracias por ser parte del Club de Socios Market Club!
+
+Este es un email automático, por favor no respondas a este mensaje.
+            ";
+
+            $result = $this->brevoService->sendEmail(
+                [$user->email => ($user->name ?? 'Usuario')],
+                $subject,
+                $htmlContent,
+                $textContent
+            );
+
+            if ($result) {
+                Log::info('Subscription confirmation email sent successfully', [
+                    'user_id' => $user->id,
+                    'subscription_id' => $subscription->id,
+                    'email' => $user->email
+                ]);
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('Subscription confirmation email error: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'subscription_id' => $subscription->id ?? null,
+                'email' => $user->email ?? null
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Enviar email de advertencia de vencimiento de suscripción
+     */
+    public function sendSubscriptionExpirationWarning($subscription, $days): bool
+    {
+        try {
+            $user = $subscription->user;
+            $plan = $subscription->subscriptionPlan;
+            
+            $subject = "⚠️ Tu suscripción al Club de Socios expira en {$days} días";
+            
+            $htmlContent = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <div style='background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>
+                    <h1 style='margin: 0; font-size: 28px;'>⚠️ Tu suscripción expira pronto</h1>
+                    <p style='margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;'>No pierdas los beneficios de tu membresía</p>
+                </div>
+                
+                <div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>
+                    <h2 style='color: #333; margin-top: 0;'>Tu suscripción expira en {$days} días</h2>
+                    
+                    <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff6b6b;'>
+                        <h3 style='margin: 0 0 10px 0; color: #ff6b6b;'>{$plan->name}</h3>
+                        <p style='margin: 5px 0; color: #666;'><strong>Expira el:</strong> " . $subscription->ends_at->format('d/m/Y') . "</p>
+                        <p style='margin: 5px 0; color: #666;'><strong>Renovación automática:</strong> " . ($subscription->auto_renew ? 'Activada' : 'Desactivada') . "</p>
+                    </div>
+                    
+                    " . ($subscription->auto_renew ? "
+                    <div style='background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                        <strong>✅ Renovación automática activada</strong><br>
+                        Tu suscripción se renovará automáticamente el " . $subscription->ends_at->format('d/m/Y') . ". 
+                        No necesitas hacer nada.
+                    </div>
+                    " : "
+                    <div style='background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                        <strong>⚠️ Renovación automática desactivada</strong><br>
+                        Para continuar disfrutando de los beneficios, necesitas renovar tu suscripción manualmente.
+                    </div>
+                    ") . "
+                    
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='" . config('app.frontend_url') . "/club-socios' 
+                           style='background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;'>
+                            Gestionar mi suscripción
+                        </a>
+                    </div>
+                </div>
+                
+                <div style='text-align: center; margin-top: 20px; color: #666; font-size: 14px;'>
+                    <p>¡No pierdas los beneficios exclusivos del Club de Socios!</p>
+                    <p>Este es un email automático, por favor no respondas a este mensaje.</p>
+                </div>
+            </div>
+            ";
+
+            $textContent = "
+⚠️ Tu suscripción al Club de Socios expira en {$days} días
+
+Tu suscripción expira en {$days} días:
+- Plan: {$plan->name}
+- Expira el: " . $subscription->ends_at->format('d/m/Y') . "
+- Renovación automática: " . ($subscription->auto_renew ? 'Activada' : 'Desactivada') . "
+
+" . ($subscription->auto_renew ? 
+"✅ Renovación automática activada
+Tu suscripción se renovará automáticamente el " . $subscription->ends_at->format('d/m/Y') . ". No necesitas hacer nada." : 
+"⚠️ Renovación automática desactivada
+Para continuar disfrutando de los beneficios, necesitas renovar tu suscripción manualmente.") . "
+
+¡No pierdas los beneficios exclusivos del Club de Socios!
+
+Este es un email automático, por favor no respondas a este mensaje.
+            ";
+
+            $result = $this->brevoService->sendEmail(
+                [$user->email => ($user->name ?? 'Usuario')],
+                $subject,
+                $htmlContent,
+                $textContent
+            );
+
+            if ($result) {
+                Log::info('Subscription expiration warning email sent successfully', [
+                    'user_id' => $user->id,
+                    'subscription_id' => $subscription->id,
+                    'email' => $user->email,
+                    'days_remaining' => $days
+                ]);
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('Subscription expiration warning email error: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'subscription_id' => $subscription->id ?? null,
+                'email' => $user->email ?? null
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Enviar email de confirmación de renovación de suscripción
+     */
+    public function sendSubscriptionRenewalConfirmation($subscription): bool
+    {
+        try {
+            $user = $subscription->user;
+            $plan = $subscription->subscriptionPlan;
+            
+            $subject = "✅ Tu suscripción al Club de Socios ha sido renovada";
+            
+            $htmlContent = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <div style='background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>
+                    <h1 style='margin: 0; font-size: 28px;'>✅ Suscripción renovada</h1>
+                    <p style='margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;'>Tu membresía ha sido renovada exitosamente</p>
+                </div>
+                
+                <div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>
+                    <h2 style='color: #333; margin-top: 0;'>Detalles de la renovación:</h2>
+                    
+                    <div style='background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #00b894;'>
+                        <h3 style='margin: 0 0 10px 0; color: #00b894;'>{$plan->name}</h3>
+                        <p style='margin: 5px 0; color: #666;'><strong>Precio pagado:</strong> $" . number_format($plan->price, 0, ',', '.') . " COP</p>
+                        <p style='margin: 5px 0; color: #666;'><strong>Nueva fecha de vencimiento:</strong> " . $subscription->ends_at->format('d/m/Y') . "</p>
+                        <p style='margin: 5px 0; color: #666;'><strong>Próxima renovación:</strong> " . $subscription->next_billing_date->format('d/m/Y') . "</p>
+                    </div>
+                    
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='" . config('app.frontend_url') . "/club-socios' 
+                           style='background: #00b894; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;'>
+                            Ver mi membresía
+                        </a>
+                    </div>
+                </div>
+                
+                <div style='text-align: center; margin-top: 20px; color: #666; font-size: 14px;'>
+                    <p>¡Gracias por continuar siendo parte del Club de Socios Market Club!</p>
+                    <p>Este es un email automático, por favor no respondas a este mensaje.</p>
+                </div>
+            </div>
+            ";
+
+            $textContent = "
+✅ Tu suscripción al Club de Socios ha sido renovada
+
+Tu membresía ha sido renovada exitosamente.
+
+Detalles de la renovación:
+- Plan: {$plan->name}
+- Precio pagado: $" . number_format($plan->price, 0, ',', '.') . " COP
+- Nueva fecha de vencimiento: " . $subscription->ends_at->format('d/m/Y') . "
+- Próxima renovación: " . $subscription->next_billing_date->format('d/m/Y') . "
+
+¡Gracias por continuar siendo parte del Club de Socios Market Club!
+
+Este es un email automático, por favor no respondas a este mensaje.
+            ";
+
+            $result = $this->brevoService->sendEmail(
+                [$user->email => ($user->name ?? 'Usuario')],
+                $subject,
+                $htmlContent,
+                $textContent
+            );
+
+            if ($result) {
+                Log::info('Subscription renewal confirmation email sent successfully', [
+                    'user_id' => $user->id,
+                    'subscription_id' => $subscription->id,
+                    'email' => $user->email
+                ]);
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('Subscription renewal confirmation email error: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'subscription_id' => $subscription->id ?? null,
+                'email' => $user->email ?? null
+            ]);
+            return false;
+        }
+    }
 }

@@ -30,7 +30,7 @@ class SubscriptionPlansSeeder extends Seeder
             ],
             [
                 'name' => 'Maestro Cervecero',
-                'slug' => 'collector_brewer',
+                'slug' => 'master_brewer',
                 'description' => 'Para quienes ya tienen afinidad con la cerveza y buscan etiquetas con mayor fuerza y personalidad. Una selección que explora estilos más complejos y distintivos según tu carácter. Según la coyuntura del mes, la caja puede incluir un espirituoso premium para empezar a la experiencia.',
                 'price' => 250000,
                 'features' => [
@@ -44,7 +44,7 @@ class SubscriptionPlansSeeder extends Seeder
             ],
             [
                 'name' => 'Coleccionista Cervecero',
-                'slug' => 'master_brewer',
+                'slug' => 'collector_brewer',
                 'description' => 'Selección de Élite. La máxima expresión de lo premium y lo inalcanzable. Recibe tres cervezas de la cúspide del mundo cervecero y los destilados. Cada caja es un manifiesto de exclusividad que incluye etiquetas de culto, ediciones especiales y, ocasionalmente, una botella de licor excepcional seleccionada para llevar la experiencia al nivel de lo sublime.',
                 'price' => 200000,
                 'features' => [

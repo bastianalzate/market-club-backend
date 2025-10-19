@@ -61,6 +61,19 @@ Route::post('/payments/wompi/generate-signature', [PaymentController::class, 'ge
 Route::post('/payments/update-order-status', [PaymentController::class, 'updateOrderStatus']);
 Route::post('/payments/create-transaction', [PaymentController::class, 'createPaymentTransaction']);
 
+// Rutas que requieren autenticación
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/payments/wompi/generate-subscription-signature', [PaymentController::class, 'getSubscriptionSignature']);
+    Route::post('/payments/process-subscription', [PaymentController::class, 'processSubscriptionPayment']);
+    
+    // Rutas de suscripciones
+    Route::get('/subscriptions/current', [SubscriptionController::class, 'getCurrentSubscription']);
+    Route::get('/subscriptions/history', [SubscriptionController::class, 'getSubscriptionHistory']);
+    Route::post('/subscriptions/cancel', [SubscriptionController::class, 'cancelSubscription']);
+    Route::post('/subscriptions/reactivate', [SubscriptionController::class, 'reactivateSubscription']);
+    Route::put('/subscriptions/payment-method', [SubscriptionController::class, 'updatePaymentMethod']);
+});
+
 // Webhook de Wompi (sin autenticación)
 Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
 
@@ -74,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Planes de suscripción (público)
-Route::get('/subscriptions/plans', [SubscriptionController::class, 'getPlans']);
+Route::get('/subscriptions/plans', [SubscriptionController::class, 'getAvailablePlans']);
 
 // Carrito de compras (público - funciona con session_id)
 Route::get('/cart', [CartController::class, 'index']);

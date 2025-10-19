@@ -762,6 +762,179 @@ class PaymentController extends Controller
     }
 
     /**
+     * Generar firma de integridad para suscripciones
+     */
+    public function getSubscriptionSignature(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'plan_id' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+            'type' => 'required|string|in:subscription',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            // Verificar que el plan existe
+            $plan = \App\Models\SubscriptionPlan::where('slug', $request->plan_id)->first();
+            if (!$plan) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Plan de suscripción no encontrado',
+                ], 404);
+            }
+
+            // Generar referencia única para suscripción
+            $reference = $this->wompiService->generateReference('SUBSCRIPTION_' . $request->plan_id . '_' . time());
+
+            // Generar firma de integridad
+            $signature = $this->generateWidgetSignature($reference, $request->amount);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'reference' => $reference,
+                    'amount' => $this->wompiService->convertToCents($request->amount),
+                    'currency' => 'COP',
+                    'signature' => ['integrity' => $signature], // Formato correcto para Widget
+                    'public_key' => config('services.wompi.public_key'),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error generating subscription signature: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor',
+            ], 500);
+        }
+    }
+
+    /**
+     * Procesar pago de suscripción después de confirmación de Wompi
+     */
+    public function processSubscriptionPayment(Request $request)
+    {
+        Log::info('Processing subscription payment request', [
+            'plan_id' => $request->plan_id,
+            'transaction_id' => $request->transaction_id,
+            'reference' => $request->reference,
+            'amount' => $request->amount,
+            'user_authenticated' => Auth::check(),
+            'user_id' => Auth::id(),
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'plan_id' => 'required|string|exists:subscription_plans,slug',
+            'transaction_id' => 'required|string',
+            'reference' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            Log::error('Subscription payment validation failed', $validator->errors()->toArray());
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $user = Auth::user(); // El middleware ya garantiza que el usuario está autenticado
+            Log::info('User authenticated for subscription', ['user_id' => $user->id, 'user_email' => $user->email]);
+            $plan = \App\Models\SubscriptionPlan::where('slug', $request->plan_id)->firstOrFail();
+
+            // Verificar si el usuario ya tiene una suscripción activa
+            $activeSubscription = $user->activeSubscription;
+            if ($activeSubscription) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya tienes una suscripción activa. Cancela tu suscripción actual antes de suscribirte a un nuevo plan.',
+                    'current_subscription' => [
+                        'plan_name' => $activeSubscription->subscriptionPlan->name,
+                        'ends_at' => $activeSubscription->ends_at->format('Y-m-d'),
+                        'days_remaining' => $activeSubscription->days_remaining,
+                    ],
+                ], 400);
+            }
+
+            // Crear nueva suscripción
+            $startsAt = now();
+            $endsAt = $startsAt->copy()->addMonth();
+
+            $subscription = \App\Models\UserSubscription::create([
+                'user_id' => $user->id,
+                'subscription_plan_id' => $plan->id,
+                'status' => 'active',
+                'price_paid' => $request->amount,
+                'starts_at' => $startsAt,
+                'ends_at' => $endsAt,
+                'next_billing_date' => $endsAt,
+                'auto_renew' => true, // Habilitar renovación automática
+                'metadata' => [
+                    'transaction_id' => $request->transaction_id,
+                    'reference' => $request->reference,
+                    'subscribed_at' => now(),
+                    'payment_method' => 'wompi',
+                    'initial_payment' => true,
+                ],
+            ]);
+
+            Log::info('Subscription created with auto-renewal enabled', [
+                'subscription_id' => $subscription->id,
+                'user_id' => $user->id,
+                'plan' => $plan->name,
+                'auto_renew' => true,
+                'next_billing_date' => $endsAt->format('Y-m-d')
+            ]);
+
+            // Enviar email de confirmación
+            try {
+                $this->emailService->sendSubscriptionConfirmation($subscription);
+                Log::info("Subscription created successfully for user {$user->id}, plan {$plan->name}");
+            } catch (\Exception $e) {
+                Log::error("Failed to send subscription confirmation email: " . $e->getMessage());
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Suscripción creada exitosamente',
+                'data' => [
+                    'subscription' => [
+                        'id' => $subscription->id,
+                        'plan_name' => $plan->name,
+                        'price_paid' => (float) $subscription->price_paid,
+                        'starts_at' => $subscription->starts_at->format('Y-m-d'),
+                        'ends_at' => $subscription->ends_at->format('Y-m-d'),
+                        'next_billing_date' => $subscription->next_billing_date->format('Y-m-d'),
+                        'days_remaining' => $subscription->days_remaining,
+                        'status' => $subscription->status,
+                    ],
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error processing subscription payment: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor',
+            ], 500);
+        }
+    }
+
+    /**
      * Crear transacción de pago manualmente (solo para testing)
      */
     public function createPaymentTransaction(Request $request)
