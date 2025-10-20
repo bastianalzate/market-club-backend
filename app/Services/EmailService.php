@@ -26,17 +26,27 @@ class EmailService
         try {
             $user = $order->user;
             
-            Mail::send('emails.order-confirmation', [
+            // Generar contenido HTML usando la plantilla
+            $htmlContent = view('emails.order-confirmation', [
                 'order' => $order,
                 'user' => $user,
                 'items' => $order->orderItems,
-            ], function ($message) use ($user, $order) {
-                $message->to($user->email, $user->name)
-                    ->subject('Confirmación de Orden #' . $order->order_number);
-            });
+            ])->render();
+            
+            // Enviar email usando Brevo
+            $result = $this->brevoService->sendEmail(
+                [$user->email => $user->name],
+                'Confirmación de Orden #' . $order->order_number,
+                $htmlContent
+            );
 
-            Log::info("Order confirmation email sent for order {$order->id}");
-            return true;
+            if ($result) {
+                Log::info("Order confirmation email sent for order {$order->id}");
+                return true;
+            } else {
+                Log::error("Failed to send order confirmation email for order {$order->id}");
+                return false;
+            }
 
         } catch (\Exception $e) {
             Log::error('Order confirmation email error: ' . $e->getMessage());

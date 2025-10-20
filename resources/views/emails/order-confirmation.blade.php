@@ -19,7 +19,7 @@
         }
 
         .header {
-            background: #1f2937;
+            background: #B48C2B;
             color: white;
             padding: 20px;
             text-align: center;

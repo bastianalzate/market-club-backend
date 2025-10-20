@@ -135,8 +135,16 @@ class PaymentController extends Controller
                     'status' => $transaction['status'] === 'APPROVED' ? 'processing' : 'pending',
                 ]);
 
-                // Enviar email de confirmación de pago si fue aprobado
+                // Enviar email de confirmación de orden solo si el pago fue exitoso
                 if ($transaction['status'] === 'APPROVED') {
+                    try {
+                        $this->emailService->sendOrderConfirmation($order);
+                        Log::info("Order confirmation email sent for order {$order->id} with status: {$transaction['status']}");
+                    } catch (\Exception $e) {
+                        Log::error("Failed to send order confirmation email for order {$order->id}: " . $e->getMessage());
+                    }
+                    
+                    // También enviar email de confirmación de pago
                     $this->emailService->sendPaymentConfirmation($order);
                 }
 
@@ -207,6 +215,16 @@ class PaymentController extends Controller
                     'payment_status' => $paymentStatus,
                     'status' => $orderStatus,
                 ]);
+
+                // Enviar email de confirmación de orden solo si el pago fue exitoso
+                if ($paymentStatus === 'paid') {
+                    try {
+                        $this->emailService->sendOrderConfirmation($order);
+                        Log::info("Order confirmation email sent for order {$order->id} with status: {$paymentStatus}");
+                    } catch (\Exception $e) {
+                        Log::error("Failed to send order confirmation email for order {$order->id}: " . $e->getMessage());
+                    }
+                }
 
                 return response()->json([
                     'success' => true,
