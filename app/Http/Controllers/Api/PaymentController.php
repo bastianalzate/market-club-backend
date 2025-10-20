@@ -135,8 +135,9 @@ class PaymentController extends Controller
                     'status' => $transaction['status'] === 'APPROVED' ? 'processing' : 'pending',
                 ]);
 
-                // Enviar email de confirmación de orden solo si el pago fue exitoso
+                // Enviar email según el estado del pago
                 if ($transaction['status'] === 'APPROVED') {
+                    // Pago exitoso - enviar confirmación
                     try {
                         $this->emailService->sendOrderConfirmation($order);
                         Log::info("Order confirmation email sent for order {$order->id} with status: {$transaction['status']}");
@@ -146,6 +147,14 @@ class PaymentController extends Controller
                     
                     // También enviar email de confirmación de pago
                     $this->emailService->sendPaymentConfirmation($order);
+                } elseif ($transaction['status'] === 'DECLINED') {
+                    // Pago rechazado - enviar email de pago fallido
+                    try {
+                        $this->emailService->sendPaymentFailed($order);
+                        Log::info("Payment failed email sent for order {$order->id} with status: {$transaction['status']}");
+                    } catch (\Exception $e) {
+                        Log::error("Failed to send payment failed email for order {$order->id}: " . $e->getMessage());
+                    }
                 }
 
                 DB::commit();
@@ -216,13 +225,22 @@ class PaymentController extends Controller
                     'status' => $orderStatus,
                 ]);
 
-                // Enviar email de confirmación de orden solo si el pago fue exitoso
+                // Enviar email según el estado del pago
                 if ($paymentStatus === 'paid') {
+                    // Pago exitoso - enviar confirmación
                     try {
                         $this->emailService->sendOrderConfirmation($order);
                         Log::info("Order confirmation email sent for order {$order->id} with status: {$paymentStatus}");
                     } catch (\Exception $e) {
                         Log::error("Failed to send order confirmation email for order {$order->id}: " . $e->getMessage());
+                    }
+                } elseif ($paymentStatus === 'failed') {
+                    // Pago rechazado - enviar email de pago fallido
+                    try {
+                        $this->emailService->sendPaymentFailed($order);
+                        Log::info("Payment failed email sent for order {$order->id} with status: {$paymentStatus}");
+                    } catch (\Exception $e) {
+                        Log::error("Failed to send payment failed email for order {$order->id}: " . $e->getMessage());
                     }
                 }
 

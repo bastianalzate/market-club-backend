@@ -1,109 +1,150 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Problema con el Pago - Market Club</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pago Fallido - Market Club</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
+        }
+
+        .container {
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
         }
+
         .header {
-            background-color: #ff6b6b;
+            background: #dc2626;
             color: white;
             padding: 20px;
             text-align: center;
-            border-radius: 5px 5px 0 0;
         }
+
         .content {
-            background-color: #f9f9f9;
-            padding: 30px;
-            border-radius: 0 0 5px 5px;
+            padding: 20px;
+            background: #f9fafb;
         }
-        .warning-box {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
+
+        .order-details {
+            background: white;
+            padding: 20px;
             margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
         }
-        .info-box {
-            background-color: white;
-            padding: 15px;
-            margin: 20px 0;
-            border-left: 4px solid #ff6b6b;
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
         }
-        .button {
-            display: inline-block;
-            padding: 12px 30px;
-            background-color: #f8b739;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin: 20px 0;
+
+        .total {
+            font-weight: bold;
+            font-size: 18px;
+            color: #1f2937;
         }
+
         .footer {
             text-align: center;
-            margin-top: 30px;
-            color: #666;
-            font-size: 12px;
+            padding: 20px;
+            color: #6b7280;
+        }
+
+        .retry-button {
+            background: #B48C2B;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 20px 0;
         }
     </style>
 </head>
+
 <body>
-    <div class="header">
-        <h1>⚠️ Problema con tu Pago</h1>
-    </div>
-    
-    <div class="content">
-        <p>Hola <strong>{{ $user->name }}</strong>,</p>
-        
-        <p>No pudimos procesar el pago de tu suscripción a <strong>{{ $plan->name }}</strong>.</p>
-        
-        <div class="info-box">
-            <h3>Detalles del Problema</h3>
-            <p><strong>Plan:</strong> {{ $plan->name }}</p>
-            <p><strong>Método de Pago:</strong> {{ $payment_method }}</p>
-            <p><strong>Error:</strong> {{ $error_message }}</p>
+    <div class="container">
+        <div class="header">
+            <h1>Market Club</h1>
+            <h2>Pago No Procesado</h2>
         </div>
-        
-        <div class="warning-box">
-            <h3>¿Qué significa esto?</h3>
-            <p><strong>Reintentos Automáticos:</strong> Intentaremos procesar el pago {{ $retries_left }} vez(veces) más en los próximos días.</p>
-            <p><strong>Intento actual:</strong> {{ $retry_count }} de 4</p>
-            
-            @if($retries_left > 0)
-                <p>Tu suscripción sigue activa. Volveremos a intentar el cobro pronto.</p>
-            @else
-                <p style="color: #d9534f;"><strong>Advertencia:</strong> Este fue el último intento. Por favor, actualiza tu método de pago para evitar la suspensión.</p>
-            @endif
+
+        <div class="content">
+            <p>Hola {{ $user->name }},</p>
+
+            <p>Lamentamos informarte que no pudimos procesar el pago de tu orden. Esto puede deberse a varios motivos:</p>
+
+            <ul>
+                <li>Fondos insuficientes en la cuenta</li>
+                <li>Datos de la tarjeta incorrectos</li>
+                <li>La tarjeta ha expirado</li>
+                <li>Restricciones de tu banco</li>
+            </ul>
+
+            <div class="order-details">
+                <h3>Detalles de la Orden</h3>
+                <p><strong>Número de Orden:</strong> #{{ $order->order_number }}</p>
+                <p><strong>Fecha:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</p>
+                <p><strong>Estado:</strong> Pago Rechazado</p>
+
+                <h4>Productos:</h4>
+                @foreach ($items as $item)
+                    <div class="item">
+                        <span>{{ $item->product->name }} (x{{ $item->quantity }})</span>
+                        <span>${{ number_format($item->total_price, 0, ',', '.') }}</span>
+                    </div>
+                @endforeach
+
+                <div class="item">
+                    <span>Subtotal:</span>
+                    <span>${{ number_format($order->subtotal, 0, ',', '.') }}</span>
+                </div>
+                <div class="item">
+                    <span>IVA (19%):</span>
+                    <span>${{ number_format($order->tax_amount, 0, ',', '.') }}</span>
+                </div>
+                <div class="item">
+                    <span>Envío:</span>
+                    <span>${{ number_format($order->shipping_amount, 0, ',', '.') }}</span>
+                </div>
+                <div class="item total">
+                    <span>Total:</span>
+                    <span>${{ number_format($order->total_amount, 0, ',', '.') }}</span>
+                </div>
+            </div>
+
+            <div class="order-details">
+                <h3>¿Qué puedes hacer?</h3>
+                <p>Puedes intentar realizar el pago nuevamente con:</p>
+                <ul>
+                    <li>Una tarjeta diferente</li>
+                    <li>Verificar los datos de tu tarjeta</li>
+                    <li>Contactar a tu banco</li>
+                    <li>Usar otro método de pago (PSE, Nequi, Daviplata)</li>
+                </ul>
+                
+                <a href="{{ config('app.frontend_url') }}/checkout" class="retry-button">
+                    Intentar Pago Nuevamente
+                </a>
+            </div>
+
+            <p>Si el problema persiste, no dudes en contactarnos.</p>
+
+            <p>¡Gracias por elegir Market Club!</p>
         </div>
-        
-        <h3>¿Qué puedes hacer?</h3>
-        <ul>
-            <li>Verificar que tu tarjeta tenga fondos suficientes</li>
-            <li>Actualizar tu método de pago</li>
-            <li>Contactar con tu banco si es necesario</li>
-        </ul>
-        
-        <center>
-            <a href="{{ config('app.frontend_url') }}/account/subscription/payment-method" class="button">
-                Actualizar Método de Pago
-            </a>
-        </center>
-        
-        <p style="margin-top: 30px; color: #666; font-size: 14px;">
-            Si necesitas ayuda, estamos aquí para asistirte. Contáctanos en cualquier momento.
-        </p>
-    </div>
-    
-    <div class="footer">
-        <p>&copy; {{ date('Y') }} Market Club. Todos los derechos reservados.</p>
+
+        <div class="footer">
+            <p>Market Club - Tu tienda de cervezas artesanales</p>
+            <p>Este es un email automático, por favor no responder.</p>
+        </div>
     </div>
 </body>
-</html>
 
+</html>

@@ -55,6 +55,42 @@ class EmailService
     }
 
     /**
+     * Enviar email de pago fallido
+     */
+    public function sendPaymentFailed(Order $order): bool
+    {
+        try {
+            $user = $order->user;
+            
+            // Generar contenido HTML usando la plantilla
+            $htmlContent = view('emails.payment-failed', [
+                'order' => $order,
+                'user' => $user,
+                'items' => $order->orderItems,
+            ])->render();
+            
+            // Enviar email usando Brevo
+            $result = $this->brevoService->sendEmail(
+                [$user->email => $user->name],
+                'Pago No Procesado - Orden #' . $order->order_number,
+                $htmlContent
+            );
+
+            if ($result) {
+                Log::info("Payment failed email sent for order {$order->id}");
+                return true;
+            } else {
+                Log::error("Failed to send payment failed email for order {$order->id}");
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Payment failed email error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Enviar email de confirmación de pago
      */
     public function sendPaymentConfirmation(Order $order): bool
