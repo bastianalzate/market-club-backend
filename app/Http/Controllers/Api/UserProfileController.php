@@ -494,6 +494,8 @@ class UserProfileController extends Controller
             'id' => $order->id,
             'order_number' => $order->order_number,
             'status' => $this->translateOrderStatus($order->status),
+            'payment_status' => $order->payment_status,
+            'payment_reference' => $order->payment_reference,
             'total_amount' => (float) $order->total_amount,
             'subtotal' => (float) $order->subtotal,
             'tax_amount' => (float) $order->tax_amount,
