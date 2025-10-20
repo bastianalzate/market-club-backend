@@ -230,6 +230,12 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request)
     {
+        // Registrar el webhook recibido para debugging
+        Log::info('Wompi webhook received', [
+            'payload' => $request->all(),
+            'headers' => $request->headers->all(),
+        ]);
+
         $signature = $request->header('X-Signature');
         $payload = $request->getContent();
 
@@ -242,40 +248,62 @@ class PaymentController extends Controller
         $data = $request->json()->all();
 
         try {
+            // Validar que vengan los datos esperados
+            if (!isset($data['data']['id']) || !isset($data['data']['status'])) {
+                Log::error('Invalid webhook data structure', ['data' => $data]);
+                return response()->json(['error' => 'Invalid data structure'], 400);
+            }
+
             DB::beginTransaction();
 
             $transactionId = $data['data']['id'];
             $status = $data['data']['status'];
+            $reference = $data['data']['reference'] ?? null;
 
-            // Buscar orden por referencia de pago
-            $order = Order::where('payment_reference', $transactionId)->first();
+            Log::info('Processing webhook for transaction', [
+                'transaction_id' => $transactionId,
+                'status' => $status,
+                'reference' => $reference,
+            ]);
 
-            if ($order) {
-                $paymentStatus = $this->mapWompiStatusToOrderStatus($status);
-                $orderStatus = $paymentStatus === 'paid' ? 'processing' : 'pending';
+            // Buscar orden por referencia de pago (transaction ID o reference)
+            $order = Order::where('payment_reference', $transactionId)
+                ->orWhere('payment_reference', $reference)
+                ->first();
 
-                $order->update([
-                    'payment_status' => $paymentStatus,
-                    'status' => $orderStatus,
-                    'wompi_transaction_id' => $transactionId,
-                    'payment_reference' => $data['data']['reference'] ?? null,
+            if (!$order) {
+                Log::warning('Order not found for webhook', [
+                    'transaction_id' => $transactionId,
+                    'reference' => $reference,
                 ]);
-
-                // Crear o actualizar transacción de pago
-                $this->createOrUpdatePaymentTransaction($order, $data, $status);
-
-                // Enviar email de confirmación si el pago fue exitoso
-                if ($paymentStatus === 'paid') {
-                    try {
-                        $this->emailService->sendOrderConfirmation($order);
-                        $this->emailService->sendPaymentConfirmation($order);
-                    } catch (\Exception $e) {
-                        Log::error("Failed to send confirmation emails for order {$order->id}: " . $e->getMessage());
-                    }
-                }
-
-                Log::info("Order {$order->id} payment status updated to {$paymentStatus}");
+                DB::commit();
+                return response()->json(['success' => true, 'message' => 'Order not found']);
             }
+
+            $paymentStatus = $this->mapWompiStatusToOrderStatus($status);
+            $orderStatus = $paymentStatus === 'paid' ? 'processing' : 'pending';
+
+            $order->update([
+                'payment_status' => $paymentStatus,
+                'status' => $orderStatus,
+                'wompi_transaction_id' => $transactionId,
+                'payment_reference' => $reference ?? $transactionId,
+            ]);
+
+            // Crear o actualizar transacción de pago
+            $this->createOrUpdatePaymentTransaction($order, $data, $status);
+
+            // Enviar email de confirmación si el pago fue exitoso
+            if ($paymentStatus === 'paid') {
+                try {
+                    $this->emailService->sendOrderConfirmation($order);
+                    $this->emailService->sendPaymentConfirmation($order);
+                } catch (\Exception $e) {
+                    Log::error("Failed to send confirmation emails for order {$order->id}: " . $e->getMessage());
+                }
+            }
+
+            Log::info("Order {$order->id} payment status updated to {$paymentStatus}");
 
             DB::commit();
 
@@ -283,7 +311,10 @@ class PaymentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Webhook processing error: ' . $e->getMessage());
+            Log::error('Webhook processing error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'data' => $data ?? null,
+            ]);
             return response()->json(['error' => 'Internal server error'], 500);
         }
     }
