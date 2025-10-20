@@ -248,17 +248,22 @@ class PaymentController extends Controller
         $data = $request->json()->all();
 
         try {
+            // Wompi puede enviar los datos en dos formatos diferentes:
+            // 1. data.transaction.id (formato actual del webhook)
+            // 2. data.id (formato antiguo o de otros eventos)
+            $transactionData = $data['data']['transaction'] ?? $data['data'] ?? null;
+            
             // Validar que vengan los datos esperados
-            if (!isset($data['data']['id']) || !isset($data['data']['status'])) {
+            if (!$transactionData || !isset($transactionData['id']) || !isset($transactionData['status'])) {
                 Log::error('Invalid webhook data structure', ['data' => $data]);
                 return response()->json(['error' => 'Invalid data structure'], 400);
             }
 
             DB::beginTransaction();
 
-            $transactionId = $data['data']['id'];
-            $status = $data['data']['status'];
-            $reference = $data['data']['reference'] ?? null;
+            $transactionId = $transactionData['id'];
+            $status = $transactionData['status'];
+            $reference = $transactionData['reference'] ?? null;
 
             Log::info('Processing webhook for transaction', [
                 'transaction_id' => $transactionId,
@@ -290,8 +295,9 @@ class PaymentController extends Controller
                 'payment_reference' => $reference ?? $transactionId,
             ]);
 
-            // Crear o actualizar transacción de pago
-            $this->createOrUpdatePaymentTransaction($order, $data, $status);
+            // Crear o actualizar transacción de pago (envolver transactionData en el formato esperado)
+            $normalizedData = ['data' => $transactionData];
+            $this->createOrUpdatePaymentTransaction($order, $normalizedData, $status);
 
             // Enviar email de confirmación si el pago fue exitoso
             if ($paymentStatus === 'paid') {
