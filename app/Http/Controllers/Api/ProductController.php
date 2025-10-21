@@ -8,6 +8,7 @@ use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -239,23 +240,80 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'sometimes|required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0',
-            'sku' => 'sometimes|required|string|unique:products,sku,' . $product->id,
-            'stock_quantity' => 'sometimes|required|integer|min:0',
-            'category_id' => 'sometimes|required|exists:categories,id',
-            'image' => 'nullable|string',
-            'gallery' => 'nullable|array',
-            'is_featured' => 'boolean',
-            'attributes' => 'nullable|array',
-        ]);
+        Log::info('=== INICIO ACTUALIZACIÓN PRODUCTO API ===');
+        Log::info('Producto ID: ' . $product->id);
+        Log::info('Producto nombre actual: ' . $product->name);
+        Log::info('Usuario autenticado: ' . (Auth::check() ? Auth::user()->email : 'No autenticado'));
+        Log::info('Datos recibidos en request: ' . json_encode($request->all()));
+        
+        try {
+            Log::info('Iniciando validación de datos...');
+            $request->validate([
+                'name' => 'sometimes|required|string|max:255',
+                'description' => 'nullable|string',
+                'price' => 'sometimes|required|numeric|min:0',
+                'sale_price' => 'nullable|numeric|min:0',
+                'sku' => 'sometimes|required|string|unique:products,sku,' . $product->id,
+                'stock_quantity' => 'sometimes|required|integer|min:0',
+                'category_id' => 'sometimes|required|exists:categories,id',
+                'image' => 'nullable|string',
+                'gallery' => 'nullable|array',
+                'is_featured' => 'boolean',
+                'is_active' => 'boolean',
+                'attributes' => 'nullable|array',
+                'product_specific_data' => 'nullable|array',
+            ]);
+            Log::info('Validación exitosa');
 
-        $product->update($request->all());
+            Log::info('Datos antes de la actualización:');
+            Log::info('  - Nombre: ' . $product->name);
+            Log::info('  - Precio: ' . $product->price);
+            Log::info('  - Stock: ' . $product->stock_quantity);
+            Log::info('  - Activo: ' . ($product->is_active ? 'true' : 'false'));
+            Log::info('  - Datos específicos: ' . json_encode($product->product_specific_data));
 
-        return response()->json($product->load('category'));
+            Log::info('Iniciando actualización del producto...');
+            $updateResult = $product->update($request->all());
+            Log::info('Resultado de la actualización: ' . ($updateResult ? 'true' : 'false'));
+
+            // Recargar el producto para obtener los datos actualizados
+            $product->refresh();
+            
+            Log::info('Datos después de la actualización:');
+            Log::info('  - Nombre: ' . $product->name);
+            Log::info('  - Precio: ' . $product->price);
+            Log::info('  - Stock: ' . $product->stock_quantity);
+            Log::info('  - Activo: ' . ($product->is_active ? 'true' : 'false'));
+            Log::info('  - Datos específicos: ' . json_encode($product->product_specific_data));
+            
+            Log::info('=== FIN ACTUALIZACIÓN PRODUCTO API ===');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto actualizado exitosamente',
+                'data' => $product->load('category')
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Error de validación en API: ' . json_encode($e->errors()));
+            Log::info('=== FIN ACTUALIZACIÓN PRODUCTO API (ERROR VALIDACIÓN) ===');
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos de validación inválidos',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            Log::error('Error general en actualización API: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::info('=== FIN ACTUALIZACIÓN PRODUCTO API (ERROR GENERAL) ===');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor al actualizar el producto'
+            ], 500);
+        }
     }
 
     /**

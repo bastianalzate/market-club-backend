@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -151,22 +152,45 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        Log::info('=== INICIO ACTUALIZACIÓN PRODUCTO ADMIN ===');
+        Log::info('Producto ID: ' . $product->id);
+        Log::info('Producto nombre actual: ' . $product->name);
+        Log::info('Datos recibidos en request: ' . json_encode($request->all()));
+        
         // Si solo se está actualizando el estado (desde el botón de acciones rápidas)
-        $requestData = $request->only(['is_active', '_token', '_method']);
-        if ($request->has('is_active') && count($requestData) <= 3) {
+        // Solo aplicar actualización rápida si NO hay campos de formulario completo
+        $isQuickUpdate = $request->has('is_active') && 
+                        !$request->has('name') && 
+                        !$request->has('price') && 
+                        !$request->has('sku');
+        
+        Log::info('¿Es actualización rápida?: ' . ($isQuickUpdate ? 'Sí' : 'No'));
+        
+        if ($isQuickUpdate) {
+            Log::info('ACTUALIZACIÓN RÁPIDA DE ESTADO');
+            
             $request->validate([
                 'is_active' => 'required|in:0,1',
             ]);
+            
+            Log::info('Validación de estado exitosa');
+            Log::info('Nuevo estado: ' . $request->input('is_active'));
             
             $product->update([
                 'is_active' => $request->input('is_active') == 1,
             ]);
             
+            Log::info('Estado actualizado exitosamente');
+            Log::info('=== FIN ACTUALIZACIÓN RÁPIDA ===');
+            
             return redirect()->route('admin.products.show', $product)
                 ->with('success', 'Estado del producto actualizado exitosamente.');
         }
         
+        Log::info('ACTUALIZACIÓN COMPLETA DE PRODUCTO');
+        
         // Validación completa para actualizaciones normales
+        Log::info('Iniciando validación completa...');
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -180,9 +204,12 @@ class ProductController extends Controller
             'is_featured' => 'nullable|in:0,1',
             'is_active' => 'nullable|in:0,1',
         ]);
+        Log::info('Validación completa exitosa');
 
         // Procesar datos específicos del tipo de producto
+        Log::info('Procesando datos específicos del producto...');
         $productSpecificData = $product->product_specific_data ?? []; // Preservar datos existentes
+        Log::info('Datos específicos actuales: ' . json_encode($productSpecificData));
         
         // Lista de campos específicos que pueden venir del formulario
         $specificFields = [
@@ -202,19 +229,26 @@ class ProductController extends Controller
         foreach ($specificFields as $fieldName) {
             if ($request->has($fieldName)) {
                 $value = $request->$fieldName;
+                Log::info("Procesando campo específico: {$fieldName} = " . json_encode($value));
                 
                 // Si el campo está vacío, lo eliminamos del array
                 if ($value === null || $value === '') {
                     unset($productSpecificData[$fieldName]);
+                    Log::info("Campo {$fieldName} eliminado por estar vacío");
                 } else {
                     $productSpecificData[$fieldName] = $value;
+                    Log::info("Campo {$fieldName} actualizado con valor: " . json_encode($value));
                 }
+            } else {
+                Log::info("Campo {$fieldName} no presente en request");
             }
         }
-
+        
+        Log::info('Datos específicos finales: ' . json_encode($productSpecificData));
 
         // Actualizar campos básicos
-        $product->update([
+        Log::info('Iniciando actualización de campos básicos...');
+        $updateData = [
             'name' => $request->name,
             'slug' => Str::slug($request->name),
             'description' => $request->description,
@@ -227,11 +261,28 @@ class ProductController extends Controller
             'image' => $request->image,
             'is_featured' => $request->input('is_featured', 0) == 1,
             'is_active' => $request->input('is_active', 0) == 1,
-        ]);
+        ];
+        
+        Log::info('Datos para actualizar campos básicos: ' . json_encode($updateData));
+        
+        $updateResult = $product->update($updateData);
+        Log::info('Resultado actualización campos básicos: ' . ($updateResult ? 'true' : 'false'));
 
         // Actualizar product_specific_data por separado
+        Log::info('Actualizando product_specific_data por separado...');
         $product->product_specific_data = $productSpecificData;
-        $product->save();
+        $saveResult = $product->save();
+        Log::info('Resultado guardado product_specific_data: ' . ($saveResult ? 'true' : 'false'));
+        
+        // Verificar datos finales
+        $product->refresh();
+        Log::info('Datos finales del producto:');
+        Log::info('  - Nombre: ' . $product->name);
+        Log::info('  - Precio: ' . $product->price);
+        Log::info('  - Stock: ' . $product->stock_quantity);
+        Log::info('  - Activo: ' . ($product->is_active ? 'true' : 'false'));
+        Log::info('  - Datos específicos: ' . json_encode($product->product_specific_data));
+        Log::info('=== FIN ACTUALIZACIÓN COMPLETA ===');
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Producto actualizado exitosamente.');
