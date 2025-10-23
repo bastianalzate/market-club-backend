@@ -51,19 +51,51 @@ class DashboardController extends Controller
         // Ventas por mes (últimos 6 meses) - Basado en transacciones de pago reales
         $dbDriver = config('database.default');
         if ($dbDriver === 'sqlite') {
-            $monthly_sales = PaymentTransaction::selectRaw('strftime("%Y-%m", created_at) as month, SUM(amount) as total')
+            $monthly_sales = PaymentTransaction::selectRaw('strftime("%Y-%m", created_at) as month, SUM(amount) as total, COUNT(*) as count')
                 ->where('created_at', '>=', now()->subMonths(6))
                 ->where('status', 'APPROVED')
                 ->groupBy('month')
                 ->orderBy('month')
                 ->get();
         } else {
-            $monthly_sales = PaymentTransaction::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(amount) as total')
+            $monthly_sales = PaymentTransaction::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(amount) as total, COUNT(*) as count')
                 ->where('created_at', '>=', now()->subMonths(6))
                 ->where('status', 'APPROVED')
                 ->groupBy('month')
                 ->orderBy('month')
                 ->get();
+        }
+        
+        // Si no hay datos, generar estructura vacía con los últimos 6 meses
+        if ($monthly_sales->isEmpty()) {
+            $monthly_sales = collect();
+            for ($i = 5; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $monthly_sales->push((object)[
+                    'month' => $date->format('Y-m'),
+                    'total' => 0,
+                    'count' => 0
+                ]);
+            }
+        } else {
+            // Rellenar meses faltantes
+            $allMonths = collect();
+            for ($i = 5; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $monthKey = $date->format('Y-m');
+                
+                $existingMonth = $monthly_sales->firstWhere('month', $monthKey);
+                if ($existingMonth) {
+                    $allMonths->push($existingMonth);
+                } else {
+                    $allMonths->push((object)[
+                        'month' => $monthKey,
+                        'total' => 0,
+                        'count' => 0
+                    ]);
+                }
+            }
+            $monthly_sales = $allMonths;
         }
 
         // Estadísticas de calidad de datos (últimos 30 días)

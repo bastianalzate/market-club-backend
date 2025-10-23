@@ -438,6 +438,18 @@
         let currentPeriod = '12_months';
 
         // Sales Chart
+        var salesData = @json($monthly_sales->pluck('total'));
+        var ordersData = @json($monthly_sales->pluck('count'));
+        var monthsData = @json(
+            $monthly_sales->pluck('month')->map(function ($month) {
+                $date = \Carbon\Carbon::parse($month . '-01');
+                return $date->locale('es')->isoFormat('MMM YY');
+            }));
+
+        console.log('Sales Data:', salesData);
+        console.log('Orders Data:', ordersData);
+        console.log('Months Data:', monthsData);
+
         var salesChartOptions = {
             chart: {
                 type: 'area',
@@ -450,15 +462,12 @@
                 },
             },
             series: [{
-                    name: 'Ventas',
-                    data: @json($monthly_sales->pluck('total')),
+                    name: 'Ventas ($)',
+                    data: salesData,
                 },
                 {
                     name: 'Órdenes',
-                    data: @json(
-                        $monthly_sales->pluck('total')->map(function ($item) {
-                            return $item * 0.6;
-                        })),
+                    data: ordersData,
                 },
             ],
             dataLabels: {
@@ -473,18 +482,39 @@
             },
             grid: {
                 row: {
-                    opacity: 0,
+                    opacity: 0.5,
                 },
+                borderColor: '#f1f1f1',
             },
             xaxis: {
-                categories: @json($monthly_sales->pluck('month')),
+                categories: monthsData,
+                labels: {
+                    style: {
+                        fontSize: '12px',
+                        fontFamily: 'Inter, sans-serif',
+                    }
+                }
             },
             yaxis: {
-                show: false,
+                show: true,
+                labels: {
+                    formatter: function(value) {
+                        return value.toLocaleString('es-CO');
+                    },
+                    style: {
+                        fontSize: '12px',
+                        fontFamily: 'Inter, sans-serif',
+                    }
+                }
             },
             fill: {
-                type: 'solid',
-                opacity: [0.05, 0],
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.4,
+                    opacityTo: 0.1,
+                    stops: [0, 90, 100]
+                }
             },
             colors: ['#4F46E5', '#818CF8'],
             legend: {
@@ -498,6 +528,21 @@
                     vertical: 20,
                 },
             },
+            tooltip: {
+                y: {
+                    formatter: function(value, {
+                        seriesIndex
+                    }) {
+                        if (seriesIndex === 0) {
+                            return '$' + value.toLocaleString('es-CO', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        }
+                        return value + ' órdenes';
+                    }
+                }
+            }
         }
 
         var salesChart = new ApexCharts(document.querySelector('#salesChart'), salesChartOptions)
