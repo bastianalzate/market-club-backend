@@ -107,9 +107,10 @@ class DashboardController extends Controller
                     break;
             }
 
-            // Obtener órdenes detalladas con información completa
+            // Obtener órdenes detalladas con información completa (solo pagadas)
             $orders = Order::with(['user', 'orderItems.product', 'paymentTransactions'])
                 ->where('created_at', '>=', $startDate)
+                ->where('payment_status', 'paid')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -122,6 +123,7 @@ class DashboardController extends Controller
             // Encabezado del reporte
             $csvContent .= "REPORTE DE VENTAS - MARKET CLUB\n";
             $csvContent .= "Período: " . str_replace('_', ' ', $period) . "\n";
+            $csvContent .= "Filtro: Solo órdenes pagadas\n";
             $csvContent .= "Generado: " . now()->format('d/m/Y H:i:s') . "\n";
             $csvContent .= "\n";
 
