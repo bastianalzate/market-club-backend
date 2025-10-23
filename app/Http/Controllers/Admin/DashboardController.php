@@ -36,8 +36,10 @@ class DashboardController extends Controller
             'expiring_soon' => UserSubscription::expiringSoon(7)->count(),
         ];
 
-        // Órdenes recientes
-        $recent_orders = Order::with(['user', 'orderItems.product'])
+        // Órdenes recientes con transacción de pago
+        $recent_orders = Order::with(['user', 'orderItems.product', 'paymentTransactions' => function($query) {
+                $query->latest()->limit(1); // Obtener solo la transacción más reciente
+            }])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();

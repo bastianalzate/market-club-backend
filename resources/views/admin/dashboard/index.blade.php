@@ -368,8 +368,43 @@
                             </div>
 
                             <div class="px-4 lg:py-4 sm:px-6">
-                                <p class="mt-1 text-sm font-medium text-gray-500">{{ $order->payment_method ?? 'N/A' }}
-                                </p>
+                                @php
+                                    $paymentTransaction = $order->paymentTransactions->first();
+                                    $paymentMethod = 'Pendiente';
+
+                                    if ($paymentTransaction) {
+                                        $paymentMethodLabels = [
+                                            'CARD' => 'Tarjeta',
+                                            'NEQUI' => 'Nequi',
+                                            'PSE' => 'PSE',
+                                            'BANCOLOMBIA_TRANSFER' => 'Bancolombia',
+                                        ];
+                                        $paymentMethod =
+                                            $paymentMethodLabels[$paymentTransaction->payment_method] ??
+                                            $paymentTransaction->payment_method;
+                                    }
+                                @endphp
+                                <p class="text-sm font-medium text-gray-900">{{ $paymentMethod }}</p>
+                                @if ($paymentTransaction)
+                                    @php
+                                        $statusLabels = [
+                                            'APPROVED' => 'Pagado',
+                                            'PENDING' => 'Pendiente',
+                                            'DECLINED' => 'Rechazado',
+                                            'VOIDED' => 'Anulado',
+                                        ];
+                                        $statusColors = [
+                                            'APPROVED' => 'text-green-600',
+                                            'PENDING' => 'text-yellow-600',
+                                            'DECLINED' => 'text-red-600',
+                                            'VOIDED' => 'text-gray-600',
+                                        ];
+                                        $paymentStatus =
+                                            $statusLabels[$paymentTransaction->status] ?? $paymentTransaction->status;
+                                        $statusColor = $statusColors[$paymentTransaction->status] ?? 'text-gray-600';
+                                    @endphp
+                                    <p class="mt-1 text-xs font-medium {{ $statusColor }}">{{ $paymentStatus }}</p>
+                                @endif
                             </div>
                         </div>
                     @empty
