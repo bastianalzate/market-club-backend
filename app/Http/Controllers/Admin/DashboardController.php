@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\PaymentTransaction;
 use App\Models\Product;
 use App\Models\User;
@@ -65,7 +66,20 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        return view('admin.dashboard.index', compact('stats', 'recent_orders', 'top_products', 'monthly_sales'));
+        // Estadísticas de calidad de datos (últimos 30 días)
+        $dataQualityStats = [
+            'orders_without_users' => Order::whereNull('user_id')
+                ->where('created_at', '>=', now()->subDays(30))
+                ->count(),
+            'orders_with_deleted_products' => OrderItem::whereDoesntHave('product')
+                ->whereHas('order', function($query) {
+                    $query->where('created_at', '>=', now()->subDays(30));
+                })
+                ->distinct('order_id')
+                ->count('order_id'),
+        ];
+
+        return view('admin.dashboard.index', compact('stats', 'recent_orders', 'top_products', 'monthly_sales', 'dataQualityStats'));
     }
 
     /**
@@ -112,21 +126,56 @@ class DashboardController extends Controller
             $csvContent .= "\n";
 
             // Encabezados de las columnas
-            $csvContent .= "# DE ORDEN,CLIENTE,MONTO,PRODUCTOS,ESTADO\n";
+            $csvContent .= "# DE ORDEN,CLIENTE,EMAIL,TELEFONO,MONTO,PRODUCTOS,ESTADO,ALERTAS\n";
             
             // Agregar datos de las órdenes
             foreach ($orders as $order) {
-                // Obtener lista de productos (validar que el producto exista)
-                $products = $order->orderItems->map(function ($item) {
-                    if ($item->product) {
-                        return $item->product->name . ' (x' . $item->quantity . ')';
+                $alerts = []; // Array para acumular alertas
+                
+                // Intentar obtener información del cliente
+                $clientName = 'Cliente no registrado';
+                $clientEmail = '';
+                $clientPhone = '';
+                
+                if ($order->user) {
+                    $clientName = $order->user->name;
+                    $clientEmail = $order->user->email ?? '';
+                    $clientPhone = $order->user->phone ?? '';
+                } else {
+                    // Intentar obtener datos de la dirección de envío
+                    $shippingAddress = $order->shipping_address;
+                    if (is_array($shippingAddress)) {
+                        $clientName = $shippingAddress['name'] ?? $shippingAddress['full_name'] ?? 'Cliente no registrado';
+                        $clientEmail = $shippingAddress['email'] ?? '';
+                        $clientPhone = $shippingAddress['phone'] ?? '';
                     }
-                    return 'Producto eliminado (x' . $item->quantity . ')';
-                })->filter()->implode(', ');
+                    
+                    $alerts[] = 'Usuario no registrado o eliminado';
+                }
+                
+                // Obtener lista de productos (validar que el producto exista)
+                $productsList = [];
+                $hasDeletedProducts = false;
+                
+                foreach ($order->orderItems as $item) {
+                    if ($item->product) {
+                        $productsList[] = $item->product->name . ' (x' . $item->quantity . ')';
+                    } else {
+                        $productsList[] = 'Producto eliminado (x' . $item->quantity . ')';
+                        $hasDeletedProducts = true;
+                    }
+                }
+                
+                if ($hasDeletedProducts) {
+                    $alerts[] = 'Contiene productos eliminados';
+                }
+                
+                $products = implode(', ', $productsList);
                 
                 // Si no hay productos, mostrar mensaje por defecto
                 if (empty($products)) {
                     $products = 'Sin productos';
+                    $alerts[] = 'Orden sin productos';
                 }
                 
                 // Obtener estado en español
@@ -139,14 +188,20 @@ class DashboardController extends Controller
                 ];
                 $status = $statusLabels[$order->status] ?? ucfirst($order->status);
                 
+                // Preparar alertas
+                $alertsStr = !empty($alerts) ? implode('; ', $alerts) : 'OK';
+                
                 // Escapar comas y comillas en los datos
                 $orderNumber = str_replace('"', '""', $order->order_number ?? 'N/A');
-                $clientName = str_replace('"', '""', $order->user ? $order->user->name : 'Cliente no registrado');
+                $clientName = str_replace('"', '""', $clientName);
+                $clientEmail = str_replace('"', '""', $clientEmail);
+                $clientPhone = str_replace('"', '""', $clientPhone);
                 $amount = number_format($order->total_amount ?? 0, 2);
                 $productsStr = str_replace('"', '""', $products);
                 $statusStr = str_replace('"', '""', $status);
+                $alertsStr = str_replace('"', '""', $alertsStr);
                 
-                $csvContent .= "\"{$orderNumber}\",\"{$clientName}\",\"{$amount}\",\"{$productsStr}\",\"{$statusStr}\"\n";
+                $csvContent .= "\"{$orderNumber}\",\"{$clientName}\",\"{$clientEmail}\",\"{$clientPhone}\",\"{$amount}\",\"{$productsStr}\",\"{$statusStr}\",\"{$alertsStr}\"\n";
             }
 
             // Retornar respuesta con el archivo CSV
