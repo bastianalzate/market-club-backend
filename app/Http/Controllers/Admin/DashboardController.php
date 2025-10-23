@@ -73,76 +73,48 @@ class DashboardController extends Controller
      */
     public function exportSales(Request $request)
     {
-        $period = $request->get('period', '12_months'); // 12_months, 6_months, 30_days, 7_days
-        
-        // Determinar fechas según el período
-        switch ($period) {
-            case '7_days':
-                $startDate = now()->subDays(7);
-                break;
-            case '30_days':
-                $startDate = now()->subDays(30);
-                break;
-            case '6_months':
-                $startDate = now()->subMonths(6);
-                break;
-            case '12_months':
-            default:
-                $startDate = now()->subMonths(12);
-                break;
-        }
-
-        // Obtener órdenes detalladas con información completa
-        $orders = Order::with(['user', 'orderItems.product', 'paymentTransaction'])
-            ->where('created_at', '>=', $startDate)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Obtener datos de ventas diarias
-        $dailySales = PaymentTransaction::selectRaw('DATE(created_at) as date, COUNT(*) as orders_count, SUM(amount) as total_amount')
-            ->where('created_at', '>=', $startDate)
-            ->where('status', 'APPROVED')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        // Obtener datos de productos vendidos
-        $productSales = \DB::table('order_items')
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->join('payment_transactions', 'orders.id', '=', 'payment_transactions.order_id')
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->selectRaw('products.name as product_name, SUM(order_items.quantity) as total_quantity, SUM(order_items.total_price) as total_revenue')
-            ->where('payment_transactions.created_at', '>=', $startDate)
-            ->where('payment_transactions.status', 'APPROVED')
-            ->groupBy('products.id', 'products.name')
-            ->orderBy('total_quantity', 'desc')
-            ->get();
-
-        // Crear nombre del archivo
-        $filename = 'reporte_ventas_' . $period . '_' . now()->format('Y-m-d') . '.csv';
-
-        // Headers para descarga
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-
-        // Crear callback para generar CSV
-        $callback = function() use ($orders, $dailySales, $productSales, $period) {
-            $file = fopen('php://output', 'w');
+        try {
+            $period = $request->get('period', '12_months'); // 12_months, 6_months, 30_days, 7_days
             
-            // BOM para UTF-8 (para que Excel abra correctamente caracteres especiales)
-            fwrite($file, "\xEF\xBB\xBF");
+            // Determinar fechas según el período
+            switch ($period) {
+                case '7_days':
+                    $startDate = now()->subDays(7);
+                    break;
+                case '30_days':
+                    $startDate = now()->subDays(30);
+                    break;
+                case '6_months':
+                    $startDate = now()->subMonths(6);
+                    break;
+                case '12_months':
+                default:
+                    $startDate = now()->subMonths(12);
+                    break;
+            }
 
+            // Obtener órdenes detalladas con información completa
+            $orders = Order::with(['user', 'orderItems.product', 'paymentTransactions'])
+                ->where('created_at', '>=', $startDate)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Crear nombre del archivo
+            $filename = 'ventas_' . $period . '_' . now()->format('Y-m-d_His') . '.csv';
+
+            // Crear el contenido del CSV
+            $csvContent = "\xEF\xBB\xBF"; // BOM para UTF-8
+            
             // Encabezado del reporte
-            fputcsv($file, ['REPORTE DE VENTAS - MARKET CLUB']);
-            fputcsv($file, ['Período:', $period]);
-            fputcsv($file, ['Generado:', now()->format('d/m/Y H:i:s')]);
-            fputcsv($file, []); // Línea vacía
+            $csvContent .= "REPORTE DE VENTAS - MARKET CLUB\n";
+            $csvContent .= "Período: " . str_replace('_', ' ', $period) . "\n";
+            $csvContent .= "Generado: " . now()->format('d/m/Y H:i:s') . "\n";
+            $csvContent .= "\n";
 
-            // Tabla principal con solo las 5 columnas requeridas
-            fputcsv($file, ['# DE ORDEN', 'CLIENTE', 'MONTO', 'PRODUCTOS', 'ESTADO']);
+            // Encabezados de las columnas
+            $csvContent .= "# DE ORDEN,CLIENTE,MONTO,PRODUCTOS,ESTADO\n";
             
+            // Agregar datos de las órdenes
             foreach ($orders as $order) {
                 // Obtener lista de productos
                 $products = $order->orderItems->map(function ($item) {
@@ -159,18 +131,27 @@ class DashboardController extends Controller
                 ];
                 $status = $statusLabels[$order->status] ?? ucfirst($order->status);
                 
-                fputcsv($file, [
-                    $order->order_number,
-                    $order->user->name ?? 'Cliente no registrado',
-                    number_format($order->total_amount, 2),
-                    $products,
-                    $status
-                ]);
+                // Escapar comas y comillas en los datos
+                $orderNumber = str_replace('"', '""', $order->order_number);
+                $clientName = str_replace('"', '""', $order->user->name ?? 'Cliente no registrado');
+                $amount = number_format($order->total_amount, 2);
+                $productsStr = str_replace('"', '""', $products);
+                $statusStr = str_replace('"', '""', $status);
+                
+                $csvContent .= "\"{$orderNumber}\",\"{$clientName}\",\"{$amount}\",\"{$productsStr}\",\"{$statusStr}\"\n";
             }
 
-            fclose($file);
-        };
+            // Retornar respuesta con el archivo CSV
+            return response($csvContent, 200)
+                ->header('Content-Type', 'text/csv; charset=UTF-8')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
 
-        return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            \Log::error('Error exportando CSV: ' . $e->getMessage());
+            return back()->with('error', 'Error al exportar el reporte: ' . $e->getMessage());
+        }
     }
 }

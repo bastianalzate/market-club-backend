@@ -525,15 +525,8 @@
             // Crear URL con parámetro de período
             const exportUrl = '{{ route('admin.dashboard.export-sales') }}?period=' + currentPeriod;
 
-            // Crear enlace temporal para descarga
-            const link = document.createElement('a');
-            link.href = exportUrl;
-            link.download = 'ventas_' + currentPeriod + '_{{ now()->format('Y-m-d') }}.csv';
-
-            // Simular click para iniciar descarga
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Redirigir directamente a la URL de descarga
+            window.location.href = exportUrl;
         });
     </script>
 @endpush
