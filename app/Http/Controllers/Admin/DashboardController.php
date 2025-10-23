@@ -128,7 +128,7 @@ class DashboardController extends Controller
             $csvContent .= "\n";
 
             // Encabezados de las columnas
-            $csvContent .= "# DE ORDEN,CLIENTE,EMAIL,TELEFONO,MONTO,PRODUCTOS,ESTADO,ALERTAS\n";
+            $csvContent .= "# DE ORDEN,CLIENTE,EMAIL,TELEFONO,MONTO,PRODUCTOS,ESTADO ORDEN,ESTADO PAGO,ALERTAS\n";
             
             // Agregar datos de las órdenes
             foreach ($orders as $order) {
@@ -180,7 +180,7 @@ class DashboardController extends Controller
                     $alerts[] = 'Orden sin productos';
                 }
                 
-                // Obtener estado en español
+                // Obtener estado de la orden en español
                 $statusLabels = [
                     'pending' => 'Pendiente',
                     'processing' => 'Procesando',
@@ -188,7 +188,16 @@ class DashboardController extends Controller
                     'delivered' => 'Entregado',
                     'cancelled' => 'Cancelado',
                 ];
-                $status = $statusLabels[$order->status] ?? ucfirst($order->status);
+                $orderStatus = $statusLabels[$order->status] ?? ucfirst($order->status);
+                
+                // Obtener estado de pago en español
+                $paymentStatusLabels = [
+                    'pending' => 'Pendiente',
+                    'paid' => 'Pagado',
+                    'failed' => 'Fallido',
+                    'refunded' => 'Reembolsado',
+                ];
+                $paymentStatus = $paymentStatusLabels[$order->payment_status] ?? 'Pagado';
                 
                 // Preparar alertas
                 $alertsStr = !empty($alerts) ? implode('; ', $alerts) : 'OK';
@@ -200,10 +209,11 @@ class DashboardController extends Controller
                 $clientPhone = str_replace('"', '""', $clientPhone);
                 $amount = number_format($order->total_amount ?? 0, 2);
                 $productsStr = str_replace('"', '""', $products);
-                $statusStr = str_replace('"', '""', $status);
+                $orderStatusStr = str_replace('"', '""', $orderStatus);
+                $paymentStatusStr = str_replace('"', '""', $paymentStatus);
                 $alertsStr = str_replace('"', '""', $alertsStr);
                 
-                $csvContent .= "\"{$orderNumber}\",\"{$clientName}\",\"{$clientEmail}\",\"{$clientPhone}\",\"{$amount}\",\"{$productsStr}\",\"{$statusStr}\",\"{$alertsStr}\"\n";
+                $csvContent .= "\"{$orderNumber}\",\"{$clientName}\",\"{$clientEmail}\",\"{$clientPhone}\",\"{$amount}\",\"{$productsStr}\",\"{$orderStatusStr}\",\"{$paymentStatusStr}\",\"{$alertsStr}\"\n";
             }
 
             // Retornar respuesta con el archivo CSV
