@@ -116,10 +116,18 @@ class DashboardController extends Controller
             
             // Agregar datos de las órdenes
             foreach ($orders as $order) {
-                // Obtener lista de productos
+                // Obtener lista de productos (validar que el producto exista)
                 $products = $order->orderItems->map(function ($item) {
-                    return $item->product->name . ' (x' . $item->quantity . ')';
-                })->implode(', ');
+                    if ($item->product) {
+                        return $item->product->name . ' (x' . $item->quantity . ')';
+                    }
+                    return 'Producto eliminado (x' . $item->quantity . ')';
+                })->filter()->implode(', ');
+                
+                // Si no hay productos, mostrar mensaje por defecto
+                if (empty($products)) {
+                    $products = 'Sin productos';
+                }
                 
                 // Obtener estado en español
                 $statusLabels = [
@@ -132,9 +140,9 @@ class DashboardController extends Controller
                 $status = $statusLabels[$order->status] ?? ucfirst($order->status);
                 
                 // Escapar comas y comillas en los datos
-                $orderNumber = str_replace('"', '""', $order->order_number);
-                $clientName = str_replace('"', '""', $order->user->name ?? 'Cliente no registrado');
-                $amount = number_format($order->total_amount, 2);
+                $orderNumber = str_replace('"', '""', $order->order_number ?? 'N/A');
+                $clientName = str_replace('"', '""', $order->user ? $order->user->name : 'Cliente no registrado');
+                $amount = number_format($order->total_amount ?? 0, 2);
                 $productsStr = str_replace('"', '""', $products);
                 $statusStr = str_replace('"', '""', $status);
                 
