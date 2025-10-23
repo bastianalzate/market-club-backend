@@ -1,177 +1,257 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Detalles del Mayorista')
+@section('title', 'Detalle de Mayorista')
+@section('page-title', 'Detalle de Mayorista')
 
 @section('content')
-    <div class="py-12">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <!-- Header -->
-            <div class="mb-8">
-                <div class="sm:flex sm:items-center">
-                    <div class="sm:flex-auto">
-                        <nav class="flex" aria-label="Breadcrumb">
-                            <ol class="flex items-center space-x-4">
-                                <li>
-                                    <a href="{{ route('admin.wholesalers.index') }}"
-                                        class="text-gray-500 hover:text-gray-700">
-                                        Mayoristas
-                                    </a>
-                                </li>
-                                <li>
-                                    <div class="flex items-center">
-                                        <svg class="flex-shrink-0 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd"
-                                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                        <span
-                                            class="ml-4 text-sm font-medium text-gray-500">{{ $wholesaler->business_name }}</span>
-                                    </div>
-                                </li>
-                            </ol>
-                        </nav>
-                        <h1 class="mt-4 text-2xl font-bold text-gray-900">{{ $wholesaler->name }}</h1>
-                        <p class="mt-2 text-sm text-gray-700">{{ $wholesaler->email }}</p>
+    <div class="max-w-6xl mx-auto">
+        <!-- Header del Mayorista -->
+        <div class="bg-white border border-gray-200 rounded-xl mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-16 w-16">
+                            <div class="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <span
+                                    class="text-indigo-600 text-2xl font-medium">{{ substr($wholesaler->name, 0, 1) }}</span>
+                            </div>
+                        </div>
+                        <div class="ml-6">
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $wholesaler->name }}</h3>
+                            <p class="mt-1 text-sm text-gray-500">Mayorista desde
+                                {{ $wholesaler->created_at->format('M d, Y') }}
+                            </p>
+                        </div>
                     </div>
-                    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                        <div class="flex space-x-3">
-                            @if($wholesaler->wholesaler_document_path)
-                                <button onclick="openFilesModal()"
-                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    <svg class="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Ver Archivos
-                                </button>
-                            @endif
-                            <a href="{{ route('admin.wholesalers.edit', $wholesaler) }}"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                <svg class="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="flex items-center space-x-3">
+                        @if ($wholesaler->wholesaler_document_path)
+                            <button onclick="openFilesModal()"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                Editar
-                            </a>
-                            @if (!$wholesaler->is_active)
-                                <form action="{{ route('admin.wholesalers.approve', $wholesaler) }}" method="POST"
-                                    class="inline">
-                                    @csrf
-                                    <button type="submit"
-                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                        <svg class="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Aprobar
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Información Principal -->
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <!-- Información del Negocio -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white shadow rounded-lg">
-                        <div class="px-4 py-5 sm:p-6">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Información del Mayorista</h3>
-                            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500">Nombre</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">{{ $wholesaler->name }}</dd>
-                                </div>
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500">Email</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">{{ $wholesaler->email }}</dd>
-                                </div>
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500">Estado</dt>
-                                    <dd class="mt-1">
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if ($wholesaler->is_active) bg-green-100 text-green-800
-                                            @else bg-red-100 text-red-800 @endif">
-                                            @if ($wholesaler->is_active)
-                                                Activo
-                                            @else
-                                                Inactivo
-                                            @endif
-                                        </span>
-                                    </dd>
-                                </div>
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500">Fecha de Registro</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
-                                        {{ $wholesaler->created_at->format('d/m/Y H:i') }}</dd>
-                                </div>
-                                @if ($wholesaler->phone)
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500">Teléfono</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ $wholesaler->phone }}</dd>
-                                    </div>
-                                @endif
-                                @if ($wholesaler->nit)
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500">NIT</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ $wholesaler->nit }}</dd>
-                                    </div>
-                                @endif
-                            </dl>
-                        </div>
-                    </div>
-
-                    <!-- Información de Ubicación -->
-                    @if ($wholesaler->address || $wholesaler->country)
-                        <div class="mt-6 bg-white shadow rounded-lg">
-                            <div class="px-4 py-5 sm:p-6">
-                                <h3 class="text-lg font-medium text-gray-900 mb-4">Información de Ubicación</h3>
-                                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                                    @if ($wholesaler->address)
-                                        <div class="sm:col-span-2">
-                                            <dt class="text-sm font-medium text-gray-500">Dirección</dt>
-                                            <dd class="mt-1 text-sm text-gray-900">{{ is_array($wholesaler->address) ? implode(', ', $wholesaler->address) : $wholesaler->address }}</dd>
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <dt class="text-sm font-medium text-gray-500">País</dt>
-                                        <dd class="mt-1 text-sm text-gray-900">{{ $wholesaler->country }}</dd>
-                                    </div>
-                                </dl>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Información Comercial -->
-                <div>
-                    @if ($wholesaler->wholesaler_document_path)
-                        <div class="bg-white shadow rounded-lg">
-                            <div class="px-4 py-5 sm:p-6">
-                                <h3 class="text-lg font-medium text-gray-900 mb-4">Documentos</h3>
-                                <div class="flex items-center space-x-3">
-                                    <svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                Ver Archivos
+                            </button>
+                        @endif
+                        <a href="{{ route('admin.wholesalers.edit', $wholesaler) }}"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                </path>
+                            </svg>
+                            Editar Mayorista
+                        </a>
+                        @if (!$wholesaler->is_active)
+                            <form action="{{ route('admin.wholesalers.approve', $wholesaler) }}" method="POST"
+                                class="inline">
+                                @csrf
+                                <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">{{ $wholesaler->wholesaler_document_original_name }}</p>
-                                        <p class="text-xs text-gray-500">Documento subido</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
+                                    Aprobar
+                                </button>
+                            </form>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <!-- Información del Mayorista -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Detalles del Negocio -->
+                <div class="bg-white border border-gray-200 rounded-xl">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h4 class="text-lg font-medium text-gray-900">Información del Negocio</h4>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Negocio</label>
+                                <p class="text-sm text-gray-900">{{ $wholesaler->business_name }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Negocio</label>
+                                <p class="text-sm text-gray-900">{{ ucfirst($wholesaler->business_type) }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de Contacto</label>
+                                <p class="text-sm text-gray-900">{{ $wholesaler->contact_name }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <p class="text-sm text-gray-900">{{ $wholesaler->email }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                                <p class="text-sm text-gray-900">{{ $wholesaler->phone ?? 'No registrado' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">NIT/RUT</label>
+                                <p class="text-sm text-gray-900">{{ $wholesaler->tax_id ?? 'No registrado' }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    @if ($wholesaler->is_active) bg-green-100 text-green-800
+                                    @else bg-red-100 text-red-800 @endif">
+                                    @if ($wholesaler->is_active)
+                                        Activo
+                                    @else
+                                        Inactivo
+                                    @endif
+                                </span>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Registro</label>
+                                <p class="text-sm text-gray-900">{{ $wholesaler->created_at->format('d M Y, H:i') }}</p>
+                            </div>
+                        </div>
+                        @if ($wholesaler->business_description)
+                            <div class="mt-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Descripción del Negocio</label>
+                                <p class="text-sm text-gray-900">{{ $wholesaler->business_description }}</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Información de Ubicación -->
+                @if ($wholesaler->address || $wholesaler->country || $wholesaler->city)
+                    <div class="bg-white border border-gray-200 rounded-xl">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h4 class="text-lg font-medium text-gray-900">Información de Ubicación</h4>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                @if ($wholesaler->address)
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                                        <p class="text-sm text-gray-900">
+                                            {{ is_array($wholesaler->address) ? implode(', ', $wholesaler->address) : $wholesaler->address }}
+                                        </p>
+                                    </div>
+                                @endif
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+                                    <p class="text-sm text-gray-900">{{ $wholesaler->city ?? 'No registrada' }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Departamento/Estado</label>
+                                    <p class="text-sm text-gray-900">{{ $wholesaler->state ?? 'No registrado' }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">País</label>
+                                    <p class="text-sm text-gray-900">{{ $wholesaler->country ?? 'No registrado' }}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Código Postal</label>
+                                    <p class="text-sm text-gray-900">{{ $wholesaler->postal_code ?? 'No registrado' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Resumen del Mayorista -->
+            <div class="space-y-6">
+                <!-- Documentos -->
+                @if ($wholesaler->wholesaler_document_path)
+                    <div class="bg-white border border-gray-200 rounded-xl">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h4 class="text-lg font-medium text-gray-900">Documentos</h4>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center space-x-3">
+                                <svg class="h-8 w-8 text-indigo-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-medium text-gray-900">
+                                        {{ $wholesaler->wholesaler_document_original_name }}</h4>
+                                    <p class="text-xs text-gray-500">Documento subido</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Información de la Cuenta -->
+                <div class="bg-white border border-gray-200 rounded-xl">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h4 class="text-lg font-medium text-gray-900">Información de la Cuenta</h4>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ID de Mayorista</label>
+                            <p class="text-sm text-gray-900">{{ $wholesaler->id }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado de Aprobación</label>
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                @if ($wholesaler->is_active) bg-green-100 text-green-800
+                                @else bg-red-100 text-red-800 @endif">
+                                {{ $wholesaler->is_active ? 'Aprobado' : 'Pendiente' }}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Mayorista desde</label>
+                            <p class="text-sm text-gray-900">{{ $wholesaler->created_at->diffForHumans() }}</p>
+                        </div>
+                        @if ($wholesaler->notes)
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                                <p class="text-sm text-gray-900">{{ $wholesaler->notes }}</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Acciones Rápidas -->
+                <div class="bg-white border border-gray-200 rounded-xl">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h4 class="text-lg font-medium text-gray-900">Acciones Rápidas</h4>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <a href="{{ route('admin.wholesalers.edit', $wholesaler) }}"
+                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                </path>
+                            </svg>
+                            Editar Mayorista
+                        </a>
+                        @if (!$wholesaler->is_active)
+                            <form action="{{ route('admin.wholesalers.approve', $wholesaler) }}" method="POST"
+                                class="w-full">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Aprobar Mayorista
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Modal de Archivos -->
@@ -183,39 +263,47 @@
                     <h3 class="text-lg font-medium text-gray-900">Archivos del Mayorista</h3>
                     <button onclick="closeFilesModal()" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
 
                 <!-- Contenido del Modal -->
                 <div class="space-y-4">
-                    @if($wholesaler->wholesaler_document_path)
+                    @if ($wholesaler->wholesaler_document_path)
                         <div class="border border-gray-200 rounded-lg p-4">
                             <div class="flex items-center space-x-3">
-                                <svg class="h-8 w-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="h-8 w-8 text-indigo-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 <div class="flex-1">
-                                    <h4 class="text-sm font-medium text-gray-900">{{ $wholesaler->wholesaler_document_original_name }}</h4>
+                                    <h4 class="text-sm font-medium text-gray-900">
+                                        {{ $wholesaler->wholesaler_document_original_name }}</h4>
                                     <p class="text-xs text-gray-500">Documento subido</p>
                                 </div>
                                 <div class="flex space-x-2">
-                                    <a href="{{ route('admin.wholesalers.serve-file', ['wholesaler' => $wholesaler->id, 'filename' => basename($wholesaler->wholesaler_document_path)]) }}" 
-                                       target="_blank"
-                                       class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    <a href="{{ route('admin.wholesalers.serve-file', ['wholesaler' => $wholesaler->id, 'filename' => basename($wholesaler->wholesaler_document_path)]) }}"
+                                        target="_blank"
+                                        class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                         Ver
                                     </a>
-                                    <a href="{{ route('admin.wholesalers.serve-file', ['wholesaler' => $wholesaler->id, 'filename' => basename($wholesaler->wholesaler_document_path)]) }}" 
-                                       download="{{ $wholesaler->wholesaler_document_original_name }}"
-                                       class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    <a href="{{ route('admin.wholesalers.serve-file', ['wholesaler' => $wholesaler->id, 'filename' => basename($wholesaler->wholesaler_document_path)]) }}"
+                                        download="{{ $wholesaler->wholesaler_document_original_name }}"
+                                        class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
                                         Descargar
                                     </a>
@@ -224,8 +312,10 @@
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             <h3 class="mt-2 text-sm font-medium text-gray-900">No hay archivos</h3>
                             <p class="mt-1 text-sm text-gray-500">Este mayorista no ha subido ningún documento.</p>
@@ -235,7 +325,7 @@
 
                 <!-- Footer del Modal -->
                 <div class="flex justify-end mt-6">
-                    <button onclick="closeFilesModal()" 
+                    <button onclick="closeFilesModal()"
                         class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
                         Cerrar
                     </button>
