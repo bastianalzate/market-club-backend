@@ -37,7 +37,7 @@ class CheckoutController extends Controller
             'shipping_address.address' => 'required|string|max:500',
             'shipping_address.city' => 'required|string|max:100',
             'shipping_address.state' => 'required|string|max:100',
-            'shipping_address.postal_code' => 'required|string|max:20',
+            'shipping_address.postal_code' => 'nullable|string|max:20',
             'shipping_address.country' => 'required|string|max:100',
             'shipping_address.phone' => 'required|string|max:20',
             'billing_address' => 'nullable|array',
@@ -46,7 +46,7 @@ class CheckoutController extends Controller
             'billing_address.address' => 'required_with:billing_address|string|max:500',
             'billing_address.city' => 'required_with:billing_address|string|max:100',
             'billing_address.state' => 'required_with:billing_address|string|max:100',
-            'billing_address.postal_code' => 'required_with:billing_address|string|max:20',
+            'billing_address.postal_code' => 'nullable|string|max:20',
             'billing_address.country' => 'required_with:billing_address|string|max:100',
             'billing_address.phone' => 'required_with:billing_address|string|max:20',
             'notes' => 'nullable|string|max:1000',
@@ -267,7 +267,7 @@ class CheckoutController extends Controller
             'shipping_address.address' => 'required|string|max:500',
             'shipping_address.city' => 'required|string|max:100',
             'shipping_address.state' => 'required|string|max:100',
-            'shipping_address.postal_code' => 'required|string|max:20',
+            'shipping_address.postal_code' => 'nullable|string|max:20',
             'shipping_address.country' => 'required|string|max:100',
             'shipping_address.phone' => 'required|string|max:20',
         ]);
@@ -307,7 +307,7 @@ class CheckoutController extends Controller
         $validator = Validator::make($request->all(), [
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
-            'postal_code' => 'required|string|max:20',
+            'postal_code' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
