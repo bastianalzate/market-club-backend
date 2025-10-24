@@ -338,11 +338,15 @@ class PaymentController extends Controller
             // Enviar email de confirmación si el pago fue exitoso
             if ($paymentStatus === 'paid') {
                 try {
+                    Log::info("Sending confirmation emails for order {$order->id} - Payment status: {$paymentStatus}");
                     $this->emailService->sendOrderConfirmation($order);
                     $this->emailService->sendPaymentConfirmation($order);
+                    Log::info("Confirmation emails sent successfully for order {$order->id}");
                 } catch (\Exception $e) {
                     Log::error("Failed to send confirmation emails for order {$order->id}: " . $e->getMessage());
                 }
+            } else {
+                Log::info("NOT sending confirmation emails for order {$order->id} - Payment status: {$paymentStatus}");
             }
 
             Log::info("Order {$order->id} payment status updated to {$paymentStatus}");

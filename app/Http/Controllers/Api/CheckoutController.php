@@ -151,8 +151,8 @@ class CheckoutController extends Controller
             // Limpiar carrito
             $cart->clear();
 
-            // Enviar email de confirmación
-            $this->emailService->sendOrderConfirmation($order);
+            // NO enviar email de confirmación aquí - se enviará solo cuando el pago sea exitoso
+            // El email se enviará desde el webhook de Wompi cuando el pago sea aprobado
 
             DB::commit();
 
