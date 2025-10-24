@@ -115,6 +115,11 @@ Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calcula
 Route::post('/checkout/create-order', [CheckoutController::class, 'createOrder']);
 Route::post('/checkout/sync-cart', [CheckoutController::class, 'syncCartAfterLogin']);
 
+// Reset de contraseña (público)
+Route::post('/password/request-reset', [App\Http\Controllers\Api\PasswordResetController::class, 'requestReset']);
+Route::post('/password/verify-token', [App\Http\Controllers\Api\PasswordResetController::class, 'verifyToken']);
+Route::post('/password/reset', [App\Http\Controllers\Api\PasswordResetController::class, 'resetPassword']);
+
 // Rutas protegidas con Sanctum
 Route::middleware('auth:sanctum')->group(function () {
     // Autenticación

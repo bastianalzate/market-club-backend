@@ -229,6 +229,41 @@ class EmailService
     }
 
     /**
+     * Enviar email de reset de contraseña
+     */
+    public function sendPasswordResetEmail(User $user, string $resetUrl): bool
+    {
+        try {
+            $data = [
+                'user' => $user,
+                'resetUrl' => $resetUrl,
+            ];
+
+            // Generar contenido HTML usando la plantilla
+            $htmlContent = view('emails.password-reset', $data)->render();
+            
+            // Enviar email usando Brevo
+            $result = $this->brevoService->sendEmail(
+                [$user->email => $user->name],
+                'Restablecer Contraseña - Market Club',
+                $htmlContent
+            );
+
+            if ($result) {
+                Log::info("Password reset email sent for user {$user->id}");
+                return true;
+            } else {
+                Log::error("Failed to send password reset email for user {$user->id}");
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Password reset email error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Enviar email de habilitación de mayorista para un usuario (is_wholesaler = true)
      */
     public function sendWholesalerActivationEmailForUser(User $user): bool
