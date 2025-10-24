@@ -48,7 +48,7 @@
         .button {
             display: inline-block;
             background: linear-gradient(135deg, #B58E31 0%, #D4AF37 100%);
-            color: #ffffff;
+            color: #ffffff !important;
             padding: 15px 30px;
             text-decoration: none;
             border-radius: 8px;
