@@ -131,6 +131,7 @@ class ProductController extends Controller
                 'image_url' => $product->image_url,
                 'stock_quantity' => $product->stock_quantity,
                 'is_favorite' => $product->is_favorite ?? false,
+                'product_specific_data' => $product->product_specific_data,
             ];
         });
 
@@ -193,6 +194,7 @@ class ProductController extends Controller
                 'stock_quantity' => $product->stock_quantity,
                 'created_at' => $product->created_at->format('Y-m-d H:i:s'),
                 'is_favorite' => $product->is_favorite ?? false,
+                'product_specific_data' => $product->product_specific_data,
             ];
         });
 
