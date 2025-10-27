@@ -122,6 +122,7 @@ class ProductController extends Controller
 
         // Formatear la respuesta con solo los campos necesarios
         $formattedProducts = $products->map(function ($product) {
+            $data = $product->product_specific_data ?? [];
             return [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -130,6 +131,8 @@ class ProductController extends Controller
                 'current_price' => $product->current_price,
                 'image_url' => $product->image_url,
                 'stock_quantity' => $product->stock_quantity,
+                'packaging_type' => $data['packaging_type'] ?? null,
+                'volume_ml' => $data['volume_ml'] ?? null,
                 'is_favorite' => $product->is_favorite ?? false,
             ];
         });
@@ -183,6 +186,7 @@ class ProductController extends Controller
 
         // Formatear la respuesta con solo los campos necesarios
         $formattedProducts = $products->map(function ($product) {
+            $data = $product->product_specific_data ?? [];
             return [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -191,6 +195,8 @@ class ProductController extends Controller
                 'current_price' => $product->current_price,
                 'image_url' => $product->image_url,
                 'stock_quantity' => $product->stock_quantity,
+                'packaging_type' => $data['packaging_type'] ?? null,
+                'volume_ml' => $data['volume_ml'] ?? null,
                 'created_at' => $product->created_at->format('Y-m-d H:i:s'),
                 'is_favorite' => $product->is_favorite ?? false,
             ];

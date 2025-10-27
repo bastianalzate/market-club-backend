@@ -144,7 +144,11 @@ GET /api/products/featured?limit=10&category_id=1&country=colombia&beer_style=ip
         "price": 15000,
         "sale_price": 12000,
         "current_price": 12000,
-        "image_url": "http://localhost:8000/storage/products/2024/09/image.jpg"
+        "image_url": "http://localhost:8000/storage/products/2024/09/image.jpg",
+        "stock_quantity": 50,
+        "packaging_type": "botella",
+        "volume_ml": 330,
+        "is_favorite": false
     },
     {
         "id": 2,
@@ -152,7 +156,11 @@ GET /api/products/featured?limit=10&category_id=1&country=colombia&beer_style=ip
         "price": 18000,
         "sale_price": null,
         "current_price": 18000,
-        "image_url": "http://localhost:8000/storage/products/2024/09/image2.jpg"
+        "image_url": "http://localhost:8000/storage/products/2024/09/image2.jpg",
+        "stock_quantity": 30,
+        "packaging_type": "lata",
+        "volume_ml": 355,
+        "is_favorite": true
     }
 ]
 ```
@@ -182,7 +190,11 @@ GET /api/products/latest-beers?limit=10&country=colombia&beer_style=ipa&price_ra
         "sale_price": 12000,
         "current_price": 12000,
         "image_url": "http://localhost:8000/storage/products/2024/09/image.jpg",
-        "created_at": "2024-09-12 14:30:00"
+        "stock_quantity": 50,
+        "packaging_type": "botella",
+        "volume_ml": 330,
+        "created_at": "2024-09-12 14:30:00",
+        "is_favorite": false
     },
     {
         "id": 2,
@@ -191,7 +203,11 @@ GET /api/products/latest-beers?limit=10&country=colombia&beer_style=ipa&price_ra
         "sale_price": null,
         "current_price": 18000,
         "image_url": "http://localhost:8000/storage/products/2024/09/image2.jpg",
-        "created_at": "2024-09-12 14:25:00"
+        "stock_quantity": 30,
+        "packaging_type": "lata",
+        "volume_ml": 355,
+        "created_at": "2024-09-12 14:25:00",
+        "is_favorite": true
     }
 ]
 ```
