@@ -80,7 +80,8 @@
                                 <div>
                                     <h1 class="text-2xl font-bold text-gray-900">{{ $product->name }}</h1>
                                     @if ($product->description)
-                                        <p class="mt-2 text-gray-600">{{ $product->description }}</p>
+                                        <div class="mt-2 text-gray-600 prose prose-sm max-w-none">{!! $product->description !!}
+                                        </div>
                                     @endif
                                 </div>
 

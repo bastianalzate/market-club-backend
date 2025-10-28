@@ -302,7 +302,7 @@
                 <!-- Descripción -->
                 <div>
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
-                    <textarea name="description" id="description" rows="4"
+                    <textarea name="description" id="description" rows="8"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('description') border-red-300 @enderror">{{ old('description', $product->description) }}</textarea>
                     @error('description')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -488,8 +488,70 @@
         </div>
     </div>
 
+    <!-- Quill.js Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <style>
+        #description-editor {
+            height: 350px;
+        }
+
+        .ql-container {
+            font-size: 14px;
+            font-family: inherit;
+        }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar Quill para el editor de descripción
+            let quill, descriptionTextarea;
+            descriptionTextarea = document.getElementById('description');
+            const editorContainer = document.createElement('div');
+            editorContainer.id = 'description-editor';
+            descriptionTextarea.parentNode.insertBefore(editorContainer, descriptionTextarea);
+            descriptionTextarea.style.display = 'none';
+
+            quill = new Quill('#description-editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{
+                            'header': [1, 2, 3, false]
+                        }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{
+                            'list': 'ordered'
+                        }, {
+                            'list': 'bullet'
+                        }],
+                        [{
+                            'align': []
+                        }],
+                        [{
+                            'color': []
+                        }, {
+                            'background': []
+                        }],
+                        ['link', 'blockquote', 'code-block'],
+                        ['clean']
+                    ]
+                },
+                placeholder: 'Ingresa la descripción del producto...'
+            });
+
+            // Cargar contenido existente si hay
+            if (descriptionTextarea.value) {
+                quill.root.innerHTML = descriptionTextarea.value;
+            }
+
+            // Sincronizar contenido del editor con textarea antes de enviar
+            const form = descriptionTextarea.closest('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    descriptionTextarea.value = quill.root.innerHTML;
+                });
+            }
             const fileInput = document.getElementById('image');
             const uploadArea = document.getElementById('upload-area');
             const progressContainer = document.getElementById('progress-container');
@@ -635,8 +697,13 @@
             }
 
             // Validación del formulario
-            const form = document.querySelector('form');
-            form.addEventListener('submit', function(e) {
+            const formElement = document.querySelector('form');
+            formElement.addEventListener('submit', function(e) {
+                // Asegurar que el contenido de Quill se sincronice con el textarea
+                if (quill && descriptionTextarea) {
+                    descriptionTextarea.value = quill.root.innerHTML;
+                }
+
                 const requiredFields = ['name', 'sku', 'category_id', 'price', 'stock_quantity'];
                 let isValid = true;
 
