@@ -289,6 +289,45 @@ class ProductController extends Controller
     }
 
     /**
+     * Generate a unique SKU for a product
+     */
+    public function generateSku(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        $name = $request->name;
+        $categoryId = $request->category_id;
+        
+        // Get category abbreviation
+        $category = Category::find($categoryId);
+        $categoryAbbr = strtoupper(substr($category->name, 0, 3));
+        
+        // Clean product name and create base SKU
+        $cleanName = preg_replace('/[^A-Za-z0-9]/', '', $name);
+        $nameAbbr = strtoupper(substr($cleanName, 0, 4));
+        
+        // Generate base SKU
+        $baseSku = $categoryAbbr . '-' . $nameAbbr;
+        
+        // Check if SKU exists and generate unique version
+        $sku = $baseSku;
+        $counter = 1;
+        
+        while (Product::where('sku', $sku)->exists()) {
+            $sku = $baseSku . '-' . str_pad($counter, 3, '0', STR_PAD_LEFT);
+            $counter++;
+        }
+        
+        return response()->json([
+            'success' => true,
+            'sku' => $sku
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Product $product)

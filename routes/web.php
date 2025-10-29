@@ -38,6 +38,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     
     // Gestión de productos
     Route::resource('products', ProductController::class);
+    Route::post('products/generate-sku', [ProductController::class, 'generateSku'])->name('products.generate-sku');
     
     // Gestión de imágenes
     Route::post('/images/upload', [App\Http\Controllers\Admin\ImageController::class, 'upload'])->name('images.upload');

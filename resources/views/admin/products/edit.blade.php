@@ -44,8 +44,15 @@
 
                     <div>
                         <label for="sku" class="block text-sm font-medium text-gray-700 mb-2">SKU *</label>
-                        <input type="text" name="sku" id="sku" value="{{ old('sku', $product->sku) }}" required
-                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('sku') border-red-300 @enderror">
+                        <div class="flex gap-2">
+                            <input type="text" name="sku" id="sku" value="{{ old('sku', $product->sku) }}"
+                                required
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm @error('sku') border-red-300 @enderror">
+                            <button type="button" id="generate-sku-btn"
+                                class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                Generar SKU
+                            </button>
+                        </div>
                         @error('sku')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -843,6 +850,59 @@
             //         loadCurrentProductTypeFields();
             //     }, 200);
             // });
+
+            // Generación automática de SKU
+            const generateSkuBtn = document.getElementById('generate-sku-btn');
+            const skuInput = document.getElementById('sku');
+            const nameInput = document.getElementById('name');
+            const categorySelect = document.getElementById('category_id');
+
+            generateSkuBtn.addEventListener('click', function() {
+                const name = nameInput.value.trim();
+                const categoryId = categorySelect.value;
+
+                if (!name || !categoryId) {
+                    alert(
+                        'Por favor completa el nombre del producto y selecciona una categoría antes de generar el SKU.');
+                    return;
+                }
+
+                // Deshabilitar el botón mientras se genera
+                generateSkuBtn.disabled = true;
+                generateSkuBtn.textContent = 'Generando...';
+
+                // Realizar petición AJAX
+                fetch('{{ route('admin.products.generate-sku') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                .getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            category_id: categoryId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            skuInput.value = data.sku;
+                            skuInput.classList.remove('border-red-300');
+                        } else {
+                            alert('Error al generar el SKU. Por favor intenta nuevamente.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al generar el SKU. Por favor intenta nuevamente.');
+                    })
+                    .finally(() => {
+                        // Rehabilitar el botón
+                        generateSkuBtn.disabled = false;
+                        generateSkuBtn.textContent = 'Generar SKU';
+                    });
+            });
         });
     </script>
 @endsection
