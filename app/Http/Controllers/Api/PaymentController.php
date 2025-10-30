@@ -420,6 +420,8 @@ class PaymentController extends Controller
                 } catch (\Exception $e) {
                     Log::error("Failed to send purchase confirmation email for order {$order->id}: " . $e->getMessage());
                 }
+            } else {
+                Log::info("NOT sending confirmation emails for order {$order->id} - Payment status: {$paymentStatus}");
             }
 
             Log::info("Order {$order->id} payment status updated to {$paymentStatus}");

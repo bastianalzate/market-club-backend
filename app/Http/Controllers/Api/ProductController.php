@@ -134,6 +134,7 @@ class ProductController extends Controller
                 'packaging_type' => $data['packaging_type'] ?? null,
                 'volume_ml' => $data['volume_ml'] ?? null,
                 'is_favorite' => $product->is_favorite ?? false,
+                'product_specific_data' => $product->product_specific_data,
             ];
         });
 
@@ -199,6 +200,7 @@ class ProductController extends Controller
                 'volume_ml' => $data['volume_ml'] ?? null,
                 'created_at' => $product->created_at->format('Y-m-d H:i:s'),
                 'is_favorite' => $product->is_favorite ?? false,
+                'product_specific_data' => $product->product_specific_data,
             ];
         });
 
