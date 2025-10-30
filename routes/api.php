@@ -60,6 +60,7 @@ Route::get('/payments/wompi/config', [PaymentController::class, 'checkWompiConfi
 Route::post('/payments/wompi/generate-signature', [PaymentController::class, 'getWidgetSignature']);
 Route::post('/payments/update-order-status', [PaymentController::class, 'updateOrderStatus']);
 Route::post('/payments/create-transaction', [PaymentController::class, 'createPaymentTransaction']);
+Route::post('/payments/confirm', [PaymentController::class, 'confirmPayment']); // Nuevo: confirmar pago después del widget
 
 // Rutas que requieren autenticación
 Route::middleware('auth:sanctum')->group(function () {

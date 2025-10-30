@@ -191,6 +191,92 @@ class PaymentController extends Controller
     }
 
     /**
+     * Confirmar pago ya procesado por Wompi (para llamar desde el frontend después del widget)
+     */
+    public function confirmPayment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required|exists:orders,id',
+            'transaction_id' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Buscar orden con sus relaciones
+            $order = Order::with(['user', 'orderItems.product'])->findOrFail($request->order_id);
+
+            // Verificar el estado de la transacción en Wompi
+            $result = $this->wompiService->getTransaction($request->transaction_id);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo verificar la transacción',
+                ], 400);
+            }
+
+            $transaction = $result['data']['data'];
+            $paymentStatus = $this->mapWompiStatusToOrderStatus($transaction['status']);
+            $orderStatus = $paymentStatus === 'paid' ? 'processing' : 'pending';
+
+            // Actualizar orden
+            $order->update([
+                'payment_status' => $paymentStatus,
+                'status' => $orderStatus,
+                'payment_reference' => $request->transaction_id,
+                'payment_method' => $transaction['payment_method_type'] ?? null,
+            ]);
+
+            // Enviar emails si el pago fue exitoso
+            if ($paymentStatus === 'paid') {
+                try {
+                    $this->emailService->sendOrderConfirmation($order);
+                    Log::info("Order confirmation email sent for order {$order->id}");
+                } catch (\Exception $e) {
+                    Log::error("Failed to send order confirmation email for order {$order->id}: " . $e->getMessage());
+                }
+
+                try {
+                    $this->emailService->sendPaymentConfirmation($order);
+                    Log::info("Payment confirmation email sent for order {$order->id}");
+                } catch (\Exception $e) {
+                    Log::error("Failed to send payment confirmation email for order {$order->id}: " . $e->getMessage());
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pago confirmado exitosamente',
+                'data' => [
+                    'order' => $order->fresh(),
+                    'payment_status' => $paymentStatus,
+                    'transaction' => $transaction,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Payment confirmation error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al confirmar el pago',
+            ], 500);
+        }
+    }
+
+    /**
      * Verificar estado de una transacción
      */
     public function verifyPayment(Request $request)
