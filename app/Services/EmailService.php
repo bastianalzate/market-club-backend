@@ -26,16 +26,25 @@ class EmailService
         try {
             $user = $order->user;
             
+            // Obtener email y nombre (del usuario o del shipping address)
+            $email = $user ? $user->email : ($order->shipping_address['email'] ?? null);
+            $name = $user ? $user->name : ($order->shipping_address['name'] ?? 'Cliente');
+            
+            if (!$email) {
+                Log::error("Cannot send order confirmation email: no email found for order {$order->id}");
+                return false;
+            }
+            
             // Generar contenido HTML usando la plantilla
             $htmlContent = view('emails.order-confirmation', [
                 'order' => $order,
-                'user' => $user,
+                'user' => $user ?: (object)['name' => $name, 'email' => $email],
                 'items' => $order->orderItems,
             ])->render();
             
             // Enviar email usando Brevo
             $result = $this->brevoService->sendEmail(
-                [$user->email => $user->name],
+                [$email => $name],
                 'Confirmación de Orden #' . $order->order_number,
                 $htmlContent
             );
@@ -62,16 +71,25 @@ class EmailService
         try {
             $user = $order->user;
             
+            // Obtener email y nombre (del usuario o del shipping address)
+            $email = $user ? $user->email : ($order->shipping_address['email'] ?? null);
+            $name = $user ? $user->name : ($order->shipping_address['name'] ?? 'Cliente');
+            
+            if (!$email) {
+                Log::error("Cannot send payment failed email: no email found for order {$order->id}");
+                return false;
+            }
+            
             // Generar contenido HTML usando la plantilla
             $htmlContent = view('emails.payment-failed', [
                 'order' => $order,
-                'user' => $user,
+                'user' => $user ?: (object)['name' => $name, 'email' => $email],
                 'items' => $order->orderItems,
             ])->render();
             
             // Enviar email usando Brevo
             $result = $this->brevoService->sendEmail(
-                [$user->email => $user->name],
+                [$email => $name],
                 'Pago No Procesado - Orden #' . $order->order_number,
                 $htmlContent
             );
@@ -98,16 +116,25 @@ class EmailService
         try {
             $user = $order->user;
             
+            // Obtener email y nombre (del usuario o del shipping address)
+            $email = $user ? $user->email : ($order->shipping_address['email'] ?? null);
+            $name = $user ? $user->name : ($order->shipping_address['name'] ?? 'Cliente');
+            
+            if (!$email) {
+                Log::error("Cannot send payment confirmation email: no email found for order {$order->id}");
+                return false;
+            }
+            
             // Generar contenido HTML usando la plantilla
             $htmlContent = view('emails.payment-confirmation', [
                 'order' => $order,
-                'user' => $user,
+                'user' => $user ?: (object)['name' => $name, 'email' => $email],
                 'items' => $order->orderItems,
             ])->render();
             
             // Enviar email usando Brevo
             $result = $this->brevoService->sendEmail(
-                [$user->email => $user->name],
+                [$email => $name],
                 'Pago Confirmado - Orden #' . $order->order_number,
                 $htmlContent
             );
