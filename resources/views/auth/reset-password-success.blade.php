@@ -143,7 +143,7 @@
             </p>
         </div>
 
-        <a href="{{ config('app.frontend_url') }}/login" class="button">
+        <a href="{{ config('app.frontend_url') }}" class="button">
             Ir a Iniciar Sesión
         </a>
 

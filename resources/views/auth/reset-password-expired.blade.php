@@ -144,8 +144,8 @@
             </p>
         </div>
 
-        <a href="{{ config('app.frontend_url') }}/forgot-password" class="button">
-            Solicitar Nuevo Enlace de Restablecimiento
+        <a href="{{ config('app.frontend_url') }}" class="button">
+            Volver al Sitio
         </a>
 
         <a href="{{ config('app.frontend_url') }}" class="back-link">
