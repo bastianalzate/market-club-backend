@@ -9,7 +9,7 @@
             <h1 class="text-2xl font-bold text-gray-900">Mayoristas</h1>
             <p class="mt-1 text-sm text-gray-500">Gestiona todos los mayoristas registrados en tu tienda</p>
         </div>
-        
+
     </div>
 
     <!-- Filtros -->
@@ -159,7 +159,8 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         </svg>
-                                        <div class="text-sm text-gray-900">{{ $wholesaler->country ?? 'Sin ubicación' }}</div>
+                                        <div class="text-sm text-gray-900">{{ $wholesaler->country ?? 'Sin ubicación' }}
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -196,9 +197,13 @@
                                         </span>
                                         <!-- Loading spinner (oculto por defecto) -->
                                         <div class="wholesaler-loading ml-2 hidden">
-                                            <svg class="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            <svg class="animate-spin h-4 w-4 text-blue-600"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                </path>
                                             </svg>
                                         </div>
                                     </label>
@@ -221,26 +226,6 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-2">
-                                        @if (!$wholesaler->is_active)
-                                            <form action="{{ route('admin.wholesalers.approve', $wholesaler) }}"
-                                                method="POST" class="inline approve-form" data-wholesaler-id="{{ $wholesaler->id }}">
-                                                @csrf
-                                                <button type="submit" class="text-green-600 hover:text-green-900 approve-button"
-                                                    title="Aprobar mayorista" data-wholesaler-id="{{ $wholesaler->id }}">
-                                                    <!-- Icono normal -->
-                                                    <svg class="w-4 h-4 approve-icon" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                    </svg>
-                                                    <!-- Loading spinner (oculto por defecto) -->
-                                                    <svg class="w-4 h-4 approve-loading hidden animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                        @endif
                                         <a href="{{ route('admin.wholesalers.show', $wholesaler) }}"
                                             class="text-indigo-600 hover:text-indigo-900" title="Ver detalles">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -316,7 +301,7 @@
                     // Mostrar loading
                     const loadingSpinner = this.parentElement.querySelector('.wholesaler-loading');
                     const statusText = this.parentElement.querySelector('span');
-                    
+
                     // Deshabilitar el toggle y mostrar loading
                     this.disabled = true;
                     loadingSpinner.classList.remove('hidden');
@@ -339,7 +324,8 @@
                                 showNotification(data.message, 'success');
 
                                 // Actualizar el texto del estado
-                                statusText.textContent = data.status === 'enabled' ? 'Sí' : 'No';
+                                statusText.textContent = data.status === 'enabled' ? 'Sí' :
+                                'No';
 
                                 // Actualizar el badge de estado en la tabla
                                 updateStatusBadge(wholesalerId, data.status);
@@ -365,56 +351,6 @@
                 });
             });
 
-            // Manejar el botón de aprobación de mayoristas
-            document.querySelectorAll('.approve-form').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const wholesalerId = this.dataset.wholesalerId;
-                    const button = this.querySelector('.approve-button');
-                    const icon = button.querySelector('.approve-icon');
-                    const loading = button.querySelector('.approve-loading');
-                    
-                    // Mostrar loading
-                    icon.classList.add('hidden');
-                    loading.classList.remove('hidden');
-                    button.disabled = true;
-                    button.title = 'Procesando...';
-                    
-                    // Enviar petición
-                    fetch(this.action, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify({})
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            // Mostrar mensaje de éxito
-                            showNotification('Mayorista habilitado exitosamente. Se generó una nueva contraseña y se envió el correo de activación con las credenciales.', 'success');
-                            
-                            // Recargar la página para actualizar el estado
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1500);
-                        } else {
-                            throw new Error('Error en la respuesta del servidor');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showNotification('Error al habilitar el mayorista', 'error');
-                        
-                        // Restaurar estado del botón
-                        icon.classList.remove('hidden');
-                        loading.classList.add('hidden');
-                        button.disabled = false;
-                        button.title = 'Aprobar mayorista';
-                    });
-                });
-            });
         });
 
         function updateStatusBadge(wholesalerId, newStatus) {
@@ -453,12 +389,12 @@
             notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-md ${
                 type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
             }`;
-            
+
             // Agregar icono según el tipo
-            const icon = type === 'success' 
-                ? '<svg class="w-5 h-5 mr-2 inline" fill="currentColor" viewBox="0 0 20 20"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
-                : '<svg class="w-5 h-5 mr-2 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>';
-            
+            const icon = type === 'success' ?
+                '<svg class="w-5 h-5 mr-2 inline" fill="currentColor" viewBox="0 0 20 20"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' :
+                '<svg class="w-5 h-5 mr-2 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>';
+
             notification.innerHTML = `
                 <div class="flex items-center">
                     ${icon}
@@ -472,7 +408,7 @@
             // Animación de entrada
             notification.style.transform = 'translateX(100%)';
             notification.style.transition = 'transform 0.3s ease-in-out';
-            
+
             setTimeout(() => {
                 notification.style.transform = 'translateX(0)';
             }, 100);

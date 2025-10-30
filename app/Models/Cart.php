@@ -93,10 +93,14 @@ class Cart extends Model
         
         $subtotal = $this->items->sum('total_price');
         
-        // Sin IVA ni envío - el total es igual al subtotal
+        // Sin IVA
         $taxAmount = 0;
-        $shippingAmount = 0;
-        $totalAmount = $subtotal;
+        
+        // Envío fijo de $12,000
+        $shippingAmount = 12000;
+        
+        // Total = Subtotal + Envío (sin IVA)
+        $totalAmount = $subtotal + $shippingAmount;
 
         $this->update([
             'subtotal' => $subtotal,
