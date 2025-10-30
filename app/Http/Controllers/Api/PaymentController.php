@@ -137,16 +137,13 @@ class PaymentController extends Controller
 
                 // Enviar email según el estado del pago
                 if ($transaction['status'] === 'APPROVED') {
-                    // Pago exitoso - enviar confirmación
+                    // Pago exitoso - enviar email de confirmación de compra
                     try {
-                        $this->emailService->sendOrderConfirmation($order);
-                        Log::info("Order confirmation email sent for order {$order->id} with status: {$transaction['status']}");
+                        $this->emailService->sendPaymentConfirmation($order);
+                        Log::info("Purchase confirmation email sent for order {$order->id} with status: {$transaction['status']}");
                     } catch (\Exception $e) {
-                        Log::error("Failed to send order confirmation email for order {$order->id}: " . $e->getMessage());
+                        Log::error("Failed to send purchase confirmation email for order {$order->id}: " . $e->getMessage());
                     }
-                    
-                    // También enviar email de confirmación de pago
-                    $this->emailService->sendPaymentConfirmation($order);
                 } elseif ($transaction['status'] === 'DECLINED') {
                     // Pago rechazado - enviar email de pago fallido
                     try {
@@ -236,20 +233,13 @@ class PaymentController extends Controller
                 'payment_method' => $transaction['payment_method_type'] ?? null,
             ]);
 
-            // Enviar emails si el pago fue exitoso
+            // Enviar email si el pago fue exitoso
             if ($paymentStatus === 'paid') {
                 try {
-                    $this->emailService->sendOrderConfirmation($order);
-                    Log::info("Order confirmation email sent for order {$order->id}");
-                } catch (\Exception $e) {
-                    Log::error("Failed to send order confirmation email for order {$order->id}: " . $e->getMessage());
-                }
-
-                try {
                     $this->emailService->sendPaymentConfirmation($order);
-                    Log::info("Payment confirmation email sent for order {$order->id}");
+                    Log::info("Purchase confirmation email sent for order {$order->id}");
                 } catch (\Exception $e) {
-                    Log::error("Failed to send payment confirmation email for order {$order->id}: " . $e->getMessage());
+                    Log::error("Failed to send purchase confirmation email for order {$order->id}: " . $e->getMessage());
                 }
             }
 
@@ -313,12 +303,12 @@ class PaymentController extends Controller
 
                 // Enviar email según el estado del pago
                 if ($paymentStatus === 'paid') {
-                    // Pago exitoso - enviar confirmación
+                    // Pago exitoso - enviar email de confirmación de compra
                     try {
-                        $this->emailService->sendOrderConfirmation($order);
-                        Log::info("Order confirmation email sent for order {$order->id} with status: {$paymentStatus}");
+                        $this->emailService->sendPaymentConfirmation($order);
+                        Log::info("Purchase confirmation email sent for order {$order->id} with status: {$paymentStatus}");
                     } catch (\Exception $e) {
-                        Log::error("Failed to send order confirmation email for order {$order->id}: " . $e->getMessage());
+                        Log::error("Failed to send purchase confirmation email for order {$order->id}: " . $e->getMessage());
                     }
                 } elseif ($paymentStatus === 'failed') {
                     // Pago rechazado - enviar email de pago fallido
@@ -425,10 +415,10 @@ class PaymentController extends Controller
             // Enviar email de confirmación si el pago fue exitoso
             if ($paymentStatus === 'paid') {
                 try {
-                    $this->emailService->sendOrderConfirmation($order);
                     $this->emailService->sendPaymentConfirmation($order);
+                    Log::info("Purchase confirmation email sent for order {$order->id} via webhook");
                 } catch (\Exception $e) {
-                    Log::error("Failed to send confirmation emails for order {$order->id}: " . $e->getMessage());
+                    Log::error("Failed to send purchase confirmation email for order {$order->id}: " . $e->getMessage());
                 }
             }
 

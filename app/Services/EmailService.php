@@ -135,15 +135,15 @@ class EmailService
             // Enviar email usando Brevo
             $result = $this->brevoService->sendEmail(
                 [$email => $name],
-                'Pago Confirmado - Orden #' . $order->order_number,
+                '¡Compra Exitosa! - Orden #' . $order->order_number,
                 $htmlContent
             );
 
             if ($result) {
-                Log::info("Payment confirmation email sent for order {$order->id}");
+                Log::info("Purchase confirmation email sent for order {$order->id}");
                 return true;
             } else {
-                Log::error("Failed to send payment confirmation email for order {$order->id}");
+                Log::error("Failed to send purchase confirmation email for order {$order->id}");
                 return false;
             }
 
