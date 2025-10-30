@@ -56,6 +56,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | This URL is used to generate links to the frontend application in emails
+    | and other notifications. Set this to your frontend application URL.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Password Reset URL
+    |--------------------------------------------------------------------------
+    |
+    | This URL is used to generate password reset links in emails.
+    | It should point to the backend application. If not set, uses APP_URL.
+    |
+    */
+
+    'reset_password_url' => env('RESET_PASSWORD_URL', env('APP_URL', 'http://localhost:8000')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

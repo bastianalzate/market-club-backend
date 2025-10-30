@@ -54,8 +54,9 @@ class PasswordResetController extends Controller
             // Crear token de reset
             $passwordReset = PasswordReset::createOrUpdateToken($email);
             
-            // Enviar email con el enlace de reset (directamente al backend)
-            $resetUrl = config('app.url') . '/reset-password?token=' . $passwordReset->token;
+            // Usar RESET_PASSWORD_URL o APP_URL como fallback
+            $baseUrl = config('app.reset_password_url', config('app.url'));
+            $resetUrl = $baseUrl . '/reset-password?token=' . $passwordReset->token;
             
             Log::info("Generated reset URL: {$resetUrl}");
             

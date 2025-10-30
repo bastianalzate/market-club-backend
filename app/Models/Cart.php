@@ -92,10 +92,11 @@ class Cart extends Model
         }
         
         $subtotal = $this->items->sum('total_price');
-        $taxRate = 0.19; // 19% IVA
-        $taxAmount = $subtotal * $taxRate;
-        $shippingAmount = $subtotal > 100000 ? 0 : 10000; // Envío gratis sobre $100,000
-        $totalAmount = $subtotal + $taxAmount + $shippingAmount;
+        
+        // Sin IVA ni envío - el total es igual al subtotal
+        $taxAmount = 0;
+        $shippingAmount = 0;
+        $totalAmount = $subtotal;
 
         $this->update([
             'subtotal' => $subtotal,
