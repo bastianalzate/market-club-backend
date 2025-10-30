@@ -151,8 +151,8 @@ class CheckoutController extends Controller
             // Limpiar carrito
             $cart->clear();
 
-            // Enviar email de confirmación
-            $this->emailService->sendOrderConfirmation($order);
+            // Nota: El email de confirmación se enviará después de confirmar el pago exitoso
+            // Ver PaymentController->webhook() y PaymentController->confirmPayment()
 
             DB::commit();
 

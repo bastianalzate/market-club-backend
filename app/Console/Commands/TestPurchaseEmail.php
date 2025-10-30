@@ -167,25 +167,14 @@ class TestPurchaseEmail extends Command
             // Recargar la orden con sus relaciones
             $order->load(['user', 'orderItems.product']);
 
-            // Enviar email de confirmación de orden
-            $this->line("📨 Enviando email de confirmación de orden...");
-            $orderEmailSent = $this->emailService->sendOrderConfirmation($order);
+            // Enviar email de confirmación de compra (simula pago exitoso)
+            $this->line("📨 Enviando email de confirmación de compra...");
+            $purchaseEmailSent = $this->emailService->sendPaymentConfirmation($order);
             
-            if ($orderEmailSent) {
-                $this->info("✅ Email de confirmación de orden enviado exitosamente");
+            if ($purchaseEmailSent) {
+                $this->info("✅ Email de confirmación de compra enviado exitosamente");
             } else {
-                $this->error("❌ Error al enviar email de confirmación de orden");
-            }
-            $this->newLine();
-
-            // Enviar email de confirmación de pago
-            $this->line("📨 Enviando email de confirmación de pago...");
-            $paymentEmailSent = $this->emailService->sendPaymentConfirmation($order);
-            
-            if ($paymentEmailSent) {
-                $this->info("✅ Email de confirmación de pago enviado exitosamente");
-            } else {
-                $this->error("❌ Error al enviar email de confirmación de pago");
+                $this->error("❌ Error al enviar email de confirmación de compra");
             }
             $this->newLine();
 

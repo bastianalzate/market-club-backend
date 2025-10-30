@@ -60,12 +60,12 @@ class TestEmailCommand extends Command
                 ]
             ]);
             
-            // Enviar email
+            // Enviar email de confirmación de compra
             $emailService = app(EmailService::class);
-            $result = $emailService->sendOrderConfirmation($order);
+            $result = $emailService->sendPaymentConfirmation($order);
             
             if ($result) {
-                $this->info("✅ Email enviado exitosamente!");
+                $this->info("✅ Email de confirmación de compra enviado exitosamente!");
             } else {
                 $this->error("❌ Error al enviar email");
             }
