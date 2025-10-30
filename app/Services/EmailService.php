@@ -132,11 +132,14 @@ class EmailService
                 'items' => $order->orderItems,
             ])->render();
             
-            // Enviar email usando Brevo
+            // Enviar email usando Brevo (con copia al admin)
             $result = $this->brevoService->sendEmail(
                 [$email => $name],
                 '¡Compra Exitosa! - Orden #' . $order->order_number,
-                $htmlContent
+                $htmlContent,
+                null,
+                null,
+                ['info@marketclub.com.co' => 'Market Club']
             );
 
             if ($result) {

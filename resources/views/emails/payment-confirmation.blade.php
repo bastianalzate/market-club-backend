@@ -25,6 +25,18 @@
             text-align: center;
         }
 
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            height: 28px;
+            width: 28px;
+            border-radius: 4px;
+        }
+
         .content {
             padding: 20px;
             background: #f9fafb;
@@ -70,7 +82,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Market Club</h1>
+            <div class="logo" style="justify-content:center;">
+                <img src="{{ config('app.frontend_url') }}/logo.png" alt="Market Club">
+                <h1 style="margin:0;">Market Club</h1>
+            </div>
             <h2>¡Compra Exitosa!</h2>
         </div>
 
@@ -84,6 +99,7 @@
 
             <div class="order-details">
                 <h3>Detalles de tu Orden</h3>
+                <p style="margin: 0 0 10px 0; color:#374151;">Tiempo de envío estimado: 1 a 3 días hábiles.</p>
                 <p><strong>Número de Orden:</strong> #{{ $order->order_number }}</p>
                 <p><strong>Fecha:</strong> {{ $order->created_at->format('d/m/Y H:i') }}</p>
                 <p><strong>Método de Pago:</strong> {{ $order->payment_method ?? 'N/A' }}</p>
@@ -100,13 +116,10 @@
                     <span>Subtotal:</span>
                     <span>${{ number_format($order->subtotal, 0, ',', '.') }}</span>
                 </div>
-                <div class="item">
-                    <span>IVA (19%):</span>
-                    <span>${{ number_format($order->tax_amount, 0, ',', '.') }}</span>
-                </div>
+
                 <div class="item">
                     <span>Envío:</span>
-                    <span>${{ number_format($order->shipping_amount, 0, ',', '.') }}</span>
+                    <span>${{ number_format(12000, 0, ',', '.') }}</span>
                 </div>
                 <div class="item total">
                     <span>Total Pagado:</span>
@@ -129,7 +142,8 @@
         </div>
 
         <div class="footer">
-            <p>Market Club - Tu tienda de cervezas artesanales</p>
+            <p>Market Club - "Somos el parche hecho pa' compartir, relajarse y disfrutar sabores del mundo, pero con el
+                corazón de Medellín."</p>
             <p>Este es un email automático, por favor no responder.</p>
         </div>
     </div>

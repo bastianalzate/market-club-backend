@@ -27,7 +27,7 @@ class BrevoService
     /**
      * Enviar email transaccional usando Brevo
      */
-    public function sendEmail(array $to, string $subject, string $htmlContent, string $textContent = null, array $replyTo = null): bool
+    public function sendEmail(array $to, string $subject, string $htmlContent, string $textContent = null, array $replyTo = null, array $bcc = null): bool
     {
         try {
             // Preparar destinatarios
@@ -52,8 +52,19 @@ class BrevoService
             // Configurar remitente
             $sendSmtpEmail->setSender([
                 'name' => env('BREVO_SENDER_NAME', 'Market Club'),
-                'email' => env('BREVO_SENDER_EMAIL', 'noreply@marketclub.com')
+                'email' => env('BREVO_SENDER_EMAIL', 'no-reply@marketclub.com.co')
             ]);
+            // BCC opcional (notificación administrativa)
+            if ($bcc && count($bcc) > 0) {
+                $bccRecipients = [];
+                foreach ($bcc as $email => $name) {
+                    $recipient = new SendSmtpEmailTo();
+                    $recipient->setEmail($email);
+                    $recipient->setName($name);
+                    $bccRecipients[] = $recipient;
+                }
+                $sendSmtpEmail->setBcc($bccRecipients);
+            }
 
             // Configurar respuesta
             if ($replyTo) {
