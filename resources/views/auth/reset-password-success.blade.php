@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -112,13 +113,14 @@
             .container {
                 padding: 30px 20px;
             }
-            
+
             h1 {
                 font-size: 24px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="icon">
@@ -126,27 +128,29 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
         </div>
-        
+
         <h1>¡Contraseña Restablecida!</h1>
-        
+
         <p class="subtitle">
             Tu contraseña ha sido actualizada exitosamente.
         </p>
-        
+
         <div class="message">
             <p class="message-text">
                 <strong>¡Perfecto!</strong><br>
-                Ya puedes iniciar sesión en tu cuenta con tu nueva contraseña. Recuerda mantener tu contraseña segura y no compartirla con nadie.
+                Ya puedes iniciar sesión en tu cuenta con tu nueva contraseña. Recuerda mantener tu contraseña segura y
+                no compartirla con nadie.
             </p>
         </div>
-        
-        <a href="{{ env('FRONTEND_URL', 'http://localhost:3000') }}" class="button">
+
+        <a href="{{ config('app.frontend_url') }}/login" class="button">
             Ir a Iniciar Sesión
         </a>
-        
-        <a href="{{ env('FRONTEND_URL', 'http://localhost:3000') }}" class="back-link">
+
+        <a href="{{ config('app.frontend_url') }}" class="back-link">
             ← Volver al inicio
         </a>
     </div>
 </body>
+
 </html>

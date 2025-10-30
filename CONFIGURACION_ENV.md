@@ -13,7 +13,7 @@
 APP_URL=http://localhost:8000
 # En producción: APP_URL=https://admin-dev.marketclub.com.co
 
-# URL del frontend (React)
+# URL del frontend (React) - Usada en enlaces de emails y redirecciones
 FRONTEND_URL=http://localhost:3000
 # En producción: FRONTEND_URL=https://market-club-frontend.vercel.app
 
