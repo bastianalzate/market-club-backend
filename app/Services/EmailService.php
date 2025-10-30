@@ -98,17 +98,27 @@ class EmailService
         try {
             $user = $order->user;
             
-            Mail::send('emails.payment-confirmation', [
+            // Generar contenido HTML usando la plantilla
+            $htmlContent = view('emails.payment-confirmation', [
                 'order' => $order,
                 'user' => $user,
                 'items' => $order->orderItems,
-            ], function ($message) use ($user, $order) {
-                $message->to($user->email, $user->name)
-                    ->subject('Pago Confirmado - Orden #' . $order->order_number);
-            });
+            ])->render();
+            
+            // Enviar email usando Brevo
+            $result = $this->brevoService->sendEmail(
+                [$user->email => $user->name],
+                'Pago Confirmado - Orden #' . $order->order_number,
+                $htmlContent
+            );
 
-            Log::info("Payment confirmation email sent for order {$order->id}");
-            return true;
+            if ($result) {
+                Log::info("Payment confirmation email sent for order {$order->id}");
+                return true;
+            } else {
+                Log::error("Failed to send payment confirmation email for order {$order->id}");
+                return false;
+            }
 
         } catch (\Exception $e) {
             Log::error('Payment confirmation email error: ' . $e->getMessage());

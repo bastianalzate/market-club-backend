@@ -308,7 +308,8 @@ class PaymentController extends Controller
             ]);
 
             // Buscar orden por referencia de pago (transaction ID o reference)
-            $order = Order::where('payment_reference', $transactionId)
+            $order = Order::with(['user', 'orderItems.product'])
+                ->where('payment_reference', $transactionId)
                 ->orWhere('payment_reference', $reference)
                 ->first();
 

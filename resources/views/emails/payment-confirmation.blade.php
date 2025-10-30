@@ -61,7 +61,7 @@
         </div>
 
         <div class="content">
-            <p>Hola {{ $user->name }},</p>
+            <p>Hola {{ $user->name ?? 'Cliente' }},</p>
 
             <div class="success">
                 <h3>✅ ¡Pago Exitoso!</h3>

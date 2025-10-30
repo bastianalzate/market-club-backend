@@ -66,7 +66,7 @@
         </div>
 
         <div class="content">
-            <p>Hola {{ $user->name }},</p>
+            <p>Hola {{ $user->name ?? 'Cliente' }},</p>
 
             <p>¡Gracias por tu compra! Hemos recibido tu orden y la estamos procesando.</p>
 
@@ -79,7 +79,7 @@
                 <h4>Productos:</h4>
                 @foreach ($items as $item)
                     <div class="item">
-                        <span>{{ $item->product->name }} (x{{ $item->quantity }})</span>
+                        <span>{{ $item->product->name ?? 'Producto' }} (x{{ $item->quantity }})</span>
                         <span>${{ number_format($item->total_price, 0, ',', '.') }}</span>
                     </div>
                 @endforeach
