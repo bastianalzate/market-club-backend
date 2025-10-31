@@ -77,11 +77,18 @@ class BrevoService
             // Enviar email
             $result = $this->apiInstance->sendTransacEmail($sendSmtpEmail);
             
-            Log::info('Email sent successfully via Brevo', [
+            $logData = [
                 'message_id' => $result->getMessageId(),
                 'to' => $to,
                 'subject' => $subject
-            ]);
+            ];
+            
+            // Agregar información de BCC si existe
+            if ($bcc && count($bcc) > 0) {
+                $logData['bcc'] = $bcc;
+            }
+            
+            Log::info('Email sent successfully via Brevo', $logData);
 
             return true;
 

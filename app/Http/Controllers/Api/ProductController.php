@@ -148,6 +148,8 @@ class ProductController extends Controller
     public function latestBeers(Request $request)
     {
         $query = Product::where('is_active', true)
+            ->whereNotNull('image')
+            ->where('image', '!=', '')
             ->whereHas('productType', function ($q) {
                 $q->where('name', 'Cervezas');
             });

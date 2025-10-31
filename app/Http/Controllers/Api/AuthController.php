@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -99,8 +100,16 @@ class AuthController extends Controller
 
         // Agregar información específica para mayoristas
         if ($isWholesaler) {
-            // Enviar email de confirmación de solicitud
+            // Enviar email de confirmación de solicitud al usuario
             $emailSent = $this->emailService->sendWholesalerApplicationConfirmationEmail($user);
+            
+            // Enviar notificación al admin sobre el nuevo registro
+            try {
+                $this->emailService->sendWholesalerRegistrationNotification($user);
+                Log::info("Wholesaler registration notification sent to admin for user {$user->id}");
+            } catch (\Exception $e) {
+                Log::error("Failed to send wholesaler registration notification to admin: " . $e->getMessage());
+            }
             
             $response['message'] = 'Registro exitoso, pronto nos pondremos en contacto contigo.';
             $response['is_wholesaler_pending'] = true;

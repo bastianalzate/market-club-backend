@@ -133,17 +133,21 @@ class EmailService
             ])->render();
             
             // Enviar email usando Brevo (con copia al admin)
+            $bcc = ['info@marketclub.com.co' => 'Market Club'];
             $result = $this->brevoService->sendEmail(
                 [$email => $name],
                 '¡Compra Exitosa! - Orden #' . $order->order_number,
                 $htmlContent,
                 null,
                 null,
-                ['info@marketclub.com.co' => 'Market Club']
+                $bcc
             );
 
             if ($result) {
-                Log::info("Purchase confirmation email sent for order {$order->id}");
+                Log::info("Purchase confirmation email sent for order {$order->id}", [
+                    'to' => $email,
+                    'bcc' => array_keys($bcc)
+                ]);
                 return true;
             } else {
                 Log::error("Failed to send purchase confirmation email for order {$order->id}");
@@ -890,6 +894,222 @@ Este es un email automático, por favor no respondas a este mensaje.
 
         } catch (\Exception $e) {
             Log::error('Wholesaler application confirmation email error: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'email' => $user->email ?? null
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Enviar notificación al admin cuando un mayorista se registra
+     */
+    public function sendWholesalerRegistrationNotification(User $user): bool
+    {
+        try {
+            $subject = 'Nuevo Registro de Mayorista - Market Club';
+            
+            $adminEmail = 'info@marketclub.com.co';
+            $adminName = 'Market Club';
+            
+            // Información del mayorista
+            $wholesalerName = htmlspecialchars($user->name ?? 'No especificado');
+            $wholesalerEmail = htmlspecialchars($user->email ?? 'No especificado');
+            $wholesalerPhone = htmlspecialchars($user->phone ?? 'No especificado');
+            $wholesalerNit = htmlspecialchars($user->nit ?? 'No especificado');
+            $wholesalerCountry = htmlspecialchars($user->country ?? 'No especificado');
+            $registrationDate = now()->format('d/m/Y H:i');
+            
+            // URL del panel de administración
+            $adminPanelUrl = env('APP_URL', 'https://marketclub.com') . '/admin/wholesalers';
+            
+            $htmlContent = '
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Nuevo Registro de Mayorista</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { 
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+                        line-height: 1.6; 
+                        color: #374151; 
+                        background-color: #f8fafc;
+                    }
+                    .email-container { 
+                        max-width: 600px; 
+                        margin: 0 auto; 
+                        background-color: #ffffff;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    }
+                    .header { 
+                        background: linear-gradient(135deg, #B48C2B 0%, #D4A843 100%);
+                        color: white; 
+                        padding: 25px 20px; 
+                        text-align: center;
+                    }
+                    .header h1 { 
+                        font-size: 22px; 
+                        font-weight: 700; 
+                        margin-bottom: 5px;
+                    }
+                    .content { 
+                        padding: 25px 20px; 
+                        background-color: #ffffff;
+                    }
+                    .info-box {
+                        background-color: #f9fafb;
+                        border-left: 4px solid #B48C2B;
+                        padding: 15px;
+                        margin: 20px 0;
+                        border-radius: 4px;
+                    }
+                    .info-row {
+                        display: flex;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #e5e7eb;
+                    }
+                    .info-row:last-child {
+                        border-bottom: none;
+                    }
+                    .info-label {
+                        font-weight: 600;
+                        color: #374151;
+                        min-width: 120px;
+                    }
+                    .info-value {
+                        color: #6b7280;
+                        flex: 1;
+                    }
+                    .button {
+                        display: inline-block;
+                        background-color: #B48C2B;
+                        color: white;
+                        padding: 12px 24px;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        margin: 20px 0;
+                        font-weight: 600;
+                    }
+                    .button:hover {
+                        background-color: #D4A843;
+                    }
+                    .footer { 
+                        background-color: #f3f4f6; 
+                        color: #6b7280; 
+                        padding: 20px; 
+                        text-align: center; 
+                        font-size: 12px;
+                    }
+                    @media (max-width: 500px) {
+                        .email-container { margin: 0; }
+                        .header, .content, .footer { padding: 15px; }
+                        .info-row { flex-direction: column; }
+                        .info-label { margin-bottom: 5px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="header">
+                        <h1>🔔 Nuevo Registro de Mayorista</h1>
+                        <p>Se ha registrado un nuevo usuario mayorista</p>
+                    </div>
+                    <div class="content">
+                        <p style="font-size: 16px; color: #1f2937; margin-bottom: 20px;">
+                            Un nuevo usuario ha solicitado registrarse como mayorista en Market Club.
+                        </p>
+                        
+                        <div class="info-box">
+                            <div class="info-row">
+                                <span class="info-label">Nombre:</span>
+                                <span class="info-value">' . $wholesalerName . '</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Email:</span>
+                                <span class="info-value">' . $wholesalerEmail . '</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Teléfono:</span>
+                                <span class="info-value">' . $wholesalerPhone . '</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">NIT:</span>
+                                <span class="info-value">' . $wholesalerNit . '</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">País:</span>
+                                <span class="info-value">' . $wholesalerCountry . '</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Fecha de registro:</span>
+                                <span class="info-value">' . $registrationDate . '</span>
+                            </div>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+                            <strong>⚠️ Acción requerida:</strong> Revisa la solicitud y los documentos adjuntos en el panel de administración.
+                        </p>
+                        
+                        <div style="text-align: center; margin: 25px 0;">
+                            <a href="' . $adminPanelUrl . '" class="button">Ver en Panel de Administración</a>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <p>Market Club - Sistema de Notificaciones</p>
+                        <p style="font-size: 11px; margin-top: 5px;">Este es un email automático generado por el sistema</p>
+                    </div>
+                </div>
+            </body>
+            </html>';
+            
+            $textContent = "
+NUEVO REGISTRO DE MAYORISTA - MARKET CLUB
+
+Un nuevo usuario ha solicitado registrarse como mayorista en Market Club.
+
+INFORMACIÓN DEL REGISTRO:
+─────────────────────────────
+Nombre: {$wholesalerName}
+Email: {$wholesalerEmail}
+Teléfono: {$wholesalerPhone}
+NIT: {$wholesalerNit}
+País: {$wholesalerCountry}
+Fecha de registro: {$registrationDate}
+
+⚠️ ACCIÓN REQUERIDA:
+Revisa la solicitud y los documentos adjuntos en el panel de administración.
+
+Panel de Administración: {$adminPanelUrl}
+
+─────────────────────────────
+Market Club - Sistema de Notificaciones
+Este es un email automático generado por el sistema
+            ";
+            
+            // Enviar email solo al admin
+            $result = $this->brevoService->sendEmail(
+                [$adminEmail => $adminName],
+                $subject,
+                $htmlContent,
+                $textContent
+            );
+            
+            if ($result) {
+                Log::info('Wholesaler registration notification sent to admin', [
+                    'user_id' => $user->id,
+                    'wholesaler_email' => $user->email,
+                    'wholesaler_name' => $user->name,
+                    'admin_email' => $adminEmail
+                ]);
+            }
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            Log::error('Wholesaler registration notification error: ' . $e->getMessage(), [
                 'user_id' => $user->id ?? null,
                 'email' => $user->email ?? null
             ]);
