@@ -211,6 +211,11 @@ class ImportBeerProducts extends Command
             'Tailandia' => 'Tailandia',
             'Mexico' => 'México',
             'Peru' => 'Perú',
+            'Francia' => 'Francia',
+            'France' => 'Francia',
+            'Irlanda' => 'Irlanda',
+            'Ireland' => 'Irlanda',
+            'India' => 'India',
         ];
 
         $country = trim($country);

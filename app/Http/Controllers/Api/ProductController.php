@@ -410,6 +410,9 @@ class ProductController extends Controller
             'republica checa' => 'República Checa',
             'estados unidos' => 'Estados Unidos',
             'tailandia' => 'Tailandia',
+            'francia' => 'Francia',
+            'irlanda' => 'Irlanda',
+            'india' => 'India',
         ];
 
         $normalized = strtolower(trim($country));
@@ -514,8 +517,10 @@ class ProductController extends Controller
         $finalPackagingTypes = array_unique(array_merge($packagingTypes, $allPackagingTypes));
         sort($finalPackagingTypes);
 
+        $countries = array_values(array_unique(array_merge(array_keys(ProductType::getBeerCountryOptions()), $countries)));
+
         return response()->json([
-            'countries' => array_values(array_unique($countries)),
+            'countries' => $countries,
             'beer_styles' => array_values(array_unique(array_merge(array_keys(ProductType::getBeerStyleOptions()), $beerStyles))),
             'packaging_types' => array_values($finalPackagingTypes),
             'price_ranges' => array_values(array_unique($priceRanges))

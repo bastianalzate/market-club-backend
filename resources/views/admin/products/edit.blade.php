@@ -107,51 +107,17 @@
                                 <div>
                                     <label for="country_of_origin" class="block text-sm font-medium text-gray-700 mb-2">País
                                         de Origen *</label>
+                                    @php
+                                        $countryOptions = \App\Models\ProductType::getBeerCountryOptions();
+                                    @endphp
                                     <select name="country_of_origin" id="country_of_origin" required
                                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                         <option value="">Selecciona un país</option>
-                                        <option value="Inglaterra"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Inglaterra' ? 'selected' : '' }}>
-                                            Inglaterra</option>
-                                        <option value="Colombia"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Colombia' ? 'selected' : '' }}>
-                                            Colombia</option>
-                                        <option value="Alemania"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Alemania' ? 'selected' : '' }}>
-                                            Alemania</option>
-                                        <option value="Italia"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Italia' ? 'selected' : '' }}>
-                                            Italia</option>
-                                        <option value="Escocia"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Escocia' ? 'selected' : '' }}>
-                                            Escocia</option>
-                                        <option value="Bélgica"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Bélgica' ? 'selected' : '' }}>
-                                            Bélgica</option>
-                                        <option value="España"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'España' ? 'selected' : '' }}>
-                                            España</option>
-                                        <option value="Países Bajos"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Países Bajos' ? 'selected' : '' }}>
-                                            Países Bajos</option>
-                                        <option value="Japón"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Japón' ? 'selected' : '' }}>
-                                            Japón</option>
-                                        <option value="México"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'México' ? 'selected' : '' }}>
-                                            México</option>
-                                        <option value="Perú"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Perú' ? 'selected' : '' }}>
-                                            Perú</option>
-                                        <option value="República Checa"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'República Checa' ? 'selected' : '' }}>
-                                            República Checa</option>
-                                        <option value="Estados Unidos"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Estados Unidos' ? 'selected' : '' }}>
-                                            Estados Unidos</option>
-                                        <option value="Tailandia"
-                                            {{ ($product->product_specific_data['country_of_origin'] ?? '') === 'Tailandia' ? 'selected' : '' }}>
-                                            Tailandia</option>
+                                        @foreach ($countryOptions as $value => $label)
+                                            <option value="{{ $value }}"
+                                                {{ ($product->product_specific_data['country_of_origin'] ?? '') === $value ? 'selected' : '' }}>
+                                                {{ $label }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
 

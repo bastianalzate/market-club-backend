@@ -22,6 +22,26 @@ class ProductType extends Model
         'fruta_saborizada' => 'Cerveza de Fruta / Saborizada',
     ];
 
+    public const BEER_COUNTRY_OPTIONS = [
+        'Inglaterra' => 'Inglaterra',
+        'Colombia' => 'Colombia',
+        'Alemania' => 'Alemania',
+        'Italia' => 'Italia',
+        'Escocia' => 'Escocia',
+        'Bélgica' => 'Bélgica',
+        'España' => 'España',
+        'Países Bajos' => 'Países Bajos',
+        'Japón' => 'Japón',
+        'México' => 'México',
+        'Perú' => 'Perú',
+        'República Checa' => 'República Checa',
+        'Estados Unidos' => 'Estados Unidos',
+        'Tailandia' => 'Tailandia',
+        'Francia' => 'Francia',
+        'Irlanda' => 'Irlanda',
+        'India' => 'India',
+    ];
+
     private const LEGACY_BEER_STYLE_MAP = [
         'lager' => 'lager_clasica_pilsner',
         'pilsner' => 'lager_clasica_pilsner',
@@ -62,6 +82,11 @@ class ProductType extends Model
     public static function getBeerStyleLabel(string $value): string
     {
         return self::BEER_STYLE_OPTIONS[$value] ?? Str::of($value)->replace('_', ' ')->headline();
+    }
+
+    public static function getBeerCountryOptions(): array
+    {
+        return self::BEER_COUNTRY_OPTIONS;
     }
 
     public static function normalizeBeerStyle(?string $style): ?string
@@ -143,22 +168,7 @@ class ProductType extends Model
                 'type' => 'select',
                 'label' => 'País de Origen',
                 'required' => true,
-                'options' => [
-                    'Inglaterra' => 'Inglaterra',
-                    'Colombia' => 'Colombia',
-                    'Alemania' => 'Alemania',
-                    'Italia' => 'Italia',
-                    'Escocia' => 'Escocia',
-                    'Bélgica' => 'Bélgica',
-                    'España' => 'España',
-                    'Países Bajos' => 'Países Bajos',
-                    'Japón' => 'Japón',
-                    'México' => 'México',
-                    'Perú' => 'Perú',
-                    'República Checa' => 'República Checa',
-                    'Estados Unidos' => 'Estados Unidos',
-                    'Tailandia' => 'Tailandia',
-                ]
+                'options' => self::BEER_COUNTRY_OPTIONS,
             ],
             'size_ml' => [
                 'type' => 'select',
