@@ -212,72 +212,11 @@
                                 @if (isset($product->product_specific_data['beer_style']))
                                     <div>
                                         <label class="text-sm font-medium text-gray-500">Estilo de Cerveza</label>
-                                        <p class="text-sm text-gray-900 font-medium">
-                                            @switch($product->product_specific_data['beer_style'])
-                                                @case('lager')
-                                                    Lager
-                                                @break
-
-                                                @case('pilsner')
-                                                    Pilsner
-                                                @break
-
-                                                @case('ale')
-                                                    Ale
-                                                @break
-
-                                                @case('ipa')
-                                                    IPA
-                                                @break
-
-                                                @case('stout')
-                                                    Stout
-                                                @break
-
-                                                @case('porter')
-                                                    Porter
-                                                @break
-
-                                                @case('wheat')
-                                                    Wheat Beer
-                                                @break
-
-                                                @case('pale_ale')
-                                                    Pale Ale
-                                                @break
-
-                                                @case('amber')
-                                                    Amber
-                                                @break
-
-                                                @case('brown')
-                                                    Brown Ale
-                                                @break
-
-                                                @case('blonde')
-                                                    Blonde
-                                                @break
-
-                                                @case('dark')
-                                                    Dark Beer
-                                                @break
-
-                                                @case('light')
-                                                    Light Beer
-                                                @break
-
-                                                @case('craft')
-                                                    Craft Beer
-                                                @break
-
-                                                @case('imported')
-                                                    Imported
-                                                @break
-
-                                                @default
-                                                    {{ $product->product_specific_data['beer_style'] }}
-                                            @endswitch
-                                        </p>
+                                        @php
+                                            $beerStyleValue = $product->product_specific_data['beer_style'];
+                                            $beerStyleLabel = \App\Models\ProductType::getBeerStyleLabel($beerStyleValue);
+                                        @endphp
+                                        <p class="text-sm text-gray-900 font-medium">{{ $beerStyleLabel }}</p>
                                     </div>
                                 @endif
 

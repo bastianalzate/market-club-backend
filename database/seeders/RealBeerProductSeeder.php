@@ -204,18 +204,35 @@ class RealBeerProductSeeder extends Seeder
     {
         $name = strtoupper($name);
         
-        if (strpos($name, 'IPA') !== false) return 'ipa';
-        if (strpos($name, 'PALE ALE') !== false) return 'pale_ale';
-        if (strpos($name, 'STOUT') !== false) return 'stout';
-        if (strpos($name, 'PORTER') !== false) return 'porter';
-        if (strpos($name, 'WEIZEN') !== false || strpos($name, 'WEISSBIER') !== false) return 'wheat';
-        if (strpos($name, 'PILS') !== false || strpos($name, 'PILSENER') !== false) return 'pilsner';
-        if (strpos($name, 'DARK') !== false || strpos($name, 'DUNKEL') !== false) return 'dark';
-        if (strpos($name, 'BLONDE') !== false || strpos($name, 'BLOND') !== false) return 'blonde';
-        if (strpos($name, 'LAGER') !== false) return 'lager';
-        if (strpos($name, 'ALE') !== false) return 'ale';
-        
-        return 'lager'; // Default
+        if (strpos($name, 'FRUIT') !== false || strpos($name, 'FRAMBOISE') !== false || strpos($name, 'MANGO') !== false) {
+            return 'fruta_saborizada';
+        }
+        if (strpos($name, 'IPA') !== false || strpos($name, 'INDIA PALE') !== false) {
+            return 'ipa';
+        }
+        if (strpos($name, 'WEIZEN') !== false || strpos($name, 'WEISSBIER') !== false || strpos($name, 'WHEAT') !== false) {
+            return 'trigo_wheat';
+        }
+        if (strpos($name, 'STOUT') !== false || strpos($name, 'PORTER') !== false) {
+            return 'stout_porter';
+        }
+        if (strpos($name, 'PALE ALE') !== false || strpos($name, 'BELG') !== false || strpos($name, 'ALE') !== false) {
+            return 'ale_belga_clasica';
+        }
+        if (strpos($name, 'DARK') !== false || strpos($name, 'STRONG') !== false || strpos($name, 'DUNKEL') !== false) {
+            return 'lager_oscura_fuerte';
+        }
+        if (strpos($name, 'LIGHT') !== false || strpos($name, 'LITE') !== false || strpos($name, 'LOW CARB') !== false) {
+            return 'lager_ligera';
+        }
+        if (strpos($name, 'PILS') !== false || strpos($name, 'PILSENER') !== false || strpos($name, 'PILSNER') !== false) {
+            return 'lager_clasica_pilsner';
+        }
+        if (strpos($name, 'LAGER') !== false) {
+            return 'lager_clasica_pilsner';
+        }
+
+        return 'lager_clasica_pilsner'; // Por defecto
     }
 
     private function getBrewery($name)

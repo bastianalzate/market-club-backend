@@ -226,54 +226,17 @@
                                 <div>
                                     <label for="beer_style" class="block text-sm font-medium text-gray-700 mb-2">Estilo de
                                         Cerveza</label>
+                                    @php
+                                        $beerStyleOptions = \App\Models\ProductType::getBeerFieldsConfig()['beer_style']['options'] ?? [];
+                                        $currentBeerStyle = $product->product_specific_data['beer_style'] ?? '';
+                                    @endphp
                                     <select name="beer_style" id="beer_style"
                                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                         <option value="">Selecciona un estilo</option>
-                                        <option value="lager"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'lager' ? 'selected' : '' }}>
-                                            Lager</option>
-                                        <option value="pilsner"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'pilsner' ? 'selected' : '' }}>
-                                            Pilsner</option>
-                                        <option value="ale"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'ale' ? 'selected' : '' }}>
-                                            Ale</option>
-                                        <option value="ipa"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'ipa' ? 'selected' : '' }}>
-                                            IPA</option>
-                                        <option value="stout"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'stout' ? 'selected' : '' }}>
-                                            Stout</option>
-                                        <option value="porter"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'porter' ? 'selected' : '' }}>
-                                            Porter</option>
-                                        <option value="wheat"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'wheat' ? 'selected' : '' }}>
-                                            Wheat Beer</option>
-                                        <option value="pale_ale"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'pale_ale' ? 'selected' : '' }}>
-                                            Pale Ale</option>
-                                        <option value="amber"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'amber' ? 'selected' : '' }}>
-                                            Amber</option>
-                                        <option value="brown"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'brown' ? 'selected' : '' }}>
-                                            Brown Ale</option>
-                                        <option value="blonde"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'blonde' ? 'selected' : '' }}>
-                                            Blonde</option>
-                                        <option value="dark"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'dark' ? 'selected' : '' }}>
-                                            Dark Beer</option>
-                                        <option value="light"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'light' ? 'selected' : '' }}>
-                                            Light Beer</option>
-                                        <option value="craft"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'craft' ? 'selected' : '' }}>
-                                            Craft Beer</option>
-                                        <option value="imported"
-                                            {{ ($product->product_specific_data['beer_style'] ?? '') === 'imported' ? 'selected' : '' }}>
-                                            Imported</option>
+                                        @foreach ($beerStyleOptions as $value => $label)
+                                            <option value="{{ $value }}" {{ $currentBeerStyle === $value ? 'selected' : '' }}>
+                                                {{ $label }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
 

@@ -104,7 +104,16 @@ class ProductController extends Controller
         // Procesar cada campo específico
         foreach ($specificFields as $fieldName) {
             if ($request->has($fieldName) && $request->$fieldName !== null && $request->$fieldName !== '') {
-                $productSpecificData[$fieldName] = $request->$fieldName;
+                $value = $request->$fieldName;
+
+                if ($fieldName === 'beer_style') {
+                    $value = ProductType::normalizeBeerStyle($value);
+                    if ($value === null) {
+                        continue;
+                    }
+                }
+
+                $productSpecificData[$fieldName] = $value;
             }
         }
 
@@ -236,6 +245,14 @@ class ProductController extends Controller
                     unset($productSpecificData[$fieldName]);
                     Log::info("Campo {$fieldName} eliminado por estar vacío");
                 } else {
+                    if ($fieldName === 'beer_style') {
+                        $value = ProductType::normalizeBeerStyle($value);
+                        if ($value === null) {
+                            unset($productSpecificData[$fieldName]);
+                            Log::info("Campo {$fieldName} eliminado tras normalización");
+                            continue;
+                        }
+                    }
                     $productSpecificData[$fieldName] = $value;
                     Log::info("Campo {$fieldName} actualizado con valor: " . json_encode($value));
                 }

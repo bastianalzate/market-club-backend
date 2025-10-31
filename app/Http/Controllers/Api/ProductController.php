@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductType;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -32,7 +33,7 @@ class ProductController extends Controller
 
         // Filtro por estilo de cerveza (nuevo)
         if ($request->has('beer_style') && $request->beer_style) {
-            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.beer_style')) = ?", [$request->beer_style]);
+            $this->applyBeerStyleFilter($query, $request->beer_style);
         }
 
         // Filtro por tipo de envase (nuevo)
@@ -92,7 +93,7 @@ class ProductController extends Controller
 
         // Filtro por estilo de cerveza (nuevo)
         if ($request->has('beer_style') && $request->beer_style) {
-            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.beer_style')) = ?", [$request->beer_style]);
+            $this->applyBeerStyleFilter($query, $request->beer_style);
         }
 
         // Filtro por rango de precios (nuevo)
@@ -159,7 +160,7 @@ class ProductController extends Controller
 
         // Filtro por estilo de cerveza (nuevo)
         if ($request->has('beer_style') && $request->beer_style) {
-            $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.beer_style')) = ?", [$request->beer_style]);
+            $this->applyBeerStyleFilter($query, $request->beer_style);
         }
 
         // Filtro por rango de precios (nuevo)
@@ -377,6 +378,17 @@ class ProductController extends Controller
         }
     }
 
+    private function applyBeerStyleFilter($query, $style): void
+    {
+        $normalized = ProductType::normalizeBeerStyle($style);
+
+        if (!$normalized) {
+            return;
+        }
+
+        $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(product_specific_data, '$.beer_style')) = ?", [$normalized]);
+    }
+
     /**
      * Normalize country name from lowercase without accents to proper format
      */
@@ -472,7 +484,10 @@ class ProductController extends Controller
             
             // Estilos de cerveza
             if (isset($data['beer_style']) && $data['beer_style']) {
-                $beerStyles[] = $data['beer_style'];
+                $normalizedStyle = ProductType::normalizeBeerStyle($data['beer_style']);
+                if ($normalizedStyle) {
+                    $beerStyles[] = $normalizedStyle;
+                }
             }
             
             // Tipos de envase
@@ -501,7 +516,7 @@ class ProductController extends Controller
 
         return response()->json([
             'countries' => array_values(array_unique($countries)),
-            'beer_styles' => array_values(array_unique($beerStyles)),
+            'beer_styles' => array_values(array_unique(array_merge(array_keys(ProductType::getBeerStyleOptions()), $beerStyles))),
             'packaging_types' => array_values($finalPackagingTypes),
             'price_ranges' => array_values(array_unique($priceRanges))
         ]);

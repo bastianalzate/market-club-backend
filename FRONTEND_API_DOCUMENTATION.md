@@ -67,7 +67,7 @@ GET /api/products?page=1&per_page=12&category_id=1&country=colombia&beer_style=i
 -   `per_page` (opcional): Productos por página (default: 15)
 -   `category_id` (opcional): Filtrar por categoría específica
 -   `country` (opcional): Filtrar por país de origen (inglaterra, colombia, alemania, italia, escocia, belgica, espana, paises bajos, japon, mexico, peru, republica checa, estados unidos, tailandia)
--   `beer_style` (opcional): Filtrar por estilo de cerveza (ale, blonde, dark, ipa, lager, pale_ale, pilsner, porter, wheat)
+-   `beer_style` (opcional): Filtrar por estilo de cerveza (`lager_clasica_pilsner`, `lager_oscura_fuerte`, `lager_ligera`, `ipa`, `trigo_wheat`, `ale_belga_clasica`, `stout_porter`, `fruta_saborizada`)
 -   `price_range` (opcional): Filtrar por rango de precios (less_than_15000, 15000_25000, 25000_35000, 35000_50000, 50000_75000, 75000_100000, more_than_100000)
 
 **Nota:** El frontend puede enviar nombres en minúsculas y sin tildes. El backend los mapea automáticamente a los nombres correctos almacenados en la base de datos.
@@ -93,7 +93,7 @@ GET /api/products?country=colombia
 GET /api/products?beer_style=ipa
 
 # Cervezas Lager de Bélgica
-GET /api/products?country=belgica&beer_style=lager
+GET /api/products?country=belgica&beer_style=lager_clasica_pilsner
 
 # Cervezas entre $15,000 y $25,000
 GET /api/products?price_range=15000_25000
@@ -105,7 +105,7 @@ GET /api/products?beer_style=ipa&price_range=25000_35000
 GET /api/products?country=alemania&search=artesanal
 
 # Cervezas Porter de México
-GET /api/products?country=mexico&beer_style=porter
+GET /api/products?country=mexico&beer_style=stout_porter
 
 # Cervezas de Bélgica en categoría específica
 GET /api/products?country=belgica&category_id=1
@@ -128,7 +128,7 @@ GET /api/products/featured?limit=10&category_id=1&country=colombia&beer_style=ip
 -   `limit` (opcional): Número máximo de productos a retornar (default: 10)
 -   `category_id` (opcional): Filtrar por categoría específica
 -   `country` (opcional): Filtrar por país (colombia, alemania, belgica, espana, china, japon, holanda, escocia, reino unido, tailandia, mexico, peru)
--   `beer_style` (opcional): Filtrar por estilo de cerveza (ale, blonde, dark, ipa, lager, pale_ale, pilsner, porter, wheat)
+-   `beer_style` (opcional): Filtrar por estilo de cerveza (`lager_clasica_pilsner`, `lager_oscura_fuerte`, `lager_ligera`, `ipa`, `trigo_wheat`, `ale_belga_clasica`, `stout_porter`, `fruta_saborizada`)
 -   `price_range` (opcional): Filtrar por rango de precios (less_than_15000, 15000_25000, 25000_35000, 35000_50000, 50000_75000, 75000_100000, more_than_100000)
 -   `search` (opcional): Buscar en nombre y descripción
 -   `sort_by` (opcional): Campo para ordenar (default: created_at)
@@ -175,7 +175,7 @@ GET /api/products/latest-beers?limit=10&country=colombia&beer_style=ipa&price_ra
 
 -   `limit` (opcional): Número máximo de cervezas a retornar (default: 10)
 -   `country` (opcional): Filtrar por país (colombia, alemania, belgica, espana, china, japon, holanda, escocia, reino unido, tailandia, mexico, peru)
--   `beer_style` (opcional): Filtrar por estilo de cerveza (ale, blonde, dark, ipa, lager, pale_ale, pilsner, porter, wheat)
+-   `beer_style` (opcional): Filtrar por estilo de cerveza (`lager_clasica_pilsner`, `lager_oscura_fuerte`, `lager_ligera`, `ipa`, `trigo_wheat`, `ale_belga_clasica`, `stout_porter`, `fruta_saborizada`)
 -   `price_range` (opcional): Filtrar por rango de precios (less_than_15000, 15000_25000, 25000_35000, 35000_50000, 50000_75000, 75000_100000, more_than_100000)
 -   `search` (opcional): Buscar en nombre y descripción
 

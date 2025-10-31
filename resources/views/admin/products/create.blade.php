@@ -207,39 +207,16 @@
                             <div>
                                 <label for="beer_style" class="block text-sm font-medium text-gray-700 mb-2">Estilo de
                                     Cerveza</label>
+                                @php
+                                    $beerStyleOptions = \App\Models\ProductType::getBeerFieldsConfig()['beer_style']['options'] ?? [];
+                                @endphp
                                 <select name="beer_style" id="beer_style"
                                     class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                     <option value="">Selecciona un estilo</option>
-                                    <option value="lager" {{ old('beer_style') === 'lager' ? 'selected' : '' }}>Lager
-                                    </option>
-                                    <option value="pilsner" {{ old('beer_style') === 'pilsner' ? 'selected' : '' }}>
-                                        Pilsner</option>
-                                    <option value="ale" {{ old('beer_style') === 'ale' ? 'selected' : '' }}>Ale
-                                    </option>
-                                    <option value="ipa" {{ old('beer_style') === 'ipa' ? 'selected' : '' }}>IPA
-                                    </option>
-                                    <option value="stout" {{ old('beer_style') === 'stout' ? 'selected' : '' }}>Stout
-                                    </option>
-                                    <option value="porter" {{ old('beer_style') === 'porter' ? 'selected' : '' }}>Porter
-                                    </option>
-                                    <option value="wheat" {{ old('beer_style') === 'wheat' ? 'selected' : '' }}>Wheat
-                                        Beer</option>
-                                    <option value="pale_ale" {{ old('beer_style') === 'pale_ale' ? 'selected' : '' }}>Pale
-                                        Ale</option>
-                                    <option value="amber" {{ old('beer_style') === 'amber' ? 'selected' : '' }}>Amber
-                                    </option>
-                                    <option value="brown" {{ old('beer_style') === 'brown' ? 'selected' : '' }}>Brown Ale
-                                    </option>
-                                    <option value="blonde" {{ old('beer_style') === 'blonde' ? 'selected' : '' }}>Blonde
-                                    </option>
-                                    <option value="dark" {{ old('beer_style') === 'dark' ? 'selected' : '' }}>Dark Beer
-                                    </option>
-                                    <option value="light" {{ old('beer_style') === 'light' ? 'selected' : '' }}>Light
-                                        Beer</option>
-                                    <option value="craft" {{ old('beer_style') === 'craft' ? 'selected' : '' }}>Craft
-                                        Beer</option>
-                                    <option value="imported" {{ old('beer_style') === 'imported' ? 'selected' : '' }}>
-                                        Imported</option>
+                                    @foreach ($beerStyleOptions as $value => $label)
+                                        <option value="{{ $value }}" {{ old('beer_style') === $value ? 'selected' : '' }}>
+                                            {{ $label }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 

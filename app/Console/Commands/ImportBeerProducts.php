@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductType;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ImportBeerProducts extends Command
@@ -90,7 +91,7 @@ class ImportBeerProducts extends Command
         $size = $this->parseSize($row->get('tamaño') ?? $row->get('volumen') ?? $row->get('ml') ?? '330');
         $container = $this->mapContainer($row->get('envase') ?? $row->get('presentacion') ?? 'botella');
         $alcohol = $this->parseAlcohol($row->get('alcohol') ?? $row->get('graduacion') ?? 0);
-        $style = $row->get('estilo') ?? $row->get('tipo') ?? '';
+        $style = $this->mapBeerStyle($row->get('estilo') ?? $row->get('tipo') ?? '');
         $brewery = $row->get('cerveceria') ?? $row->get('marca') ?? '';
 
         $productSpecificData = [
@@ -114,6 +115,68 @@ class ImportBeerProducts extends Command
             'is_featured' => false,
             'sku' => 'BEER-' . strtoupper(substr(md5($name), 0, 8)),
         ];
+    }
+
+    private function mapBeerStyle(?string $style): string
+    {
+        if (!$style) {
+            return 'lager_clasica_pilsner';
+        }
+
+        $normalized = Str::of($style)
+            ->lower()
+            ->replace(['á', 'à', 'ä'], 'a')
+            ->replace(['é', 'è', 'ë'], 'e')
+            ->replace(['í', 'ì', 'ï'], 'i')
+            ->replace(['ó', 'ò', 'ö'], 'o')
+            ->replace(['ú', 'ù', 'ü'], 'u')
+            ->replace('-', ' ')
+            ->replace('/', ' ')
+            ->replace(',', ' ')
+            ->trim()
+            ->value();
+
+        $mapping = [
+            'lager clasica' => 'lager_clasica_pilsner',
+            'lager clasica pilsner' => 'lager_clasica_pilsner',
+            'pilsner' => 'lager_clasica_pilsner',
+            'pilsener' => 'lager_clasica_pilsner',
+            'lager' => 'lager_clasica_pilsner',
+            'lager oscura' => 'lager_oscura_fuerte',
+            'lager fuerte' => 'lager_oscura_fuerte',
+            'dark lager' => 'lager_oscura_fuerte',
+            'strong lager' => 'lager_oscura_fuerte',
+            'lager ligera' => 'lager_ligera',
+            'light lager' => 'lager_ligera',
+            'lager light' => 'lager_ligera',
+            'india pale ale' => 'ipa',
+            'ipa' => 'ipa',
+            'cerveza de trigo' => 'trigo_wheat',
+            'trigo wheat' => 'trigo_wheat',
+            'trigo' => 'trigo_wheat',
+            'wheat' => 'trigo_wheat',
+            'wheat beer' => 'trigo_wheat',
+            'belgian ale' => 'ale_belga_clasica',
+            'ale belga' => 'ale_belga_clasica',
+            'belgian' => 'ale_belga_clasica',
+            'ale clasica' => 'ale_belga_clasica',
+            'ale' => 'ale_belga_clasica',
+            'stout' => 'stout_porter',
+            'porter' => 'stout_porter',
+            'stout porter' => 'stout_porter',
+            'fruit beer' => 'fruta_saborizada',
+            'fruit' => 'fruta_saborizada',
+            'frambuesa' => 'fruta_saborizada',
+            'sour' => 'fruta_saborizada',
+        ];
+
+        foreach ($mapping as $needle => $value) {
+            if (str_contains($normalized, $needle)) {
+                return ProductType::normalizeBeerStyle($value) ?? 'lager_clasica_pilsner';
+            }
+        }
+
+        return ProductType::normalizeBeerStyle($normalized) ?? 'lager_clasica_pilsner';
     }
 
     private function parsePrice($value)

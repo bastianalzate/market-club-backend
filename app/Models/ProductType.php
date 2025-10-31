@@ -5,10 +5,41 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class ProductType extends Model
 {
     use HasFactory;
+
+    public const BEER_STYLE_OPTIONS = [
+        'lager_clasica_pilsner' => 'Lager Clásica / Pilsner',
+        'lager_oscura_fuerte' => 'Lager Oscura / Fuerte',
+        'lager_ligera' => 'Lager Ligera',
+        'ipa' => 'India Pale Ale (IPA)',
+        'trigo_wheat' => 'Cerveza de Trigo (Wheat)',
+        'ale_belga_clasica' => 'Ale Belga Clásica',
+        'stout_porter' => 'Stout / Porter',
+        'fruta_saborizada' => 'Cerveza de Fruta / Saborizada',
+    ];
+
+    private const LEGACY_BEER_STYLE_MAP = [
+        'lager' => 'lager_clasica_pilsner',
+        'pilsner' => 'lager_clasica_pilsner',
+        'pilsener' => 'lager_clasica_pilsner',
+        'ale' => 'ale_belga_clasica',
+        'ipa' => 'ipa',
+        'stout' => 'stout_porter',
+        'porter' => 'stout_porter',
+        'wheat' => 'trigo_wheat',
+        'pale_ale' => 'ale_belga_clasica',
+        'amber' => 'ale_belga_clasica',
+        'brown' => 'ale_belga_clasica',
+        'blonde' => 'lager_ligera',
+        'dark' => 'lager_oscura_fuerte',
+        'light' => 'lager_ligera',
+        'craft' => 'ale_belga_clasica',
+        'imported' => 'lager_clasica_pilsner',
+    ];
 
     protected $fillable = [
         'name',
@@ -22,6 +53,77 @@ class ProductType extends Model
         'fields_config' => 'array',
         'is_active' => 'boolean',
     ];
+
+    public static function getBeerStyleOptions(): array
+    {
+        return self::BEER_STYLE_OPTIONS;
+    }
+
+    public static function getBeerStyleLabel(string $value): string
+    {
+        return self::BEER_STYLE_OPTIONS[$value] ?? Str::of($value)->replace('_', ' ')->headline();
+    }
+
+    public static function normalizeBeerStyle(?string $style): ?string
+    {
+        if ($style === null) {
+            return null;
+        }
+
+        $sanitized = self::sanitizeBeerStyle($style);
+
+        if ($sanitized === '') {
+            return null;
+        }
+
+        if (isset(self::BEER_STYLE_OPTIONS[$sanitized])) {
+            return $sanitized;
+        }
+
+        if (isset(self::LEGACY_BEER_STYLE_MAP[$sanitized])) {
+            return self::LEGACY_BEER_STYLE_MAP[$sanitized];
+        }
+
+        foreach (self::LEGACY_BEER_STYLE_MAP as $legacy => $normalized) {
+            if (str_contains($sanitized, $legacy)) {
+                return $normalized;
+            }
+        }
+
+        return null;
+    }
+
+    public static function getBeerStyleAliases(string $normalized): array
+    {
+        $aliases = [$normalized];
+
+        foreach (self::LEGACY_BEER_STYLE_MAP as $legacy => $mapped) {
+            if ($mapped === $normalized) {
+                $aliases[] = $legacy;
+            }
+        }
+
+        return array_values(array_unique($aliases));
+    }
+
+    private static function sanitizeBeerStyle(string $style): string
+    {
+        $sanitized = Str::of($style)
+            ->lower()
+            ->ascii()
+            ->replace(['/', '-'], ' ')
+            ->squish()
+            ->replace(' ', '_')
+            ->value();
+
+        $invalidValues = ['n_a', 'na', 'n\\a', 'sin_estilo', 'sin estilo', 'none', 'no_definido', 'no definido', ''];
+
+        if (in_array($sanitized, $invalidValues, true)) {
+            return '';
+        }
+
+        return $sanitized;
+    }
 
     /**
      * Relación con productos
@@ -96,23 +198,7 @@ class ProductType extends Model
                 'type' => 'select',
                 'label' => 'Estilo de Cerveza',
                 'required' => false,
-                'options' => [
-                    'lager' => 'Lager',
-                    'pilsner' => 'Pilsner',
-                    'ale' => 'Ale',
-                    'ipa' => 'IPA',
-                    'stout' => 'Stout',
-                    'porter' => 'Porter',
-                    'wheat' => 'Wheat Beer',
-                    'pale_ale' => 'Pale Ale',
-                    'amber' => 'Amber',
-                    'brown' => 'Brown Ale',
-                    'blonde' => 'Blonde',
-                    'dark' => 'Dark Beer',
-                    'light' => 'Light Beer',
-                    'craft' => 'Craft Beer',
-                    'imported' => 'Imported',
-                ]
+                'options' => self::BEER_STYLE_OPTIONS,
             ],
             'ibu' => [
                 'type' => 'number',
